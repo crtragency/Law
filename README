@@ -1,0 +1,34 @@
+# Law
+
+Website for a law firm — public marketing site with practice areas, attorney profiles, and client intake.
+
+## Status
+
+Early stage. This repository currently contains project documentation only; application code has not been added yet.
+
+## Planned Structure
+
+| Page | Purpose |
+| --- | --- |
+| Home | Firm overview, primary call to action |
+| Practice Areas | Services offered, one page per area |
+| Attorneys | Bios, credentials, contact details |
+| About | Firm history, values, locations |
+| Contact | Intake form, office address, phone |
+
+## Getting Started
+
+Once a stack is chosen, this section should cover install, local dev server, and build commands.
+
+```bash
+git clone https://github.com/crtragency/Law.git
+cd Law
+```
+
+## Contributing
+
+Create a branch off `main`, commit your changes, and open a pull request.
+
+## License
+
+Not yet specified.
