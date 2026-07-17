@@ -1,0 +1,292 @@
+// نظام إدارة مكتب المحاماة — مخطط قاعدة البيانات
+// Prisma schema — Law Office Management System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+//  المستخدمون والصلاحيات  —  Users & Roles
+// ===========================================================================
+
+enum Role {
+  ADMIN // مدير المكتب — كل الصلاحيات
+  LAWYER // محامي
+  PARALEGAL // مساعد قانوني
+  SECRETARY // سكرتير
+  ACCOUNTANT // محاسب
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(SECRETARY)
+  phone        String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // من أنشأ هذا الحساب (الأدمن)
+  createdById String?
+  createdBy   User?   @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers User[] @relation("UserCreatedBy")
+
+  sessions        Session[]
+  createdClients  Client[]   @relation("ClientCreatedBy")
+  createdCases    Case[]     @relation("CaseCreatedBy")
+  assignedCases   Case[]     @relation("CaseAssignedLawyer")
+  uploadedDocs    Document[]
+  createdTasks    Task[]     @relation("TaskCreatedBy")
+  assignedTasks   Task[]     @relation("TaskAssignedTo")
+  taskComments    TaskComment[]
+  caseNotes       CaseNote[]
+  createdEvents   Event[]
+  auditLogs       AuditLog[]
+
+  @@index([role])
+  @@index([isActive])
+}
+
+// جلسات الدخول — تُخزَّن في قاعدة البيانات حتى يمكن إلغاؤها فوراً
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // نخزّن هاش التوكن فقط، وليس التوكن نفسه
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  ip        String?
+  userAgent String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ===========================================================================
+//  الموكّلون  —  Clients
+// ===========================================================================
+
+model Client {
+  id         String   @id @default(cuid())
+  name       String
+  nationalId String? // الرقم القومي
+  phone      String?
+  email      String?
+  address    String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  cases Case[]
+
+  @@index([name])
+}
+
+// ===========================================================================
+//  القضايا  —  Cases
+// ===========================================================================
+
+enum CaseStatus {
+  OPEN // مفتوحة
+  IN_PROGRESS // جارية
+  POSTPONED // مؤجلة
+  WON // كُسبت
+  LOST // خُسرت
+  CLOSED // مغلقة
+  ARCHIVED // مؤرشفة
+}
+
+enum CaseType {
+  CIVIL // مدني
+  CRIMINAL // جنائي
+  COMMERCIAL // تجاري
+  FAMILY // أحوال شخصية
+  LABOR // عمالي
+  ADMINISTRATIVE // إداري
+  OTHER // أخرى
+}
+
+model Case {
+  id          String     @id @default(cuid())
+  caseNumber  String     @unique // رقم القضية
+  title       String
+  court       String? // المحكمة
+  caseType    CaseType   @default(OTHER)
+  status      CaseStatus @default(OPEN)
+  description String?
+  openedAt    DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  createdById String?
+  createdBy   User?   @relation("CaseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedLawyerId String?
+  assignedLawyer   User?   @relation("CaseAssignedLawyer", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
+
+  documents Document[]
+  tasks     Task[]
+  notes     CaseNote[]
+  events    Event[]
+
+  @@index([status])
+  @@index([caseType])
+  @@index([clientId])
+  @@index([assignedLawyerId])
+}
+
+// ملاحظات داخلية على القضية (تواصل بين الموظفين)
+model CaseNote {
+  id        String   @id @default(cuid())
+  body      String
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([caseId])
+}
+
+// ===========================================================================
+//  المستندات  —  Documents
+// ===========================================================================
+
+model Document {
+  id           String   @id @default(cuid())
+  title        String
+  fileName     String
+  storageKey   String // مسار/مفتاح الملف في التخزين
+  mimeType     String?
+  sizeBytes    Int?
+  caseId       String
+  case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([caseId])
+}
+
+// ===========================================================================
+//  المهام  —  Tasks
+// ===========================================================================
+
+enum TaskStatus {
+  TODO // للعمل
+  IN_PROGRESS // جارية
+  DONE // منتهية
+  CANCELLED // ملغاة
+}
+
+enum TaskPriority {
+  LOW // منخفضة
+  MEDIUM // متوسطة
+  HIGH // عالية
+  URGENT // عاجلة
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  comments TaskComment[]
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([caseId])
+}
+
+// تعليقات على المهمة (تواصل بين الموظفين)
+model TaskComment {
+  id        String   @id @default(cuid())
+  body      String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+// ===========================================================================
+//  التقويم والمواعيد  —  Calendar & Events
+// ===========================================================================
+
+enum EventType {
+  HEARING // جلسة محكمة
+  MEETING // اجتماع
+  DEADLINE // موعد نهائي
+  APPOINTMENT // موعد
+  OTHER // أخرى
+}
+
+model Event {
+  id        String    @id @default(cuid())
+  title     String
+  type      EventType @default(HEARING)
+  startAt   DateTime
+  endAt     DateTime?
+  location  String?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([startAt])
+  @@index([caseId])
+}
+
+// ===========================================================================
+//  سجل التدقيق  —  Audit Log
+// ===========================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // مثال: "user.login", "case.create"
+  entity    String? // نوع الكيان
+  entityId  String? // معرّف الكيان
+  details   String? // تفاصيل إضافية (JSON)
+  ip        String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
