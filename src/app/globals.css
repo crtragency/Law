@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4f6fb;
+  --foreground: #16202e;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Cairo", Tahoma, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* حقول الإدخال الموحّدة */
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm
+      outline-none transition focus:border-brand-500 focus:ring-2
+      focus:ring-brand-200;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium text-gray-700;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+      text-sm font-medium transition disabled:cursor-not-allowed
+      disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white p-5 shadow-sm;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs
+      font-medium;
+  }
+  .table-th {
+    @apply px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide
+      text-gray-500;
+  }
+  .table-td {
+    @apply px-4 py-3 text-sm text-gray-700;
+  }
+}

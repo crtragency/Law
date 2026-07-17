@@ -1,0 +1,91 @@
+import type { Role } from "@prisma/client";
+
+// ===========================================================================
+//  نظام الصلاحيات (RBAC)  —  تحديد ما يستطيع كل دور فعله
+// ===========================================================================
+
+export type Permission =
+  | "users.manage" // إدارة حسابات الموظفين (أدمن فقط)
+  | "clients.view"
+  | "clients.manage"
+  | "cases.view"
+  | "cases.manage"
+  | "documents.view"
+  | "documents.manage"
+  | "tasks.view"
+  | "tasks.manage" // إنشاء/تعديل/إسناد المهام
+  | "tasks.assignOthers" // إسناد مهام لموظفين آخرين
+  | "events.view"
+  | "events.manage"
+  | "audit.view"; // عرض سجل التدقيق (أدمن فقط)
+
+const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  ADMIN: [
+    "users.manage",
+    "clients.view",
+    "clients.manage",
+    "cases.view",
+    "cases.manage",
+    "documents.view",
+    "documents.manage",
+    "tasks.view",
+    "tasks.manage",
+    "tasks.assignOthers",
+    "events.view",
+    "events.manage",
+    "audit.view",
+  ],
+  LAWYER: [
+    "clients.view",
+    "clients.manage",
+    "cases.view",
+    "cases.manage",
+    "documents.view",
+    "documents.manage",
+    "tasks.view",
+    "tasks.manage",
+    "tasks.assignOthers",
+    "events.view",
+    "events.manage",
+  ],
+  PARALEGAL: [
+    "clients.view",
+    "cases.view",
+    "cases.manage",
+    "documents.view",
+    "documents.manage",
+    "tasks.view",
+    "tasks.manage",
+    "events.view",
+    "events.manage",
+  ],
+  SECRETARY: [
+    "clients.view",
+    "clients.manage",
+    "cases.view",
+    "documents.view",
+    "tasks.view",
+    "events.view",
+    "events.manage",
+  ],
+  ACCOUNTANT: [
+    "clients.view",
+    "cases.view",
+    "tasks.view",
+    "events.view",
+  ],
+};
+
+/** هل يملك هذا الدور صلاحية معيّنة؟ */
+export function hasPermission(role: Role, permission: Permission): boolean {
+  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+}
+
+/** الأسماء العربية للأدوار للعرض في الواجهة. */
+export const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "مدير المكتب",
+  LAWYER: "محامي",
+  PARALEGAL: "مساعد قانوني",
+  SECRETARY: "سكرتير",
+  ACCOUNTANT: "محاسب",
+};
