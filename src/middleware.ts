@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
 const SESSION_COOKIE = "law_session";
 
 // المسارات العامة التي لا تتطلب تسجيل دخول.
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/setup"];
 
 /**
  * حماية أوّلية للمسارات على مستوى الحافة (edge).
