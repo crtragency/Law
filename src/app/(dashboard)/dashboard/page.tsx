@@ -58,8 +58,13 @@ export default async function DashboardPage({
   return (
     <div>
       <PageHeader
-        title={`أهلاً، ${user.name} 👋`}
-        subtitle="نظرة سريعة على عمل المكتب اليوم"
+        title={`أهلاً بك، ${user.name}`}
+        subtitle={new Intl.DateTimeFormat("ar-EG", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(new Date())}
       />
       <FlashMessage error={error} />
 
@@ -100,7 +105,7 @@ export default async function DashboardPage({
       <div className="grid gap-6 lg:grid-cols-2">
         {/* المواعيد القادمة */}
         <div>
-          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
+          <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <IconCalendar className="text-brand-600" /> المواعيد القادمة
           </h2>
           <div className="card divide-y divide-gray-100 p-0">
@@ -135,7 +140,7 @@ export default async function DashboardPage({
         {/* أحدث القضايا */}
         {hasPermission(user.role, "cases.view") && (
           <div>
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
+            <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
               <IconFolder className="text-brand-600" /> أحدث القضايا
             </h2>
             <div className="card divide-y divide-gray-100 p-0">

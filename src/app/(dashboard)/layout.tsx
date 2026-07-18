@@ -45,7 +45,7 @@ export default async function DashboardLayout({
         roleLabel={ROLE_LABELS[user.role]}
       />
       <div className="flex flex-1 flex-col overflow-x-hidden">
-        <header className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-gray-200 bg-white/80 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8">
           <HeaderButton
             href="/messages"
             count={unreadMessages}
@@ -82,11 +82,11 @@ function HeaderButton({
     <Link
       href={href}
       aria-label={label}
-      className="relative flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+      className="relative flex h-9 w-9 items-center justify-center rounded-md border border-line bg-white text-gray-500 transition hover:border-brand-300 hover:text-brand-700"
     >
       {children}
       {count > 0 && (
-        <span className="absolute -top-0.5 -left-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+        <span className="absolute -top-1.5 -left-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-seal-600 px-1 text-[10px] font-bold text-white">
           {count > 9 ? "9+" : count}
         </span>
       )}

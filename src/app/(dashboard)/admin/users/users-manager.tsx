@@ -10,6 +10,7 @@ import {
 } from "./actions";
 import { ROLE_LABELS } from "@/lib/rbac";
 import { Badge } from "@/components/ui";
+import { IconPlus } from "@/components/icons";
 import { formatDateTime } from "@/lib/labels";
 
 interface UserRow {
@@ -53,7 +54,13 @@ export function UsersManager({
           onClick={() => setShowCreate((v) => !v)}
           className="btn-primary"
         >
-          {showCreate ? "إخفاء النموذج" : "➕ إضافة موظف جديد"}
+          {showCreate ? (
+            "إغلاق النموذج"
+          ) : (
+            <>
+              <IconPlus className="h-4 w-4" /> إضافة موظف جديد
+            </>
+          )}
         </button>
       </div>
 

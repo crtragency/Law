@@ -19,6 +19,7 @@ import {
   NotesSection,
   DocumentsSection,
 } from "./case-detail";
+import { IconCheck, IconCalendar } from "@/components/icons";
 
 export default async function CaseDetailPage({
   params,
@@ -68,12 +69,15 @@ export default async function CaseDetailPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/cases" className="text-sm text-brand-600 hover:underline">
-          ← رجوع للقضايا
+        <Link
+          href="/cases"
+          className="text-sm font-medium text-brand-700 hover:underline"
+        >
+          رجوع إلى القضايا
         </Link>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{c.title}</h1>
+            <h1 className="page-title">{c.title}</h1>
             <p className="mt-1 text-sm text-gray-500" dir="ltr">
               {c.caseNumber}
             </p>
@@ -82,6 +86,7 @@ export default async function CaseDetailPage({
             {CASE_STATUS_LABELS[c.status]}
           </Badge>
         </div>
+        <div className="rule-double mt-4" aria-hidden />
       </div>
 
       {/* بيانات القضية */}
@@ -149,8 +154,10 @@ export default async function CaseDetailPage({
       {/* المهام المرتبطة */}
       <div className="card">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">✅ مهام القضية</h3>
-          <Link href="/tasks" className="text-sm text-brand-600 hover:underline">
+          <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+            <IconCheck className="h-5 w-5 text-brand-600" /> مهام القضية
+          </h3>
+          <Link href="/tasks" className="text-sm text-brand-700 hover:underline">
             كل المهام
           </Link>
         </div>
@@ -178,8 +185,11 @@ export default async function CaseDetailPage({
       {/* المواعيد المرتبطة */}
       <div className="card">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">📅 مواعيد وجلسات القضية</h3>
-          <Link href="/calendar" className="text-sm text-brand-600 hover:underline">
+          <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+            <IconCalendar className="h-5 w-5 text-brand-600" /> مواعيد وجلسات
+            القضية
+          </h3>
+          <Link href="/calendar" className="text-sm text-brand-700 hover:underline">
             التقويم
           </Link>
         </div>

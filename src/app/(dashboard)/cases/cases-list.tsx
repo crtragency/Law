@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CaseForm } from "./case-form";
 import { Badge } from "@/components/ui";
+import { IconPlus, IconSearch } from "@/components/icons";
 import {
   CASE_STATUS_LABELS,
   CASE_STATUS_COLORS,
@@ -54,15 +55,24 @@ export function CasesList({
       <div className="flex flex-wrap items-center gap-3">
         {canManage && (
           <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
-            {showNew ? "إخفاء" : "➕ قضية جديدة"}
+            {showNew ? (
+              "إغلاق النموذج"
+            ) : (
+              <>
+                <IconPlus className="h-4 w-4" /> قضية جديدة
+              </>
+            )}
           </button>
         )}
-        <input
-          className="field max-w-xs"
-          placeholder="🔍 بحث برقم القضية أو العنوان أو الموكّل"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="relative w-full max-w-xs">
+          <IconSearch className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            className="field pr-9"
+            placeholder="بحث برقم القضية أو العنوان أو الموكّل"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
         <select
           className="field max-w-[160px]"
           value={statusFilter}

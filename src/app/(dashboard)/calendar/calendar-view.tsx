@@ -9,6 +9,14 @@ import {
 } from "./actions";
 import { Badge } from "@/components/ui";
 import {
+  IconPlus,
+  IconGavel,
+  IconClock,
+  IconCalendar,
+  IconPin,
+  IconFolder,
+} from "@/components/icons";
+import {
   EVENT_TYPE_LABELS,
   EVENT_TYPE_COLORS,
   formatDateTime,
@@ -62,22 +70,32 @@ export function CalendarView({
       <div className="flex flex-wrap items-center gap-3">
         {canManage && (
           <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
-            {showNew ? "إخفاء" : "➕ موعد / جلسة"}
+            {showNew ? (
+              "إغلاق النموذج"
+            ) : (
+              <>
+                <IconPlus className="h-4 w-4" /> موعد / جلسة
+              </>
+            )}
           </button>
         )}
-        <div className="flex rounded-lg border border-gray-300 p-0.5">
+        <div className="flex rounded-md border border-line bg-white p-0.5">
           <button
             onClick={() => setTab("upcoming")}
-            className={`rounded-md px-3 py-1 text-sm ${
-              tab === "upcoming" ? "bg-brand-600 text-white" : "text-gray-600"
+            className={`rounded px-3 py-1 text-sm font-medium transition ${
+              tab === "upcoming"
+                ? "bg-brand-700 text-white"
+                : "text-gray-600 hover:text-ink"
             }`}
           >
             القادمة ({upcoming.length})
           </button>
           <button
             onClick={() => setTab("past")}
-            className={`rounded-md px-3 py-1 text-sm ${
-              tab === "past" ? "bg-brand-600 text-white" : "text-gray-600"
+            className={`rounded px-3 py-1 text-sm font-medium transition ${
+              tab === "past"
+                ? "bg-brand-700 text-white"
+                : "text-gray-600 hover:text-ink"
             }`}
           >
             السابقة ({past.length})
@@ -97,29 +115,50 @@ export function CalendarView({
         <div className="space-y-3">
           {list.map((ev) => (
             <div key={ev.id} className="card flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">
-                  {ev.type === "HEARING" ? "⚖️" : ev.type === "DEADLINE" ? "⏳" : "📌"}
+              <div className="flex items-start gap-3.5">
+                <div
+                  className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${
+                    ev.type === "DEADLINE"
+                      ? "bg-seal-50 text-seal-600"
+                      : "bg-brand-50 text-brand-700"
+                  }`}
+                >
+                  {ev.type === "HEARING" ? (
+                    <IconGavel className="h-5 w-5" />
+                  ) : ev.type === "DEADLINE" ? (
+                    <IconClock className="h-5 w-5" />
+                  ) : (
+                    <IconCalendar className="h-5 w-5" />
+                  )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-900">{ev.title}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-display font-bold text-ink">
+                      {ev.title}
+                    </span>
                     <Badge className={EVENT_TYPE_COLORS[ev.type]}>
                       {EVENT_TYPE_LABELS[ev.type]}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-sm text-gray-600">
-                    🕐 {formatDateTime(ev.startAt)}
+                  <p className="mt-1.5 flex items-center gap-1.5 text-sm text-gray-600">
+                    <IconClock className="h-4 w-4 text-gray-400" />
+                    {formatDateTime(ev.startAt)}
                     {ev.endAt && ` — ${formatDateTime(ev.endAt)}`}
                   </p>
                   {ev.location && (
-                    <p className="text-sm text-gray-500">📍 {ev.location}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                      <IconPin className="h-4 w-4 text-gray-400" />
+                      {ev.location}
+                    </p>
                   )}
                   {ev.caseTitle && (
-                    <p className="text-sm text-gray-500">📁 {ev.caseTitle}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
+                      <IconFolder className="h-4 w-4 text-gray-400" />
+                      {ev.caseTitle}
+                    </p>
                   )}
                   {ev.notes && (
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm text-gray-600">
                       {ev.notes}
                     </p>
                   )}
