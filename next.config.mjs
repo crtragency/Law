@@ -2,6 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // إبقاء الصفحات المزارة حديثاً في ذاكرة المتصفح: الرجوع والتنقل المتكرر
+    // خلال 30 ثانية يفتح فوراً بدون طلب جديد للخادم.
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
   // Security headers applied to every response.
   async headers() {
     return [
