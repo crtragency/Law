@@ -10,6 +10,12 @@ import {
   type ActionResult,
 } from "../actions";
 import { formatDateTime } from "@/lib/labels";
+import {
+  IconPen,
+  IconPaperclip,
+  IconFileText,
+  IconMessage,
+} from "@/components/icons";
 
 const EMPTY: ActionResult = { ok: false };
 
@@ -64,7 +70,7 @@ export function CaseEditSection({
     />
   ) : (
     <button onClick={() => setEditing(true)} className="btn-secondary">
-      ✏️ تعديل القضية
+      <IconPen className="h-4 w-4" /> تعديل القضية
     </button>
   );
 }
@@ -79,7 +85,9 @@ export function NotesSection({
   const [state, action] = useActionState(addCaseNoteAction, EMPTY);
   return (
     <div className="card">
-      <h3 className="mb-4 text-lg font-bold">📝 ملاحظات الفريق</h3>
+      <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+        <IconMessage className="h-5 w-5 text-brand-600" /> ملاحظات الفريق
+      </h3>
       <form action={action} className="mb-4 space-y-2">
         <input type="hidden" name="caseId" value={caseId} />
         <textarea
@@ -126,7 +134,9 @@ export function DocumentsSection({
   const [addState, addAction] = useActionState(addDocumentAction, EMPTY);
   return (
     <div className="card">
-      <h3 className="mb-4 text-lg font-bold">📎 المستندات</h3>
+      <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+        <IconPaperclip className="h-5 w-5 text-brand-600" /> المستندات
+      </h3>
       {canManage && (
         <form action={addAction} className="mb-4 grid gap-2 sm:grid-cols-2">
           <input type="hidden" name="caseId" value={caseId} />
@@ -162,9 +172,10 @@ export function DocumentsSection({
                   href={d.storageKey}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-brand-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
                 >
-                  📄 {d.title}
+                  <IconFileText className="h-4 w-4 shrink-0 text-gray-400" />
+                  {d.title}
                 </a>
                 <p className="text-xs text-gray-400">
                   {d.uploaderName ?? "—"} — {formatDateTime(d.createdAt)}

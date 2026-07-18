@@ -11,11 +11,11 @@ export const CASE_STATUS_LABELS: Record<string, string> = {
 };
 
 export const CASE_STATUS_COLORS: Record<string, string> = {
-  OPEN: "bg-blue-100 text-blue-800",
-  IN_PROGRESS: "bg-amber-100 text-amber-800",
-  POSTPONED: "bg-orange-100 text-orange-800",
-  WON: "bg-green-100 text-green-800",
-  LOST: "bg-red-100 text-red-800",
+  OPEN: "bg-brand-50 text-brand-800",
+  IN_PROGRESS: "bg-brass-50 text-brass-700",
+  POSTPONED: "bg-brass-100 text-brass-800",
+  WON: "bg-brand-100 text-brand-900",
+  LOST: "bg-seal-50 text-seal-700",
   CLOSED: "bg-gray-200 text-gray-700",
   ARCHIVED: "bg-gray-100 text-gray-500",
 };
@@ -39,9 +39,9 @@ export const TASK_STATUS_LABELS: Record<string, string> = {
 
 export const TASK_STATUS_COLORS: Record<string, string> = {
   TODO: "bg-gray-100 text-gray-700",
-  IN_PROGRESS: "bg-amber-100 text-amber-800",
-  DONE: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-700",
+  IN_PROGRESS: "bg-brass-50 text-brass-700",
+  DONE: "bg-brand-50 text-brand-800",
+  CANCELLED: "bg-seal-50 text-seal-700",
 };
 
 export const TASK_PRIORITY_LABELS: Record<string, string> = {
@@ -53,9 +53,9 @@ export const TASK_PRIORITY_LABELS: Record<string, string> = {
 
 export const TASK_PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-gray-100 text-gray-600",
-  MEDIUM: "bg-blue-100 text-blue-700",
-  HIGH: "bg-orange-100 text-orange-800",
-  URGENT: "bg-red-100 text-red-800",
+  MEDIUM: "bg-brand-50 text-brand-700",
+  HIGH: "bg-brass-100 text-brass-800",
+  URGENT: "bg-seal-50 text-seal-700",
 };
 
 export const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -67,11 +67,11 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export const EVENT_TYPE_COLORS: Record<string, string> = {
-  HEARING: "bg-purple-100 text-purple-800",
-  MEETING: "bg-blue-100 text-blue-800",
-  DEADLINE: "bg-red-100 text-red-800",
-  APPOINTMENT: "bg-teal-100 text-teal-800",
-  OTHER: "bg-gray-100 text-gray-700",
+  HEARING: "bg-brand-100 text-brand-900",
+  MEETING: "bg-gray-100 text-gray-700",
+  DEADLINE: "bg-seal-50 text-seal-700",
+  APPOINTMENT: "bg-brass-50 text-brass-700",
+  OTHER: "bg-gray-100 text-gray-500",
 };
 
 /** تنسيق التاريخ بالعربية. */

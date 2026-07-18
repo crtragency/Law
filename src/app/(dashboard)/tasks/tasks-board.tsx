@@ -10,6 +10,13 @@ import {
 } from "./actions";
 import { Badge } from "@/components/ui";
 import {
+  IconPlus,
+  IconUser,
+  IconFolder,
+  IconClock,
+  IconMessage,
+} from "@/components/icons";
+import {
   TASK_STATUS_LABELS,
   TASK_STATUS_COLORS,
   TASK_PRIORITY_LABELS,
@@ -86,7 +93,13 @@ export function TasksBoard({
       <div className="flex flex-wrap items-center gap-3">
         {canManage && (
           <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
-            {showNew ? "إخفاء" : "➕ مهمة جديدة"}
+            {showNew ? (
+              "إغلاق النموذج"
+            ) : (
+              <>
+                <IconPlus className="h-4 w-4" /> مهمة جديدة
+              </>
+            )}
           </button>
         )}
         <label className="flex items-center gap-2 text-sm">
@@ -232,7 +245,7 @@ function TaskCard({ task }: { task: TaskItem }) {
   return (
     <div className="card">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-bold text-gray-900">{task.title}</h3>
+        <h3 className="font-display font-bold text-ink">{task.title}</h3>
         <Badge className={TASK_PRIORITY_COLORS[task.priority]}>
           {TASK_PRIORITY_LABELS[task.priority]}
         </Badge>
@@ -242,10 +255,23 @@ function TaskCard({ task }: { task: TaskItem }) {
           {task.description}
         </p>
       )}
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-        <span>👤 {task.assignedName ?? "غير مُسندة"}</span>
-        {task.caseTitle && <span>📁 {task.caseTitle}</span>}
-        {task.dueDate && <span>⏰ {formatDate(task.dueDate)}</span>}
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500">
+        <span className="inline-flex items-center gap-1.5">
+          <IconUser className="h-3.5 w-3.5 text-gray-400" />
+          {task.assignedName ?? "غير مُسندة"}
+        </span>
+        {task.caseTitle && (
+          <span className="inline-flex items-center gap-1.5">
+            <IconFolder className="h-3.5 w-3.5 text-gray-400" />
+            {task.caseTitle}
+          </span>
+        )}
+        {task.dueDate && (
+          <span className="inline-flex items-center gap-1.5">
+            <IconClock className="h-3.5 w-3.5 text-gray-400" />
+            {formatDate(task.dueDate)}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
@@ -269,9 +295,10 @@ function TaskCard({ task }: { task: TaskItem }) {
         </Badge>
         <button
           onClick={() => setShowComments((v) => !v)}
-          className="mr-auto text-xs font-medium text-brand-600 hover:underline"
+          className="mr-auto inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:underline"
         >
-          💬 التعليقات ({task.comments.length})
+          <IconMessage className="h-3.5 w-3.5" />
+          التعليقات ({task.comments.length})
         </button>
       </div>
 

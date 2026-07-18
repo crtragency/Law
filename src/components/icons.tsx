@@ -168,6 +168,85 @@ export function IconClock(props: IconProps) {
   );
 }
 
+export function IconPhone(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M5 4h4l1.5 4.5-2 1.5a12 12 0 0 0 5.5 5.5l1.5-2L20 15v4a1.5 1.5 0 0 1-1.6 1.5C10.6 20 4 13.4 3.5 5.6A1.5 1.5 0 0 1 5 4Z" />
+    </svg>
+  );
+}
+
+export function IconMail(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+      <path d="m4.5 7.5 7.5 5.5 7.5-5.5" />
+    </svg>
+  );
+}
+
+export function IconPin(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 21s-6.5-5.5-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.5 12 21 12 21Z" />
+      <circle cx="12" cy="10.5" r="2.2" />
+    </svg>
+  );
+}
+
+export function IconPaperclip(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="m20 11-8.2 8.2a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7L9.5 17a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4" />
+    </svg>
+  );
+}
+
+export function IconPen(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1Z" />
+      <path d="m14.5 6.5 3 3" />
+    </svg>
+  );
+}
+
+export function IconUser(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+    </svg>
+  );
+}
+
+export function IconSend(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M20 4 3.5 10.5l6 2.5 2.5 6L20 4Z" />
+      <path d="m9.5 13 4-4" />
+    </svg>
+  );
+}
+
+export function IconInbox(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 5h16v14H4V5Z" />
+      <path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20" />
+    </svg>
+  );
+}
+
+export function IconTrash(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M5 7h14M9.5 7V4.8A.8.8 0 0 1 10.3 4h3.4a.8.8 0 0 1 .8.8V7M7 7l.8 12.2a1.5 1.5 0 0 0 1.5 1.3h5.4a1.5 1.5 0 0 0 1.5-1.3L17 7" />
+      <path d="M10 11v5.5M14 11v5.5" />
+    </svg>
+  );
+}
+
 // خريطة بالاسم لتسهيل الاستخدام في التنقّل.
 export const ICONS = {
   home: IconHome,

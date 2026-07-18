@@ -22,7 +22,7 @@ export default async function ClientsPage() {
         subtitle={`${clients.length} موكّل مسجّل`}
       />
       {clients.length === 0 && !canManage ? (
-        <EmptyState icon="👥" title="لا يوجد موكّلون بعد" />
+        <EmptyState title="لا يوجد موكّلون بعد" />
       ) : (
         <ClientsManager
           canManage={canManage}

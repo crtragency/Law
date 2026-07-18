@@ -1,5 +1,10 @@
 import Link from "next/link";
+import { IconInbox } from "@/components/icons";
 
+/**
+ * ترويسة الصفحة — تحمل توقيع الهوية: السطر المزدوج (سطر ثخين يليه رفيع)
+ * المأخوذ من تقاليد السجلات والمستندات الرسمية.
+ */
 export function PageHeader({
   title,
   subtitle,
@@ -10,12 +15,15 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+    <div className="mb-7">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+        </div>
+        {action}
       </div>
-      {action}
+      <div className="rule-double mt-4" aria-hidden />
     </div>
   );
 }
@@ -31,17 +39,19 @@ export function Badge({
 }
 
 export function EmptyState({
-  icon = "📭",
+  icon,
   title,
   hint,
 }: {
-  icon?: string;
+  icon?: React.ReactNode;
   title: string;
   hint?: string;
 }) {
   return (
     <div className="card flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-3 text-4xl">{icon}</div>
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-paper text-gray-400">
+        {icon ?? <IconInbox />}
+      </div>
       <p className="font-medium text-gray-700">{title}</p>
       {hint && <p className="mt-1 text-sm text-gray-500">{hint}</p>}
     </div>
@@ -60,13 +70,15 @@ export function StatCard({
   href?: string;
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 transition hover:border-brand-200 hover:shadow-md">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+    <div className="card flex items-center gap-4 transition hover:border-brand-300">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
         {icon}
       </div>
-      <div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm text-gray-500">{label}</div>
+      <div className="leading-tight">
+        <div className="font-display text-[26px] font-bold text-ink">
+          {value}
+        </div>
+        <div className="mt-0.5 text-[13px] text-gray-500">{label}</div>
       </div>
     </div>
   );
@@ -90,13 +102,13 @@ export function FlashMessage({
   };
   if (error) {
     return (
-      <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="mb-4 rounded-md border border-seal-100 bg-seal-50 px-4 py-3 text-sm text-seal-700">
         {messages[error] ?? error}
       </div>
     );
   }
   return (
-    <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+    <div className="mb-4 rounded-md border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
       {messages[success!] ?? success}
     </div>
   );
