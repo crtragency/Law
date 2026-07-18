@@ -80,22 +80,33 @@ npm run dev
 
 ---
 
-## النشر على Vercel
+## النشر على Vercel (مع Supabase)
 
 1. ارفع المشروع إلى مستودع على GitHub.
-2. من [Vercel](https://vercel.com) اختر **New Project** واربطه بالمستودع.
-3. أنشئ قاعدة بيانات Postgres (Vercel Postgres أو Neon) وانسخ رابطها.
-4. في إعدادات المشروع على Vercel أضف متغيرات البيئة:
-   - `DATABASE_URL`
-   - `ADMIN_EMAIL` و `ADMIN_PASSWORD` و `ADMIN_NAME`
-5. أول نشر سيبني المشروع. بعده شغّل الأمرين مرة واحدة (من جهازك موجّهاً لنفس
-   قاعدة البيانات، أو عبر Vercel):
-   ```bash
-   npm run db:push
-   npm run db:seed
-   ```
+2. أنشئ مشروعاً على [Supabase](https://supabase.com) واختر كلمة مرور قوية لقاعدة البيانات.
+3. من Supabase: **Project Settings → Database → Connection string** وانسخ رابط
+   **Session pooler** (منفذ 5432، يعمل على Vercel ويدعم كل العمليات). استبدل
+   `[YOUR-PASSWORD]` بكلمة مرور قاعدة البيانات.
+4. من [Vercel](https://vercel.com) اختر **New Project** واربطه بالمستودع، وتأكد أن
+   **Framework Preset = Next.js**.
+5. في إعدادات المشروع على Vercel → **Environment Variables** أضف:
+   - `DATABASE_URL` ← رابط الاتصال من Supabase.
+6. اعمل **Deploy / Redeploy**. أثناء البناء تُنشأ الجداول تلقائياً
+   (`prisma db push`).
+7. افتح رابط الموقع → ستُوجَّه إلى صفحة **`/setup`** لإنشاء حساب المدير من المتصفح
+   (تعمل مرة واحدة فقط).
 
-> الأمر `build` يشغّل `prisma generate` تلقائياً.
+> **ملاحظة عن Supabase:** إن استخدمت "Transaction pooler" (منفذ 6543) بدل الـ
+> Session pooler، أضف أيضاً متغيراً باسم `DIRECT_URL` بالاتصال المباشر (منفذ 5432)
+> ليُستخدم في إنشاء الجداول.
+
+> الأمر `build` يشغّل `prisma generate` وإنشاء الجداول تلقائياً.
+
+### بديل: إنشاء حساب المدير بالأوامر
+بدل صفحة `/setup`، يمكنك ضبط `ADMIN_EMAIL` و `ADMIN_PASSWORD` و `ADMIN_NAME` ثم:
+```bash
+npm run db:seed
+```
 
 ---
 
