@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +9,7 @@ import { caseSchema, commentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { notifyMany } from "@/lib/notifications";
+import { createSignedUploadUrl, storageConfigured } from "@/lib/storage";
 
 export interface ActionResult {
   ok: boolean;
@@ -226,6 +228,128 @@ export async function addDocumentAction(
 
   revalidatePath(`/cases/${parsed.data.caseId}`);
   return { ok: true, success: "تمت إضافة المستند" };
+}
+
+// ===========================================================================
+//  رفع الملفات الفعلي — Supabase Storage
+// ===========================================================================
+
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
+
+const uploadRequestSchema = z.object({
+  caseId: z.string().min(1),
+  fileName: z.string().trim().min(1).max(200),
+});
+
+/** الخطوة 1: تجهيز رابط رفع موقّع — المتصفح يرفع الملف مباشرة للتخزين. */
+export async function createUploadUrlAction(input: {
+  caseId: string;
+  fileName: string;
+}): Promise<
+  | { ok: true; uploadUrl: string; storageKey: string }
+  | { ok: false; error: string }
+> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  try {
+    await ensurePermission("documents.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  if (!storageConfigured()) {
+    return {
+      ok: false,
+      error:
+        "رفع الملفات غير مُفعّل بعد — أضف SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY ثم أعد النشر",
+    };
+  }
+
+  const parsed = uploadRequestSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "بيانات غير صالحة" };
+
+  const exists = await prisma.case.findUnique({
+    where: { id: parsed.data.caseId },
+    select: { id: true },
+  });
+  if (!exists) return { ok: false, error: "القضية غير موجودة" };
+
+  // اسم آمن: معرّف عشوائي + الاسم الأصلي بعد تنظيفه.
+  const safeName = parsed.data.fileName
+    .replace(/[^\w.\-؀-ۿ]+/g, "_")
+    .slice(-100);
+  const storageKey = `cases/${parsed.data.caseId}/${crypto.randomUUID()}-${safeName}`;
+
+  try {
+    const uploadUrl = await createSignedUploadUrl(storageKey);
+    return { ok: true, uploadUrl, storageKey };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "تعذّر تجهيز الرفع",
+    };
+  }
+}
+
+const registerUploadSchema = z.object({
+  caseId: z.string().min(1),
+  title: z.string().trim().min(1, "عنوان المستند مطلوب").max(200),
+  storageKey: z.string().min(1).max(600),
+  fileName: z.string().trim().min(1).max(200),
+  mimeType: z.string().max(150).optional().or(z.literal("")),
+  sizeBytes: z.number().int().positive().max(MAX_UPLOAD_BYTES),
+});
+
+/** الخطوة 2: بعد نجاح الرفع، تسجيل المستند في قاعدة البيانات. */
+export async function registerUploadedDocumentAction(input: {
+  caseId: string;
+  title: string;
+  storageKey: string;
+  fileName: string;
+  mimeType?: string;
+  sizeBytes: number;
+}): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("documents.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const parsed = registerUploadSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
+  }
+
+  // حماية: المسار يجب أن يتبع نفس القضية المرسلة، لا مسار آخر.
+  if (!parsed.data.storageKey.startsWith(`cases/${parsed.data.caseId}/`)) {
+    return { ok: false, error: "مسار غير صالح" };
+  }
+
+  await prisma.document.create({
+    data: {
+      caseId: parsed.data.caseId,
+      title: parsed.data.title,
+      storageKey: parsed.data.storageKey,
+      fileName: parsed.data.fileName,
+      mimeType: parsed.data.mimeType || null,
+      sizeBytes: parsed.data.sizeBytes,
+      uploadedById: actor.id,
+    },
+  });
+  await audit({
+    action: "document.add",
+    userId: actor.id,
+    entity: "Case",
+    entityId: parsed.data.caseId,
+    ip: await getClientIp(),
+    details: { fileName: parsed.data.fileName, sizeBytes: parsed.data.sizeBytes },
+  });
+
+  revalidatePath(`/cases/${parsed.data.caseId}`);
+  return { ok: true, success: "تم رفع المستند" };
 }
 
 export async function deleteDocumentAction(
