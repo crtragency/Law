@@ -71,3 +71,36 @@ try {
   console.error("❌ فشل إنشاء حساب المدير:", err?.message ?? err);
   process.exit(1);
 }
+
+// (3) إنشاء bucket خاص للمستندات في Supabase Storage (إن ضُبطت المتغيرات)
+const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/+$/, "");
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.log(
+    "ℹ️  SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY غير مضبوطين — رفع الملفات سيبقى معطّلاً (الروابط الخارجية تعمل)."
+  );
+} else {
+  try {
+    const res = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: "documents", name: "documents", public: false }),
+    });
+    if (res.ok) {
+      console.log("✅ تم إنشاء bucket المستندات (خاص).");
+    } else {
+      const body = await res.text();
+      if (/already exists|Duplicate/i.test(body) || res.status === 409) {
+        console.log("✔ bucket المستندات موجود بالفعل.");
+      } else {
+        console.warn(`⚠️  تعذّر إنشاء bucket المستندات: ${res.status} ${body}`);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️  تعذّر الوصول إلى Supabase Storage:", err?.message ?? err);
+  }
+}
