@@ -51,8 +51,50 @@ model User {
   createdEvents   Event[]
   auditLogs       AuditLog[]
 
+  notifications     Notification[] @relation("UserNotifications")
+  messagesSent      Message[]      @relation("MessagesSent")
+  messagesReceived  Message[]      @relation("MessagesReceived")
+
   @@index([role])
   @@index([isActive])
+}
+
+// ===========================================================================
+//  الإشعارات  —  Notifications
+// ===========================================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String // المستلِم
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  type      String // مثال: task.assigned, task.comment, case.note, message, event.soon
+  title     String
+  body      String?
+  link      String? // المسار الذي يفتحه الإشعار عند الضغط
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// ===========================================================================
+//  الرسائل الداخلية بين الموظفين  —  Internal Messages
+// ===========================================================================
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("MessagesReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  body        String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId, read])
+  @@index([senderId])
+  @@index([createdAt])
 }
 
 // جلسات الدخول — تُخزَّن في قاعدة البيانات حتى يمكن إلغاؤها فوراً

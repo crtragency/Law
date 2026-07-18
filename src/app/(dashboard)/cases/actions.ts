@@ -7,6 +7,7 @@ import { ensurePermission, AuthError } from "@/lib/auth";
 import { caseSchema, commentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
+import { notifyMany } from "@/lib/notifications";
 
 export interface ActionResult {
   ok: boolean;
@@ -152,6 +153,25 @@ export async function addCaseNoteAction(
     entityId: caseId,
     ip: await getClientIp(),
   });
+
+  // أشعر المحامي المسؤول ومُنشئ القضية بالملاحظة الجديدة (عدا كاتبها).
+  const caseInfo = await prisma.case.findUnique({
+    where: { id: caseId },
+    select: { title: true, assignedLawyerId: true, createdById: true },
+  });
+  if (caseInfo) {
+    await notifyMany(
+      [caseInfo.assignedLawyerId, caseInfo.createdById].filter(
+        (id) => id !== actor.id
+      ),
+      {
+        type: "case.note",
+        title: "ملاحظة جديدة على قضية",
+        body: `${actor.name}: ${caseInfo.title}`,
+        link: `/cases/${caseId}`,
+      }
+    );
+  }
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true, success: "تمت إضافة الملاحظة" };

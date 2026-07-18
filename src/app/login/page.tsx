@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
+import { IconScale } from "@/components/icons";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول — نظام مكتب المحاماة",
@@ -10,8 +11,8 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-brand-800 to-brand-950 p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center text-white">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-3xl">
-            ⚖️
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
+            <IconScale className="h-8 w-8" />
           </div>
           <h1 className="text-2xl font-bold">نظام مكتب المحاماة</h1>
           <p className="mt-1 text-sm text-brand-100">
