@@ -7,6 +7,7 @@ import { hasPermission } from "@/lib/rbac";
 import { taskSchema, commentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
+import { notify, notifyMany } from "@/lib/notifications";
 
 export interface ActionResult {
   ok: boolean;
@@ -84,6 +85,17 @@ export async function saveTaskAction(
     });
   }
 
+  // أشعر الموظف المُسنَدة إليه المهمة (إن كان غير مُنشئها).
+  if (assignedToId && assignedToId !== actor.id) {
+    await notify({
+      userId: assignedToId,
+      type: "task.assigned",
+      title: "تم إسناد مهمة إليك",
+      body: `${actor.name}: ${parsed.data.title}`,
+      link: "/tasks",
+    });
+  }
+
   revalidatePath("/tasks");
   return { ok: true, success: parsed.data.id ? "تم حفظ المهمة" : "تمت إضافة المهمة" };
 }
@@ -157,9 +169,27 @@ export async function addTaskCommentAction(
     return { ok: false, error: "اكتب تعليقاً صحيحاً" };
   }
 
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { title: true, assignedToId: true, createdById: true },
+  });
+
   await prisma.taskComment.create({
     data: { taskId, body: parsed.data.body, authorId: actor.id },
   });
+
+  // أشعر المُسنَد إليه ومُنشئ المهمة (عدا كاتب التعليق).
+  if (task) {
+    await notifyMany(
+      [task.assignedToId, task.createdById].filter((id) => id !== actor.id),
+      {
+        type: "task.comment",
+        title: "تعليق جديد على مهمة",
+        body: `${actor.name} علّق على: ${task.title}`,
+        link: "/tasks",
+      }
+    );
+  }
 
   revalidatePath("/tasks");
   return { ok: true, success: "تمت إضافة التعليق" };

@@ -9,6 +9,13 @@ import {
   EVENT_TYPE_LABELS,
   formatDateTime,
 } from "@/lib/labels";
+import {
+  IconFolder,
+  IconScale,
+  IconUsers,
+  IconCheck,
+  IconCalendar,
+} from "@/components/icons";
 import Link from "next/link";
 
 export default async function DashboardPage({
@@ -61,18 +68,22 @@ export default async function DashboardPage({
           <StatCard
             label="إجمالي القضايا"
             value={caseCount}
-            icon="📁"
+            icon={<IconFolder />}
             href="/cases"
           />
         )}
         {hasPermission(user.role, "cases.view") && (
-          <StatCard label="قضايا نشطة" value={openCaseCount} icon="⚖️" />
+          <StatCard
+            label="قضايا نشطة"
+            value={openCaseCount}
+            icon={<IconScale />}
+          />
         )}
         {hasPermission(user.role, "clients.view") && (
           <StatCard
             label="الموكّلون"
             value={clientCount}
-            icon="👥"
+            icon={<IconUsers />}
             href="/clients"
           />
         )}
@@ -80,7 +91,7 @@ export default async function DashboardPage({
           <StatCard
             label="مهامي المفتوحة"
             value={myTaskCount}
-            icon="✅"
+            icon={<IconCheck />}
             href="/tasks"
           />
         )}
@@ -89,8 +100,8 @@ export default async function DashboardPage({
       <div className="grid gap-6 lg:grid-cols-2">
         {/* المواعيد القادمة */}
         <div>
-          <h2 className="mb-3 text-lg font-bold text-gray-800">
-            📅 المواعيد القادمة
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
+            <IconCalendar className="text-brand-600" /> المواعيد القادمة
           </h2>
           <div className="card divide-y divide-gray-100 p-0">
             {upcomingEvents.length === 0 ? (
@@ -98,7 +109,9 @@ export default async function DashboardPage({
             ) : (
               upcomingEvents.map((ev) => (
                 <div key={ev.id} className="flex items-start gap-3 p-4">
-                  <div className="text-xl">📌</div>
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                    <IconCalendar className="h-4 w-4" />
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-800">
@@ -122,8 +135,8 @@ export default async function DashboardPage({
         {/* أحدث القضايا */}
         {hasPermission(user.role, "cases.view") && (
           <div>
-            <h2 className="mb-3 text-lg font-bold text-gray-800">
-              📁 أحدث القضايا
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
+              <IconFolder className="text-brand-600" /> أحدث القضايا
             </h2>
             <div className="card divide-y divide-gray-100 p-0">
               {recentCases.length === 0 ? (

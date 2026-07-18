@@ -56,12 +56,12 @@ export function StatCard({
 }: {
   label: string;
   value: number | string;
-  icon: string;
+  icon: React.ReactNode;
   href?: string;
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 transition hover:shadow-md">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-2xl">
+    <div className="card flex items-center gap-4 transition hover:border-brand-200 hover:shadow-md">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
         {icon}
       </div>
       <div>
