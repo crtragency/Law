@@ -1,5 +1,6 @@
 import "server-only";
 import crypto from "crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
@@ -49,8 +50,12 @@ export async function createSession(
   });
 }
 
-/** جلب الجلسة الحالية من الكوكي والتحقق من صلاحيتها. */
-export async function getSessionUser() {
+/**
+ * جلب الجلسة الحالية من الكوكي والتحقق من صلاحيتها.
+ * مغلّفة بـ cache() حتى لا يتكرر استعلام الجلسة داخل نفس الطلب
+ * (الـ layout والصفحة كلاهما يستدعيها) — استعلام واحد لكل طلب.
+ */
+export const getSessionUser = cache(async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -75,7 +80,7 @@ export async function getSessionUser() {
   }
 
   return session.user;
-}
+});
 
 /** إنهاء الجلسة الحالية (تسجيل الخروج). */
 export async function destroySession(): Promise<void> {

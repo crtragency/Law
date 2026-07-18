@@ -16,16 +16,23 @@ function buildDatasourceUrl(): string | undefined {
   if (!raw) return undefined;
   try {
     const url = new URL(raw);
-    const isPooler =
-      url.hostname.includes("pooler.supabase.com") ||
-      url.port === "6543" ||
-      url.port === "5432";
+    const isPooler = url.hostname.includes("pooler.supabase.com");
+    // منفذ 6543 = وضع Transaction (يتحمّل مئات العملاء) — نسمح بتوازٍ أعلى.
+    // منفذ 5432 على الـ Pooler = وضع Session (سعة 15 عميلاً فقط) — اتصال واحد
+    // لكل نسخة حتى لا تُستنزف الحصة ويتوقف الموقع.
+    const isTransactionMode = url.port === "6543";
     if (isPooler) {
       if (!url.searchParams.has("pgbouncer")) {
         url.searchParams.set("pgbouncer", "true");
       }
       if (!url.searchParams.has("connection_limit")) {
-        url.searchParams.set("connection_limit", "1");
+        url.searchParams.set(
+          "connection_limit",
+          isTransactionMode ? "10" : "1"
+        );
+      }
+      if (!url.searchParams.has("connect_timeout")) {
+        url.searchParams.set("connect_timeout", "15");
       }
     }
     return url.toString();
