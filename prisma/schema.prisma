@@ -50,6 +50,7 @@ model User {
   caseNotes       CaseNote[]
   createdEvents   Event[]
   auditLogs       AuditLog[]
+  createdContracts Contract[]
 
   notifications     Notification[] @relation("UserNotifications")
   messagesSent      Message[]      @relation("MessagesSent")
@@ -116,23 +117,58 @@ model Session {
 //  الموكّلون  —  Clients
 // ===========================================================================
 
+enum ClientType {
+  INDIVIDUAL // فرد
+  COMPANY // منشأة / قطاع تجاري
+}
+
 model Client {
-  id         String   @id @default(cuid())
-  name       String
-  nationalId String? // الرقم القومي
-  phone      String?
-  email      String?
-  address    String?
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         String     @id @default(cuid())
+  type       ClientType @default(INDIVIDUAL)
+  name       String // اسم الشخص أو الممثّل
+  // بيانات الفرد
+  nationalId  String? // رقم الهوية الوطنية
+  nationality String? // الجنسية
+  // بيانات المنشأة التجارية
+  companyName   String? // اسم الشركة
+  unifiedNumber String? // الرقم الوطني الموحّد
+  taxNumber     String? // الرقم الضريبي
+  // بيانات التواصل
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // بوابة العميل — دخول منفصل عن الموظفين
+  portalEnabled      Boolean @default(false)
+  portalEmail        String? @unique
+  portalPasswordHash String?
 
   createdById String?
   createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  cases Case[]
+  cases          Case[]
+  contracts      Contract[]
+  portalSessions ClientSession[]
 
   @@index([name])
+}
+
+// جلسات دخول العميل للبوابة (منفصلة تماماً عن جلسات الموظفين)
+model ClientSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  ip        String?
+  userAgent String?
+
+  @@index([clientId])
+  @@index([expiresAt])
 }
 
 // ===========================================================================
@@ -184,6 +220,7 @@ model Case {
   tasks     Task[]
   notes     CaseNote[]
   events    Event[]
+  contracts Contract[]
 
   @@index([status])
   @@index([caseType])
@@ -311,6 +348,68 @@ model Event {
 
   @@index([startAt])
   @@index([caseId])
+}
+
+// ===========================================================================
+//  بيانات الشركة/المكتب  —  Firm Settings (سجل واحد)
+// ===========================================================================
+
+model FirmSettings {
+  id            String   @id @default("firm")
+  name          String   @default("مكتب المحاماة") // اسم الشركة كاملاً
+  legalForm     String? // الشكل القانوني (مهنية شخص واحد ذات مسؤولية محدودة)
+  licenseNumber String? // رقم شهادة تسجيل الشركة المهنية
+  address       String? // العنوان الرئيسي (المدينة)
+  branches      String? // الفروع
+  phones        String? // الجوالات
+  email         String? // البريد الإلكتروني
+  taxNumber     String? // الرقم الضريبي للشركة
+  managerName   String? // اسم المدير العام / الممثّل بالتوقيع
+  city          String? // مدينة الاختصاص القضائي
+  updatedAt     DateTime @updatedAt
+}
+
+// ===========================================================================
+//  اتفاقيات الأتعاب  —  Fee Agreements / Contracts
+// ===========================================================================
+
+enum ContractStatus {
+  DRAFT // مسودّة
+  ACTIVE // سارية
+  COMPLETED // منتهية
+  CANCELLED // ملغاة
+}
+
+model Contract {
+  id     String @id @default(cuid())
+  number String // رقم الاتفاقية (مثال: 47/73/ج)
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  city          String? // مدينة الإبرام
+  dateHijri     String? // التاريخ الهجري (نص)
+  dateGregorian DateTime? // التاريخ الميلادي
+  scope         String // مهام الطرف الأول (المتفق عليها)
+
+  // المبالغ محفوظة بالهللة (1 ريال = 100 هللة) لتفادي أخطاء الكسور
+  amountBeforeTax Int // المبلغ قبل الضريبة
+  taxRate         Int  @default(15) // نسبة ضريبة القيمة المضافة %
+  installments    Json // مصفوفة الدفعات: [{ amount, note, paid }]
+
+  notes     String?
+  status    ContractStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([status])
 }
 
 // ===========================================================================

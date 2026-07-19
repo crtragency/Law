@@ -40,8 +40,13 @@ export const resetPasswordSchema = z.object({
 
 export const clientSchema = z.object({
   id: z.string().optional(),
+  type: z.enum(["INDIVIDUAL", "COMPANY"]).default("INDIVIDUAL"),
   name: z.string().trim().min(2, "اسم الموكّل مطلوب").max(150),
   nationalId: z.string().trim().max(20).optional().or(z.literal("")),
+  nationality: z.string().trim().max(60).optional().or(z.literal("")),
+  companyName: z.string().trim().max(200).optional().or(z.literal("")),
+  unifiedNumber: z.string().trim().max(30).optional().or(z.literal("")),
+  taxNumber: z.string().trim().max(30).optional().or(z.literal("")),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   email: z
     .string()

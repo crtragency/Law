@@ -28,13 +28,20 @@ export default async function ClientsPage() {
           canManage={canManage}
           clients={clients.map((c) => ({
             id: c.id,
+            type: c.type,
             name: c.name,
             nationalId: c.nationalId,
+            nationality: c.nationality,
+            companyName: c.companyName,
+            unifiedNumber: c.unifiedNumber,
+            taxNumber: c.taxNumber,
             phone: c.phone,
             email: c.email,
             address: c.address,
             notes: c.notes,
             caseCount: c._count.cases,
+            portalEnabled: c.portalEnabled,
+            portalEmail: c.portalEmail,
           }))}
         />
       )}

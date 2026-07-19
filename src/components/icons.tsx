@@ -247,6 +247,16 @@ export function IconTrash(props: IconProps) {
   );
 }
 
+export function IconBuilding(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16" />
+      <path d="M15 21V10h4a1 1 0 0 1 1 1v10" />
+      <path d="M3 21h18M7.5 8h3M7.5 12h3M7.5 16h3" />
+    </svg>
+  );
+}
+
 // خريطة بالاسم لتسهيل الاستخدام في التنقّل.
 export const ICONS = {
   home: IconHome,
@@ -263,6 +273,7 @@ export const ICONS = {
   bell: IconBell,
   message: IconMessage,
   scale: IconScale,
+  building: IconBuilding,
 } as const;
 
 export type IconName = keyof typeof ICONS;
