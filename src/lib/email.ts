@@ -58,6 +58,10 @@ export async function sendEmail(input: SendInput): Promise<boolean> {
     return false;
   }
   try {
+    // عنوان الرد (اختياري): يجعل ردود العملاء تصل لبريد المكتب الحقيقي
+    // حتى لو كان الإرسال من نطاق آخر.
+    const replyTo = process.env.EMAIL_REPLY_TO;
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -69,6 +73,7 @@ export async function sendEmail(input: SendInput): Promise<boolean> {
         to: [input.to],
         subject: input.subject,
         html: renderHtml(input),
+        ...(replyTo ? { reply_to: replyTo } : {}),
       }),
       cache: "no-store",
     });
