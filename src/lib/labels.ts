@@ -58,6 +58,20 @@ export const TASK_PRIORITY_COLORS: Record<string, string> = {
   URGENT: "bg-seal-50 text-seal-700",
 };
 
+export const CONTRACT_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "مسودّة",
+  ACTIVE: "سارية",
+  COMPLETED: "منتهية",
+  CANCELLED: "ملغاة",
+};
+
+export const CONTRACT_STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-gray-100 text-gray-600",
+  ACTIVE: "bg-brand-50 text-brand-800",
+  COMPLETED: "bg-brand-100 text-brand-900",
+  CANCELLED: "bg-seal-50 text-seal-700",
+};
+
 export const EVENT_TYPE_LABELS: Record<string, string> = {
   HEARING: "جلسة محكمة",
   MEETING: "اجتماع",

@@ -17,6 +17,9 @@ export type Permission =
   | "tasks.assignOthers" // إسناد مهام لموظفين آخرين
   | "events.view"
   | "events.manage"
+  | "contracts.view" // عرض اتفاقيات الأتعاب
+  | "contracts.manage" // إنشاء/تعديل الاتفاقيات
+  | "firm.manage" // تعديل بيانات الشركة (أدمن فقط)
   | "audit.view"; // عرض سجل التدقيق (أدمن فقط)
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -33,6 +36,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.assignOthers",
     "events.view",
     "events.manage",
+    "contracts.view",
+    "contracts.manage",
+    "firm.manage",
     "audit.view",
   ],
   LAWYER: [
@@ -47,6 +53,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.assignOthers",
     "events.view",
     "events.manage",
+    "contracts.view",
+    "contracts.manage",
   ],
   PARALEGAL: [
     "clients.view",
@@ -67,12 +75,15 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.view",
     "events.view",
     "events.manage",
+    "contracts.view",
   ],
   ACCOUNTANT: [
     "clients.view",
     "cases.view",
     "tasks.view",
     "events.view",
+    "contracts.view",
+    "contracts.manage",
   ],
 };
 

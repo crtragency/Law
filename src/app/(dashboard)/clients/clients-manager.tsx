@@ -19,8 +19,13 @@ import {
 
 interface ClientRow {
   id: string;
+  type: "INDIVIDUAL" | "COMPANY";
   name: string;
   nationalId: string | null;
+  nationality: string | null;
+  companyName: string | null;
+  unifiedNumber: string | null;
+  taxNumber: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -99,12 +104,28 @@ export function ClientsManager({
           {filtered.map((c) => (
             <div key={c.id} className="card">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-display font-bold text-ink">{c.name}</h3>
+                <div>
+                  <h3 className="font-display font-bold text-ink">
+                    {c.type === "COMPANY" && c.companyName ? c.companyName : c.name}
+                  </h3>
+                  <span
+                    className={`badge mt-1 ${
+                      c.type === "COMPANY"
+                        ? "bg-brass-50 text-brass-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {c.type === "COMPANY" ? "منشأة تجارية" : "فرد"}
+                  </span>
+                </div>
                 <span className="badge shrink-0 bg-brand-50 text-brand-800">
                   {c.caseCount} قضية
                 </span>
               </div>
               <div className="mt-2.5 space-y-1.5">
+                {c.type === "COMPANY" && c.name && (
+                  <p className="text-sm text-gray-600">الممثّل: {c.name}</p>
+                )}
                 {c.phone && (
                   <p className="flex items-center gap-2 text-sm text-gray-600">
                     <IconPhone className="h-4 w-4 shrink-0 text-gray-400" />
@@ -123,9 +144,14 @@ export function ClientsManager({
                     {c.address}
                   </p>
                 )}
-                {c.nationalId && (
+                {c.type === "INDIVIDUAL" && c.nationalId && (
                   <p className="text-xs text-gray-400">
-                    رقم قومي: {c.nationalId}
+                    هوية وطنية: {c.nationalId}
+                  </p>
+                )}
+                {c.type === "COMPANY" && c.unifiedNumber && (
+                  <p className="text-xs text-gray-400">
+                    الرقم الموحّد: {c.unifiedNumber}
                   </p>
                 )}
               </div>
@@ -156,6 +182,9 @@ function ClientForm({
   onClose: () => void;
 }) {
   const [state, action] = useActionState(saveClientAction, EMPTY);
+  const [type, setType] = useState<"INDIVIDUAL" | "COMPANY">(
+    client?.type ?? "INDIVIDUAL"
+  );
 
   // أغلق النموذج تلقائياً بعد النجاح.
   useEffect(() => {
@@ -167,34 +196,107 @@ function ClientForm({
 
   return (
     <div className="card">
-      <h3 className="mb-4 text-lg font-bold">
+      <h3 className="mb-4 font-display text-lg font-bold">
         {client ? "تعديل بيانات الموكّل" : "إضافة موكّل جديد"}
       </h3>
       {state.error && (
-        <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-md border border-seal-100 bg-seal-50 px-3 py-2 text-sm text-seal-700">
           {state.error}
         </div>
       )}
       {state.ok && state.success && (
-        <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-3 rounded-md border border-brand-100 bg-brand-50 px-3 py-2 text-sm text-brand-800">
           {state.success}
         </div>
       )}
+
+      {/* نوع الموكّل */}
+      <div className="mb-4 flex rounded-md border border-line bg-white p-0.5 text-sm font-medium">
+        <button
+          type="button"
+          onClick={() => setType("INDIVIDUAL")}
+          className={`flex-1 rounded px-3 py-1.5 transition ${
+            type === "INDIVIDUAL" ? "bg-brand-700 text-white" : "text-gray-600"
+          }`}
+        >
+          فرد
+        </button>
+        <button
+          type="button"
+          onClick={() => setType("COMPANY")}
+          className={`flex-1 rounded px-3 py-1.5 transition ${
+            type === "COMPANY" ? "bg-brand-700 text-white" : "text-gray-600"
+          }`}
+        >
+          منشأة تجارية
+        </button>
+      </div>
+
       <form action={action} className="grid gap-4 sm:grid-cols-2">
         {client && <input type="hidden" name="id" value={client.id} />}
+        <input type="hidden" name="type" value={type} />
+
+        {type === "COMPANY" && (
+          <>
+            <div className="sm:col-span-2">
+              <label className="label">اسم الشركة / المنشأة *</label>
+              <input
+                name="companyName"
+                defaultValue={client?.companyName ?? ""}
+                required
+                className="field"
+              />
+            </div>
+            <div>
+              <label className="label">الرقم الوطني الموحّد</label>
+              <input
+                name="unifiedNumber"
+                defaultValue={client?.unifiedNumber ?? ""}
+                className="field"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="label">الرقم الضريبي</label>
+              <input
+                name="taxNumber"
+                defaultValue={client?.taxNumber ?? ""}
+                className="field"
+                dir="ltr"
+              />
+            </div>
+          </>
+        )}
+
         <div>
-          <label className="label">الاسم *</label>
+          <label className="label">
+            {type === "COMPANY" ? "اسم الممثّل / المفوّض *" : "الاسم *"}
+          </label>
           <input name="name" defaultValue={client?.name} required className="field" />
         </div>
-        <div>
-          <label className="label">الرقم القومي</label>
-          <input
-            name="nationalId"
-            defaultValue={client?.nationalId ?? ""}
-            className="field"
-            dir="ltr"
-          />
-        </div>
+
+        {type === "INDIVIDUAL" && (
+          <>
+            <div>
+              <label className="label">رقم الهوية الوطنية</label>
+              <input
+                name="nationalId"
+                defaultValue={client?.nationalId ?? ""}
+                className="field"
+                dir="ltr"
+              />
+            </div>
+            <div>
+              <label className="label">الجنسية</label>
+              <input
+                name="nationality"
+                defaultValue={client?.nationality ?? ""}
+                className="field"
+              />
+            </div>
+          </>
+        )}
+
         <div>
           <label className="label">الهاتف</label>
           <input

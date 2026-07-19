@@ -13,6 +13,27 @@ body {
   outline-offset: 2px;
 }
 
+/* الطباعة: إخفاء كل ما هو ليس المستند نفسه، وإظهار الورقة نظيفة */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+}
+
 /* احترام تفضيل تقليل الحركة */
 @media (prefers-reduced-motion: reduce) {
   *,

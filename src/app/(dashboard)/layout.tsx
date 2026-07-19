@@ -25,9 +25,13 @@ export default async function DashboardLayout({
     items.push({ href: "/tasks", label: "المهام", icon: "check" });
   if (hasPermission(user.role, "events.view"))
     items.push({ href: "/calendar", label: "التقويم", icon: "calendar" });
+  if (hasPermission(user.role, "contracts.view"))
+    items.push({ href: "/contracts", label: "اتفاقيات الأتعاب", icon: "file" });
   items.push({ href: "/messages", label: "الرسائل", icon: "message" });
   if (hasPermission(user.role, "users.manage"))
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });
+  if (hasPermission(user.role, "firm.manage"))
+    items.push({ href: "/admin/firm", label: "بيانات الشركة", icon: "building" });
   if (hasPermission(user.role, "audit.view"))
     items.push({ href: "/admin/audit", label: "سجل التدقيق", icon: "file" });
 

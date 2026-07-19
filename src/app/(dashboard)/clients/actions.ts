@@ -29,8 +29,13 @@ export async function saveClientAction(
 
   const parsed = clientSchema.safeParse({
     id: formData.get("id") || undefined,
+    type: formData.get("type") || "INDIVIDUAL",
     name: formData.get("name"),
     nationalId: formData.get("nationalId") ?? "",
+    nationality: formData.get("nationality") ?? "",
+    companyName: formData.get("companyName") ?? "",
+    unifiedNumber: formData.get("unifiedNumber") ?? "",
+    taxNumber: formData.get("taxNumber") ?? "",
     phone: formData.get("phone") ?? "",
     email: formData.get("email") ?? "",
     address: formData.get("address") ?? "",
@@ -41,8 +46,13 @@ export async function saveClientAction(
   }
 
   const data = {
+    type: parsed.data.type,
     name: parsed.data.name,
     nationalId: parsed.data.nationalId || null,
+    nationality: parsed.data.nationality || null,
+    companyName: parsed.data.type === "COMPANY" ? parsed.data.companyName || null : null,
+    unifiedNumber: parsed.data.type === "COMPANY" ? parsed.data.unifiedNumber || null : null,
+    taxNumber: parsed.data.type === "COMPANY" ? parsed.data.taxNumber || null : null,
     phone: parsed.data.phone || null,
     email: parsed.data.email || null,
     address: parsed.data.address || null,
