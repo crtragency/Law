@@ -6,6 +6,8 @@ import { ensurePermission, AuthError } from "@/lib/auth";
 import { eventSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import { EVENT_TYPE_LABELS, formatDateTime } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -77,6 +79,18 @@ export async function saveEventAction(
       entityId: created.id,
       ip,
     });
+    // إشعار العميل بالبريد عند إضافة موعد/جلسة جديدة على قضيته.
+    if (data.caseId) {
+      await notifyClientCaseUpdate(data.caseId, {
+        subject: `موعد جديد على قضيتك: ${data.title}`,
+        heading: "تمت إضافة موعد جديد",
+        lines: [
+          `${EVENT_TYPE_LABELS[data.type] ?? "موعد"}: ${data.title}`,
+          `التاريخ: ${formatDateTime(data.startAt)}`,
+          ...(data.location ? [`المكان: ${data.location}`] : []),
+        ],
+      });
+    }
   }
 
   revalidatePath("/calendar");

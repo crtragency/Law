@@ -141,13 +141,34 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // بوابة العميل — دخول منفصل عن الموظفين
+  portalEnabled      Boolean @default(false)
+  portalEmail        String? @unique
+  portalPasswordHash String?
+
   createdById String?
   createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  cases     Case[]
-  contracts Contract[]
+  cases          Case[]
+  contracts      Contract[]
+  portalSessions ClientSession[]
 
   @@index([name])
+}
+
+// جلسات دخول العميل للبوابة (منفصلة تماماً عن جلسات الموظفين)
+model ClientSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  ip        String?
+  userAgent String?
+
+  @@index([clientId])
+  @@index([expiresAt])
 }
 
 // ===========================================================================

@@ -9,7 +9,9 @@ import { caseSchema, commentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { notifyMany } from "@/lib/notifications";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
 import { createSignedUploadUrl, storageConfigured } from "@/lib/storage";
+import { CASE_STATUS_LABELS } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -64,6 +66,11 @@ export async function saveCaseAction(
   const ip = await getClientIp();
   try {
     if (parsed.data.id) {
+      // نقرأ الحالة السابقة لاكتشاف تغيّرها وإشعار العميل.
+      const before = await prisma.case.findUnique({
+        where: { id: parsed.data.id },
+        select: { status: true },
+      });
       await prisma.case.update({ where: { id: parsed.data.id }, data });
       await audit({
         action: "case.update",
@@ -72,6 +79,17 @@ export async function saveCaseAction(
         entityId: parsed.data.id,
         ip,
       });
+      // إشعار العميل بالبريد عند تغيّر حالة القضية.
+      if (before && before.status !== parsed.data.status) {
+        await notifyClientCaseUpdate(parsed.data.id, {
+          subject: `تحديث حالة قضيتك: ${parsed.data.title}`,
+          heading: "تم تحديث حالة قضيتك",
+          lines: [
+            `قضية: ${parsed.data.title} (${parsed.data.caseNumber})`,
+            `الحالة الجديدة: ${CASE_STATUS_LABELS[parsed.data.status] ?? parsed.data.status}`,
+          ],
+        });
+      }
       revalidatePath(`/cases/${parsed.data.id}`);
     } else {
       const created = await prisma.case.create({

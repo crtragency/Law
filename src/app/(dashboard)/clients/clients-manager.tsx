@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import {
   saveClientAction,
   deleteClientAction,
+  setClientPortalAction,
   type ActionResult,
 } from "./actions";
 import { EmptyState } from "@/components/ui";
@@ -31,6 +32,8 @@ interface ClientRow {
   address: string | null;
   notes: string | null;
   caseCount: number;
+  portalEnabled: boolean;
+  portalEmail: string | null;
 }
 
 const EMPTY: ActionResult = { ok: false };
@@ -340,6 +343,123 @@ function ClientForm({
           </button>
         </div>
       </form>
+
+      {client && <PortalSection client={client} />}
+    </div>
+  );
+}
+
+/** إدارة دخول العميل إلى البوابة (تظهر عند تعديل موكّل قائم). */
+function PortalSection({ client }: { client: ClientRow }) {
+  const [pending, start] = useTransition();
+  const [enabled, setEnabled] = useState(client.portalEnabled);
+  const [email, setEmail] = useState(client.portalEmail ?? client.email ?? "");
+  const [password, setPassword] = useState("");
+  const [sendWelcome, setSendWelcome] = useState(true);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function save(nextEnabled: boolean) {
+    setMsg(null);
+    start(async () => {
+      const res = await setClientPortalAction({
+        clientId: client.id,
+        enabled: nextEnabled,
+        portalEmail: email,
+        password: password || undefined,
+        sendWelcome,
+      });
+      if (res.ok) {
+        setEnabled(nextEnabled);
+        setPassword("");
+        setMsg({ ok: true, text: res.success ?? "تم" });
+      } else {
+        setMsg({ ok: false, text: res.error ?? "تعذّر الحفظ" });
+      }
+    });
+  }
+
+  return (
+    <div className="mt-6 rounded-md border border-line bg-paper/60 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="font-display font-bold text-ink">بوابة العميل</h4>
+        <span
+          className={`badge ${
+            enabled ? "bg-brand-50 text-brand-800" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          {enabled ? "مُفعّلة" : "غير مُفعّلة"}
+        </span>
+      </div>
+      <p className="mb-3 text-xs text-gray-500">
+        يدخل العميل ببريد وكلمة مرور ليتابع قضاياه ومستنداته ومواعيده.
+      </p>
+
+      {msg && (
+        <div
+          className={`mb-3 rounded-md px-3 py-2 text-sm ${
+            msg.ok
+              ? "border border-brand-100 bg-brand-50 text-brand-800"
+              : "border border-seal-100 bg-seal-50 text-seal-700"
+          }`}
+        >
+          {msg.text}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="label">بريد الدخول</label>
+          <input
+            className="field"
+            dir="ltr"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="client@example.com"
+          />
+        </div>
+        <div>
+          <label className="label">
+            {client.portalEnabled ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}
+          </label>
+          <input
+            className="field"
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="8 أحرف على الأقل، حروف وأرقام"
+          />
+        </div>
+      </div>
+
+      <label className="mt-3 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={sendWelcome}
+          onChange={(e) => setSendWelcome(e.target.checked)}
+        />
+        إرسال بريد ترحيبي للعميل عند التفعيل
+      </label>
+
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => save(true)}
+          disabled={pending}
+          className="btn-primary"
+        >
+          {pending ? "..." : enabled ? "حفظ البيانات" : "تفعيل البوابة"}
+        </button>
+        {enabled && (
+          <button
+            type="button"
+            onClick={() => save(false)}
+            disabled={pending}
+            className="btn-secondary text-seal-600"
+          >
+            تعطيل
+          </button>
+        )}
+      </div>
     </div>
   );
 }

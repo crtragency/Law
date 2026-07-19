@@ -40,6 +40,8 @@ export default async function ClientsPage() {
             address: c.address,
             notes: c.notes,
             caseCount: c._count.cases,
+            portalEnabled: c.portalEnabled,
+            portalEmail: c.portalEmail,
           }))}
         />
       )}
