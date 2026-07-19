@@ -1,15 +1,17 @@
 import "server-only";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
 // ===========================================================================
-//  إرسال البريد الإلكتروني عبر Resend
-//  لا يرمي استثناءً حتى لا يعطّل العملية الأصلية إذا فشل الإرسال.
+//  إرسال البريد الإلكتروني عبر Gmail SMTP
+//  المُرسِل هو حساب جيميل المكتب (مع اسم عرض عربي). لا يرمي استثناءً حتى لا
+//  يعطّل العملية الأصلية إذا فشل الإرسال.
 // ===========================================================================
 
-const FROM =
-  process.env.EMAIL_FROM || "مكتب المحاماة <onboarding@resend.dev>";
+const FROM_NAME = process.env.EMAIL_FROM_NAME || "مكتب المحاماة";
 
 export function emailConfigured(): boolean {
-  return !!process.env.RESEND_API_KEY;
+  return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }
 
 /** رابط الموقع الأساسي (للروابط داخل الرسائل). */
@@ -17,10 +19,29 @@ export function appUrl(): string {
   return (process.env.APP_URL || "").replace(/\/+$/, "");
 }
 
+// نعيد استخدام ناقل SMTP واحد عبر الطلبات لتقليل زمن الاتصال.
+const globalForMail = globalThis as unknown as {
+  mailer?: Transporter;
+};
+
+function getTransporter(): Transporter | null {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) return null;
+  if (!globalForMail.mailer) {
+    globalForMail.mailer = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user, pass: pass.replace(/\s+/g, "") },
+    });
+  }
+  return globalForMail.mailer;
+}
+
 interface SendInput {
   to: string;
   subject: string;
-  /** نص عادي — نغلّفه بقالب HTML بسيط بالعربية. */
   heading: string;
   lines: string[];
   actionLabel?: string;
@@ -37,7 +58,7 @@ function renderHtml(input: SendInput): string {
     .join("");
   return `<!doctype html><html lang="ar" dir="rtl"><body style="margin:0;background:#f5f4ef;font-family:Tahoma,Arial,sans-serif">
     <div style="max-width:560px;margin:24px auto;background:#fff;border:1px solid #e4e2d9;border-radius:12px;overflow:hidden">
-      <div style="background:#16352C;color:#CDAF63;padding:18px 24px;font-weight:700;font-size:16px">⚖️ مكتب المحاماة</div>
+      <div style="background:#16352C;color:#CDAF63;padding:18px 24px;font-weight:700;font-size:16px">⚖️ ${FROM_NAME}</div>
       <div style="padding:24px">
         <h1 style="margin:0 0 14px;font-size:18px;color:#1C2521">${input.heading}</h1>
         ${body}
@@ -52,38 +73,22 @@ function renderHtml(input: SendInput): string {
 
 /** إرسال بريد. يُرجع true عند النجاح. لا يرمي استثناءً. */
 export async function sendEmail(input: SendInput): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn("RESEND_API_KEY غير مضبوط — لن يُرسل البريد.");
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn("إعدادات Gmail غير مضبوطة — لن يُرسل البريد.");
     return false;
   }
   try {
-    // عنوان الرد (اختياري): يجعل ردود العملاء تصل لبريد المكتب الحقيقي
-    // حتى لو كان الإرسال من نطاق آخر.
-    const replyTo = process.env.EMAIL_REPLY_TO;
-
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: FROM,
-        to: [input.to],
-        subject: input.subject,
-        html: renderHtml(input),
-        ...(replyTo ? { reply_to: replyTo } : {}),
-      }),
-      cache: "no-store",
+    await transporter.sendMail({
+      from: `"${FROM_NAME}" <${process.env.GMAIL_USER}>`,
+      to: input.to,
+      subject: input.subject,
+      html: renderHtml(input),
+      replyTo: process.env.EMAIL_REPLY_TO || undefined,
     });
-    if (!res.ok) {
-      console.error("فشل إرسال البريد:", res.status, await res.text());
-      return false;
-    }
     return true;
   } catch (err) {
-    console.error("خطأ أثناء إرسال البريد:", err);
+    console.error("فشل إرسال البريد:", err);
     return false;
   }
 }

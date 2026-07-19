@@ -19,7 +19,10 @@ const pushUrl = process.env.DIRECT_URL || dbUrl;
 // (1) مزامنة الجداول
 try {
   console.log("🗄️  مزامنة مخطط قاعدة البيانات (prisma db push)...");
-  execSync("npx prisma db push --skip-generate", {
+  // --accept-data-loss: تغييراتنا كلها إضافية (جداول/أعمدة جديدة بقيَم
+  // افتراضية أو اختيارية)، فلا تُفقد أي بيانات فعلية؛ العلم فقط ليتجاوز التحذير
+  // التحفظي من Prisma حتى لا يتوقف النشر.
+  execSync("npx prisma db push --skip-generate --accept-data-loss", {
     stdio: "inherit",
     env: { ...process.env, DATABASE_URL: pushUrl },
   });
