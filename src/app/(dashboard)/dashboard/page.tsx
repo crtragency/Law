@@ -15,6 +15,7 @@ import {
   IconUsers,
   IconCheck,
   IconCalendar,
+  IconFileText,
 } from "@/components/icons";
 import Link from "next/link";
 
@@ -33,6 +34,7 @@ export default async function DashboardPage({
     openCaseCount,
     clientCount,
     myTaskCount,
+    openServiceRequestCount,
     upcomingEvents,
     recentCases,
   ] = await Promise.all([
@@ -41,6 +43,9 @@ export default async function DashboardPage({
     prisma.client.count(),
     prisma.task.count({
       where: { assignedToId: user.id, status: { in: ["TODO", "IN_PROGRESS"] } },
+    }),
+    prisma.serviceRequest.count({
+      where: { status: { notIn: ["COMPLETED", "CANCELLED"] } },
     }),
     prisma.event.findMany({
       where: { startAt: { gte: now } },
@@ -98,6 +103,14 @@ export default async function DashboardPage({
             value={myTaskCount}
             icon={<IconCheck />}
             href="/tasks"
+          />
+        )}
+        {hasPermission(user.role, "services.view") && (
+          <StatCard
+            label="طلبات خدمات مفتوحة"
+            value={openServiceRequestCount}
+            icon={<IconFileText />}
+            href="/services"
           />
         )}
       </div>

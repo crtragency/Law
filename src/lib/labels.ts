@@ -88,6 +88,75 @@ export const EVENT_TYPE_COLORS: Record<string, string> = {
   OTHER: "bg-gray-100 text-gray-500",
 };
 
+
+export const SERVICE_AREA_LABELS: Record<string, string> = {
+  CONTACTS: "جهات الاتصال",
+  LITIGATION: "التقاضي والقضايا",
+  POWER_OF_ATTORNEY: "التوكيلات والتفويضات",
+  CONSULTATION: "الاستشارات القانونية",
+  ADMIN_REQUEST: "المهام والطلبات الإدارية",
+  COMPLAINT: "البلاغات والشكاوى",
+  LEGAL_TEMPLATE: "النماذج والصياغات القانونية",
+  FILE_MANAGEMENT: "إدارة الملفات والمستندات",
+  ALERTS: "التنبيهات والمواعيد",
+  REPORTING: "التقارير ولوحات المتابعة",
+  ACCOUNTING: "الحسابات والفواتير",
+  JUDICIAL_EXPENSE: "المصروفات القضائية",
+  CLIENT_PORTAL: "بوابة العميل",
+  CONTRACTS: "العقود واتفاقيات الأتعاب",
+  OTHER: "أخرى",
+};
+
+export const SERVICE_AREA_DESCRIPTIONS: Record<string, string> = {
+  CONTACTS: "جهات حكومية، محاكم، خبراء، خصوم، محامون، مزودو خدمات، وجهات داعمة للعمل القانوني.",
+  LITIGATION: "متابعة دورة القضية من القيد وحتى الحكم والتنفيذ مع الجلسات والمستندات والمهام.",
+  POWER_OF_ATTORNEY: "إدارة الوكالات والتفويضات، تواريخ الإصدار والانتهاء، وربطها بالموكل والقضية.",
+  CONSULTATION: "تسجيل الاستشارات، الرأي القانوني، المرفقات، والردود المعتمدة للموكلين.",
+  ADMIN_REQUEST: "طلبات داخلية وإدارية مرتبطة بتشغيل المكتب وتوزيع العمل بين الفريق.",
+  COMPLAINT: "إدارة البلاغات والشكاوى منذ الاستلام حتى الإغلاق مع توثيق الإجراءات.",
+  LEGAL_TEMPLATE: "نماذج مذكرات، عقود، إنذارات، خطابات، وصيغ قانونية قابلة لإعادة الاستخدام.",
+  FILE_MANAGEMENT: "أرشفة وتنظيم الملفات والمستندات وربطها بالموكلين والقضايا والخدمات.",
+  ALERTS: "تنبيهات المواعيد الحساسة، الجلسات، انتهاء الوكالات، والمهل القانونية.",
+  REPORTING: "مؤشرات الأداء، الإنتاجية، حالات القضايا، المصروفات، والتقارير الإدارية.",
+  ACCOUNTING: "أتعاب، دفعات، فواتير، مستحقات، ومتابعة مالية مرتبطة بالملفات القانونية.",
+  JUDICIAL_EXPENSE: "رسوم محاكم، مصاريف تنفيذ، خبراء، إعلانات، وانتقالات مرتبطة بالقضايا.",
+  CLIENT_PORTAL: "خدمات متابعة العميل لقضاياه ومستنداته ومواعيده من بوابة مستقلة.",
+  CONTRACTS: "صياغة ومتابعة العقود واتفاقيات الأتعاب والمدفوعات المرتبطة بها.",
+  OTHER: "أي خدمة خاصة لا تقع تحت التصنيفات الحالية.",
+};
+
+export const SERVICE_STATUS_LABELS: Record<string, string> = {
+  NEW: "جديد",
+  IN_REVIEW: "قيد المراجعة",
+  IN_PROGRESS: "جار التنفيذ",
+  WAITING_CLIENT: "بانتظار العميل",
+  COMPLETED: "مكتمل",
+  CANCELLED: "ملغى",
+};
+
+export const SERVICE_STATUS_COLORS: Record<string, string> = {
+  NEW: "bg-brand-50 text-brand-800",
+  IN_REVIEW: "bg-brass-50 text-brass-700",
+  IN_PROGRESS: "bg-brass-100 text-brass-800",
+  WAITING_CLIENT: "bg-gray-100 text-gray-700",
+  COMPLETED: "bg-brand-100 text-brand-900",
+  CANCELLED: "bg-seal-50 text-seal-700",
+};
+
+export const SERVICE_PRIORITY_LABELS: Record<string, string> = {
+  LOW: "منخفضة",
+  MEDIUM: "متوسطة",
+  HIGH: "عالية",
+  URGENT: "عاجلة",
+};
+
+export const SERVICE_PRIORITY_COLORS: Record<string, string> = {
+  LOW: "bg-gray-100 text-gray-600",
+  MEDIUM: "bg-brand-50 text-brand-700",
+  HIGH: "bg-brass-100 text-brass-800",
+  URGENT: "bg-seal-50 text-seal-700",
+};
+
 /** تنسيق التاريخ بالعربية. */
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "—";

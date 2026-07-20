@@ -109,6 +109,45 @@ export const eventSchema = z.object({
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
+
+export const serviceRequestSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "عنوان الخدمة مطلوب").max(200),
+  serviceArea: z.enum([
+    "CONTACTS",
+    "LITIGATION",
+    "POWER_OF_ATTORNEY",
+    "CONSULTATION",
+    "ADMIN_REQUEST",
+    "COMPLAINT",
+    "LEGAL_TEMPLATE",
+    "FILE_MANAGEMENT",
+    "ALERTS",
+    "REPORTING",
+    "ACCOUNTING",
+    "JUDICIAL_EXPENSE",
+    "CLIENT_PORTAL",
+    "CONTRACTS",
+    "OTHER",
+  ]),
+  status: z
+    .enum([
+      "NEW",
+      "IN_REVIEW",
+      "IN_PROGRESS",
+      "WAITING_CLIENT",
+      "COMPLETED",
+      "CANCELLED",
+    ])
+    .default("NEW"),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
+  description: z.string().trim().max(4000).optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+  assignedToId: z.string().optional().or(z.literal("")),
+});
+
 export const commentSchema = z.object({
   body: z.string().trim().min(1, "اكتب الملاحظة").max(2000),
 });

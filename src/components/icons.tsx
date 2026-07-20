@@ -274,6 +274,17 @@ export const ICONS = {
   message: IconMessage,
   scale: IconScale,
   building: IconBuilding,
+  gavel: IconGavel,
+  clock: IconClock,
+  phone: IconPhone,
+  mail: IconMail,
+  pin: IconPin,
+  paperclip: IconPaperclip,
+  pen: IconPen,
+  user: IconUser,
+  send: IconSend,
+  inbox: IconInbox,
+  trash: IconTrash,
 } as const;
 
 export type IconName = keyof typeof ICONS;

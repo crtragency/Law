@@ -51,6 +51,9 @@ model User {
   createdEvents   Event[]
   auditLogs       AuditLog[]
   createdContracts Contract[]
+  createdServiceRequests  ServiceRequest[]     @relation("ServiceRequestCreatedBy")
+  assignedServiceRequests ServiceRequest[]     @relation("ServiceRequestAssignedTo")
+  serviceRequestNotes     ServiceRequestNote[]
 
   notifications     Notification[] @relation("UserNotifications")
   messagesSent      Message[]      @relation("MessagesSent")
@@ -149,9 +152,10 @@ model Client {
   createdById String?
   createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  cases          Case[]
-  contracts      Contract[]
-  portalSessions ClientSession[]
+  cases           Case[]
+  contracts       Contract[]
+  serviceRequests ServiceRequest[]
+  portalSessions  ClientSession[]
 
   @@index([name])
 }
@@ -217,10 +221,11 @@ model Case {
   assignedLawyer   User?   @relation("CaseAssignedLawyer", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
 
   documents Document[]
-  tasks     Task[]
-  notes     CaseNote[]
-  events    Event[]
-  contracts Contract[]
+  tasks           Task[]
+  notes           CaseNote[]
+  events          Event[]
+  contracts       Contract[]
+  serviceRequests ServiceRequest[]
 
   @@index([status])
   @@index([caseType])
@@ -412,6 +417,88 @@ model Contract {
   @@index([status])
 }
 
+// ===========================================================================
+//  طلبات الخدمات القانونية  —  Legal Service Requests
+// ===========================================================================
+
+enum ServiceArea {
+  CONTACTS // جهات الاتصال والعلاقات القانونية
+  LITIGATION // التقاضي والقضايا
+  POWER_OF_ATTORNEY // التوكيلات والتفويضات
+  CONSULTATION // الاستشارات القانونية
+  ADMIN_REQUEST // المهام والطلبات الإدارية
+  COMPLAINT // البلاغات والشكاوى
+  LEGAL_TEMPLATE // النماذج والصياغات القانونية
+  FILE_MANAGEMENT // إدارة الملفات والمستندات
+  ALERTS // التنبيهات والمواعيد
+  REPORTING // التقارير ولوحات المتابعة
+  ACCOUNTING // الحسابات والفواتير
+  JUDICIAL_EXPENSE // المصروفات القضائية
+  CLIENT_PORTAL // خدمات بوابة العميل
+  CONTRACTS // العقود واتفاقيات الأتعاب
+  OTHER // أخرى
+}
+
+enum ServiceRequestStatus {
+  NEW // جديد
+  IN_REVIEW // قيد المراجعة
+  IN_PROGRESS // جار التنفيذ
+  WAITING_CLIENT // بانتظار العميل
+  COMPLETED // مكتمل
+  CANCELLED // ملغى
+}
+
+enum ServiceRequestPriority {
+  LOW // منخفضة
+  MEDIUM // متوسطة
+  HIGH // عالية
+  URGENT // عاجلة
+}
+
+model ServiceRequest {
+  id          String                 @id @default(cuid())
+  title       String
+  serviceArea ServiceArea
+  status      ServiceRequestStatus   @default(NEW)
+  priority    ServiceRequestPriority @default(MEDIUM)
+  description String?
+  dueDate     DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("ServiceRequestCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("ServiceRequestAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  notes ServiceRequestNote[]
+
+  @@index([serviceArea])
+  @@index([status])
+  @@index([priority])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
+}
+
+model ServiceRequestNote {
+  id        String         @id @default(cuid())
+  body      String
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?          @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime       @default(now())
+
+  @@index([requestId])
+}
 // ===========================================================================
 //  سجل التدقيق  —  Audit Log
 // ===========================================================================

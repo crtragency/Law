@@ -17,6 +17,8 @@ export default async function DashboardLayout({
   const items: NavItem[] = [
     { href: "/dashboard", label: "الرئيسية", icon: "home" },
   ];
+  if (hasPermission(user.role, "services.view"))
+    items.push({ href: "/services", label: "الخدمات والوحدات", icon: "scale" });
   if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
   if (hasPermission(user.role, "clients.view"))

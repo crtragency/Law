@@ -17,6 +17,8 @@ export type Permission =
   | "tasks.assignOthers" // إسناد مهام لموظفين آخرين
   | "events.view"
   | "events.manage"
+  | "services.view" // عرض كتالوج الخدمات وطلبات الخدمات القانونية
+  | "services.manage" // إنشاء ومتابعة طلبات الخدمات القانونية
   | "contracts.view" // عرض اتفاقيات الأتعاب
   | "contracts.manage" // إنشاء/تعديل الاتفاقيات
   | "firm.manage" // تعديل بيانات الشركة (أدمن فقط)
@@ -36,6 +38,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.assignOthers",
     "events.view",
     "events.manage",
+    "services.view",
+    "services.manage",
     "contracts.view",
     "contracts.manage",
     "firm.manage",
@@ -53,6 +57,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.assignOthers",
     "events.view",
     "events.manage",
+    "services.view",
+    "services.manage",
     "contracts.view",
     "contracts.manage",
   ],
@@ -66,6 +72,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.manage",
     "events.view",
     "events.manage",
+    "services.view",
+    "services.manage",
   ],
   SECRETARY: [
     "clients.view",
@@ -75,6 +83,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "tasks.view",
     "events.view",
     "events.manage",
+    "services.view",
+    "services.manage",
     "contracts.view",
   ],
   ACCOUNTANT: [
@@ -84,6 +94,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.view",
     "contracts.view",
     "contracts.manage",
+    "services.view",
+    "services.manage",
   ],
 };
 
