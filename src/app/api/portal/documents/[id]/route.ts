@@ -18,7 +18,7 @@ export async function GET(
 
   const { id } = await params;
   const doc = await prisma.document.findFirst({
-    where: { id, case: { clientId: client.id } },
+    where: { id, visibility: "PORTAL", case: { clientId: client.id } },
   });
   if (!doc) {
     return new NextResponse("المستند غير موجود", { status: 404 });
