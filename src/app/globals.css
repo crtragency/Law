@@ -5,15 +5,30 @@
 body {
   @apply bg-paper text-ink antialiased;
   font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-/* إظهار حالة التركيز بوضوح للوحة المفاتيح */
+::selection {
+  background: #cdae63;
+  color: #071812;
+}
+
 :focus-visible {
   outline: 2px solid #3d7660;
   outline-offset: 2px;
 }
 
-/* الطباعة: إخفاء كل ما هو ليس المستند نفسه، وإظهار الورقة نظيفة */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -34,28 +49,57 @@ body {
   }
 }
 
-/* احترام تفضيل تقليل الحركة */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
 }
 
 @layer components {
-  /* --- الطباعة --- */
-  .page-title {
-    @apply font-display text-2xl font-bold text-ink;
+  .dashboard-shell {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(245, 244, 239, 0) 340px),
+      theme("colors.paper");
   }
 
-  /* توقيع الهوية: السطر المزدوج أسفل عناوين الصفحات — من تقاليد
-     السجلات والمستندات الرسمية (سطر ثخين يليه سطر رفيع). */
+  .dashboard-main {
+    animation: page-in 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 175, 99, 0.45) rgba(255, 255, 255, 0.06);
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(205, 175, 99, 0.45);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+  }
+
+  .page-title {
+    @apply font-display text-2xl font-bold tracking-normal text-ink;
+  }
+
   .rule-double {
     border-top: 2px solid theme("colors.brand.900");
   }
+
   .rule-double::after {
     content: "";
     display: block;
@@ -64,47 +108,44 @@ body {
     opacity: 0.3;
   }
 
-  /* --- الحقول --- */
   .field {
-    @apply w-full rounded-md border border-line bg-white px-3 py-2 text-sm
-      text-ink outline-none transition placeholder:text-gray-400
-      focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink outline-none
+      transition placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
   }
+
   .label {
     @apply mb-1 block text-[13px] font-medium text-gray-600;
   }
 
-  /* --- الأزرار --- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2
-      text-sm font-semibold transition disabled:cursor-not-allowed
-      disabled:opacity-60;
-  }
-  .btn-primary {
-    @apply btn bg-brand-700 text-white hover:bg-brand-800 active:bg-brand-900;
-  }
-  .btn-secondary {
-    @apply btn border border-line bg-white text-ink hover:border-brand-300
-      hover:bg-brand-50/40;
-  }
-  .btn-danger {
-    @apply btn bg-seal-600 text-white hover:bg-seal-700;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold
+      shadow-sm shadow-black/[0.03] transition duration-200 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
-  /* --- الأسطح --- */
+  .btn-primary {
+    @apply btn bg-brand-700 text-white hover:-translate-y-0.5 hover:bg-brand-800 active:translate-y-0 active:bg-brand-900;
+  }
+
+  .btn-secondary {
+    @apply btn border border-line bg-white text-ink hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50/40;
+  }
+
+  .btn-danger {
+    @apply btn bg-seal-600 text-white hover:-translate-y-0.5 hover:bg-seal-700 active:translate-y-0;
+  }
+
   .card {
-    @apply rounded-lg border border-line bg-white p-5;
+    @apply rounded-lg border border-line bg-white p-5 shadow-sm shadow-black/[0.035] transition duration-200;
   }
 
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px]
-      font-semibold;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
   }
 
-  /* --- الجداول: أسطر السجل --- */
   .table-th {
     @apply px-4 py-2.5 text-right text-[11px] font-semibold text-gray-500;
   }
+
   .table-td {
     @apply px-4 py-3 text-sm text-gray-700;
   }

@@ -4,7 +4,7 @@ import { hasPermission } from "@/lib/rbac";
 import { ROLE_LABELS } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { Sidebar, type NavItem } from "@/components/sidebar";
-import { IconBell, IconMessage } from "@/components/icons";
+import { IconBell, IconMessage, IconSearch } from "@/components/icons";
 
 export default async function DashboardLayout({
   children,
@@ -60,14 +60,19 @@ export default async function DashboardLayout({
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="dashboard-shell flex min-h-screen flex-col bg-paper lg:flex-row">
       <Sidebar
         items={items}
         userName={user.name}
         roleLabel={ROLE_LABELS[user.role]}
       />
-      <div className="flex flex-1 flex-col overflow-x-hidden">
-        <header className="sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-line bg-paper/90 px-4 py-2.5 backdrop-blur sm:px-6 lg:px-8">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-paper/90 px-4 py-3 shadow-sm shadow-black/[0.02] backdrop-blur-xl sm:px-6 lg:px-8">
+          {hasPermission(user.role, "search.view") && (
+            <HeaderButton href="/search" count={0} label="البحث العام">
+              <IconSearch />
+            </HeaderButton>
+          )}
           <HeaderButton
             href="/messages"
             count={unreadMessages}
@@ -83,7 +88,7 @@ export default async function DashboardLayout({
             <IconBell />
           </HeaderButton>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="dashboard-main flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
@@ -104,7 +109,7 @@ function HeaderButton({
     <Link
       href={href}
       aria-label={label}
-      className="relative flex h-9 w-9 items-center justify-center rounded-md border border-line bg-white text-gray-500 transition hover:border-brand-300 hover:text-brand-700"
+      className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white/95 text-gray-500 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:text-brand-700"
     >
       {children}
       {count > 0 && (
