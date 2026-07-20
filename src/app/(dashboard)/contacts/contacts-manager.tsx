@@ -55,10 +55,15 @@ export function ContactsManager({
   const [state, action] = useActionState(saveContactAction, EMPTY);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+    <div className="workspace-grid">
       {canManage && (
-        <form action={action} className="card h-fit space-y-3">
-          <h2 className="font-display text-lg font-bold">جهة جديدة</h2>
+        <form action={action} className="form-panel h-fit space-y-4">
+          <div className="form-heading">
+            <div>
+              <h2 className="form-title">جهة جديدة</h2>
+              <p className="form-subtitle">محكمة، خبير، جهة حكومية، خصم، أو مزود خدمة مرتبط بالملف.</p>
+            </div>
+          </div>
           <div>
             <label className="label">نوع الجهة</label>
             <select name="type" className="field" defaultValue="OTHER">
@@ -73,11 +78,11 @@ export function ContactsManager({
             <label className="label">الاسم</label>
             <input name="name" required className="field" placeholder="اسم الجهة أو الشخص" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="form-grid">
             <input name="organization" className="field" placeholder="المنظمة" />
             <input name="roleTitle" className="field" placeholder="الصفة" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="form-grid">
             <input name="phone" className="field" placeholder="الهاتف" dir="ltr" />
             <input name="email" className="field" placeholder="البريد" dir="ltr" />
           </div>
@@ -106,7 +111,7 @@ export function ContactsManager({
       )}
 
       <div className={canManage ? "" : "lg:col-span-2"}>
-        <div className="card overflow-x-auto p-0">
+        <div className="data-panel overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead className="border-b border-line bg-paper/60">
               <tr>

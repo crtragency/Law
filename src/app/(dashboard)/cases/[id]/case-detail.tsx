@@ -87,11 +87,11 @@ export function NotesSection({
 }) {
   const [state, action] = useActionState(addCaseNoteAction, EMPTY);
   return (
-    <div className="card">
-      <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+    <div className="form-panel">
+      <h3 className="mb-5 flex items-center gap-2 font-display text-xl font-bold">
         <IconMessage className="h-5 w-5 text-brand-600" /> ملاحظات الفريق
       </h3>
-      <form action={action} className="mb-4 space-y-2">
+      <form action={action} className="mb-5 space-y-3">
         <input type="hidden" name="caseId" value={caseId} />
         <textarea
           name="body"
@@ -110,7 +110,7 @@ export function NotesSection({
           <p className="text-sm text-gray-500">لا توجد ملاحظات بعد</p>
         ) : (
           notes.map((n) => (
-            <div key={n.id} className="rounded-lg bg-gray-50 p-3">
+            <div key={n.id} className="rounded-2xl bg-gray-50 p-4">
               <p className="whitespace-pre-wrap text-sm text-gray-800">
                 {n.body}
               </p>
@@ -203,14 +203,14 @@ export function DocumentsSection({
   }
 
   return (
-    <div className="card">
-      <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+    <div className="form-panel">
+      <h3 className="mb-5 flex items-center gap-2 font-display text-xl font-bold">
         <IconPaperclip className="h-5 w-5 text-brand-600" /> المستندات
       </h3>
 
       {canManage && (
-        <div className="mb-5 rounded-md border border-line bg-paper/60 p-3">
-          <div className="mb-3 flex rounded-md border border-line bg-white p-0.5 text-sm font-medium">
+        <div className="mb-6 rounded-2xl border border-line bg-paper/70 p-4">
+          <div className="mb-4 flex rounded-xl border border-line bg-white p-1 text-sm font-semibold">
             <button
               type="button"
               onClick={() => setMode("upload")}
@@ -236,7 +236,7 @@ export function DocumentsSection({
           </div>
 
           {mode === "upload" ? (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="form-grid">
               <input
                 ref={titleRef}
                 className="field"
@@ -269,7 +269,7 @@ export function DocumentsSection({
               </div>
             </div>
           ) : (
-            <form action={addAction} className="grid gap-2 sm:grid-cols-2">
+            <form action={addAction} className="form-grid">
               <input type="hidden" name="caseId" value={caseId} />
               <input
                 name="title"

@@ -76,14 +76,16 @@ export function ServicesManager({
   const openRequests = requests.filter((r) => !["COMPLETED", "CANCELLED"].includes(r.status)).length;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(280px,380px)_1fr]">
+    <div className="workspace-grid">
       {canManage && (
-        <form action={action} className="card h-fit space-y-3">
-          <div>
-            <h2 className="font-display text-lg font-bold text-ink">طلب خدمة جديد</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <form action={action} className="form-panel h-fit space-y-4">
+          <div className="form-heading">
+            <div>
+              <h2 className="form-title">طلب خدمة جديد</h2>
+              <p className="form-subtitle">
               سجّل أي خدمة قانونية أو إدارية غير مغطاة بشاشة مستقلة.
-            </p>
+              </p>
+            </div>
           </div>
 
           <input type="hidden" name="status" value="NEW" />
@@ -104,7 +106,7 @@ export function ServicesManager({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="form-grid">
             <div>
               <label className="label">الأولوية</label>
               <select name="priority" className="field" defaultValue="MEDIUM">
@@ -184,11 +186,11 @@ export function ServicesManager({
         </div>
 
         {requests.length === 0 ? (
-          <div className="card py-12 text-center text-sm text-gray-500">
+          <div className="data-panel py-12 text-center text-sm text-gray-500">
             لا توجد طلبات خدمات بعد
           </div>
         ) : (
-          <div className="card overflow-x-auto p-0">
+          <div className="data-panel overflow-x-auto">
             <table className="w-full min-w-[980px]">
               <thead className="border-b border-line bg-paper/60">
                 <tr>

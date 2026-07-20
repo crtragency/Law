@@ -46,16 +46,21 @@ export default async function LitigationPage() {
   ]);
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title="إجراءات التقاضي"
         subtitle="مراحل القضية، الجلسات، الأحكام، الإجراء التالي، والمسؤول"
       />
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="workspace-grid">
         {canManage && (
-          <form action={saveLitigationStepFormAction} className="card h-fit space-y-3">
-            <h2 className="font-display text-lg font-bold">إجراء جديد</h2>
+          <form action={saveLitigationStepFormAction} className="form-panel h-fit space-y-4">
+            <div className="form-heading">
+              <div>
+                <h2 className="form-title">إجراء جديد</h2>
+                <p className="form-subtitle">سجل جلسة، حكم، مذكرة، مهلة، أو إجراء متابعة للقضية.</p>
+              </div>
+            </div>
             <input name="title" required className="field" placeholder="مثال: إعداد مذكرة الرد" />
             <select name="caseId" required className="field" defaultValue="">
               <option value="">اختر القضية</option>
@@ -63,7 +68,7 @@ export default async function LitigationPage() {
                 <option key={c.id} value={c.id}>{c.caseNumber} — {c.title}</option>
               ))}
             </select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <select name="stage" className="field" defaultValue="OTHER">
                 {STAGES.map((stage) => <option key={stage} value={stage}>{LITIGATION_STAGE_LABELS[stage]}</option>)}
               </select>
@@ -71,7 +76,7 @@ export default async function LitigationPage() {
                 {STATUSES.map((status) => <option key={status} value={status}>{LITIGATION_STEP_STATUS_LABELS[status]}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <select name="priority" className="field" defaultValue="MEDIUM">
                 {PRIORITIES.map((priority) => <option key={priority} value={priority}>{TASK_PRIORITY_LABELS[priority]}</option>)}
               </select>
@@ -80,11 +85,11 @@ export default async function LitigationPage() {
                 {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="court" className="field" placeholder="المحكمة" />
               <input name="circuit" className="field" placeholder="الدائرة" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="sessionDate" type="datetime-local" className="field" />
               <input name="dueDate" type="date" className="field" />
             </div>
@@ -96,7 +101,7 @@ export default async function LitigationPage() {
         )}
 
         <div className={canManage ? "" : "lg:col-span-2"}>
-          <div className="card overflow-x-auto p-0">
+          <div className="data-panel overflow-x-auto">
             <table className="w-full min-w-[1000px]">
               <thead className="border-b border-line bg-paper/60">
                 <tr>

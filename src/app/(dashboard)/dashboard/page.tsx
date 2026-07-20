@@ -161,7 +161,7 @@ export default async function DashboardPage({
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
             <IconCalendar className="text-brand-600" /> المواعيد القادمة
           </h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {upcomingEvents.length === 0 ? (
               <p className="p-5 text-sm text-gray-500">لا توجد مواعيد قادمة</p>
             ) : (
@@ -196,7 +196,7 @@ export default async function DashboardPage({
             <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
               <IconFolder className="text-brand-600" /> أحدث القضايا
             </h2>
-            <div className="card divide-y divide-gray-100 p-0">
+            <div className="data-panel divide-y divide-gray-100">
               {recentCases.length === 0 ? (
                 <p className="p-5 text-sm text-gray-500">لا توجد قضايا بعد</p>
               ) : (

@@ -75,14 +75,14 @@ export function ClientsManager({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm shadow-black/[0.025]">
         {canManage && (
           <button onClick={openNew} className="btn-primary">
             <IconPlus className="h-4 w-4" /> موكّل جديد
           </button>
         )}
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full max-w-md">
           <IconSearch className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             className="field pr-9"
@@ -198,8 +198,8 @@ function ClientForm({
   }, [state, onClose]);
 
   return (
-    <div className="card">
-      <h3 className="mb-4 font-display text-lg font-bold">
+    <div className="form-panel">
+      <h3 className="form-title mb-5">
         {client ? "تعديل بيانات الموكّل" : "إضافة موكّل جديد"}
       </h3>
       {state.error && (
@@ -214,7 +214,7 @@ function ClientForm({
       )}
 
       {/* نوع الموكّل */}
-      <div className="mb-4 flex rounded-md border border-line bg-white p-0.5 text-sm font-medium">
+      <div className="mb-5 flex rounded-xl border border-line bg-paper p-1 text-sm font-semibold">
         <button
           type="button"
           onClick={() => setType("INDIVIDUAL")}
@@ -235,7 +235,7 @@ function ClientForm({
         </button>
       </div>
 
-      <form action={action} className="grid gap-4 sm:grid-cols-2">
+      <form action={action} className="form-grid">
         {client && <input type="hidden" name="id" value={client.id} />}
         <input type="hidden" name="type" value={type} />
 
@@ -379,7 +379,7 @@ function PortalSection({ client }: { client: ClientRow }) {
   }
 
   return (
-    <div className="mt-6 rounded-md border border-line bg-paper/60 p-4">
+    <div className="mt-6 rounded-2xl border border-line bg-paper/70 p-5">
       <div className="mb-2 flex items-center justify-between">
         <h4 className="font-display font-bold text-ink">بوابة العميل</h4>
         <span

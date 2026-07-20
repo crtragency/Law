@@ -56,8 +56,8 @@ export function CaseForm({
   }, [state, onDone]);
 
   return (
-    <div className="card">
-      <h3 className="mb-4 text-lg font-bold">
+    <div className="form-panel">
+      <h3 className="form-title mb-5">
         {values?.id ? "تعديل القضية" : "قضية جديدة"}
       </h3>
       {state.error && (
@@ -70,7 +70,7 @@ export function CaseForm({
           {state.success}
         </div>
       )}
-      <form action={action} className="grid gap-4 sm:grid-cols-2">
+      <form action={action} className="form-grid">
         {values?.id && <input type="hidden" name="id" value={values.id} />}
         <div>
           <label className="label">رقم القضية *</label>

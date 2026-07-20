@@ -49,7 +49,7 @@ export function UsersManager({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="rounded-2xl border border-line bg-white p-4 shadow-sm shadow-black/[0.025]">
         <button
           onClick={() => setShowCreate((v) => !v)}
           className="btn-primary"
@@ -65,8 +65,8 @@ export function UsersManager({
       </div>
 
       {showCreate && (
-        <div className="card">
-          <h3 className="mb-4 text-lg font-bold">إنشاء حساب موظف</h3>
+        <div className="form-panel">
+          <h3 className="form-title mb-5">إنشاء حساب موظف</h3>
           {createState.error && (
             <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
               {createState.error}
@@ -79,7 +79,7 @@ export function UsersManager({
           )}
           <form
             action={createAction}
-            className="grid gap-4 sm:grid-cols-2"
+            className="form-grid"
             key={createState.success /* reset form after success */}
           >
             <div>
@@ -129,7 +129,7 @@ export function UsersManager({
       )}
 
       {/* جدول الموظفين */}
-      <div className="card overflow-x-auto p-0">
+      <div className="data-panel overflow-x-auto">
         <table className="w-full min-w-[720px]">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr>
@@ -203,7 +203,7 @@ function EditPanel({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {/* تعديل البيانات */}
-      <form action={editAction} className="space-y-3">
+      <form action={editAction} className="form-panel-compact space-y-4">
         <h4 className="font-semibold">تعديل بيانات الموظف</h4>
         <input type="hidden" name="id" value={user.id} />
         {editState.error && (
@@ -255,7 +255,7 @@ function EditPanel({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
       </form>
 
       {/* تغيير كلمة المرور */}
-      <form action={pwAction} className="space-y-3">
+      <form action={pwAction} className="form-panel-compact space-y-4">
         <h4 className="font-semibold">تعيين كلمة مرور جديدة</h4>
         <input type="hidden" name="id" value={user.id} />
         {pwState.error && (

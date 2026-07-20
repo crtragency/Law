@@ -69,9 +69,9 @@ export default async function FinancePage() {
       </div>
 
       {canManage && (
-        <div className="grid gap-4 xl:grid-cols-3">
-          <form action={saveInvoiceFormAction} className="card space-y-3">
-            <h2 className="font-display text-lg font-bold">فاتورة جديدة</h2>
+        <div className="grid gap-6 xl:grid-cols-3">
+          <form action={saveInvoiceFormAction} className="form-panel h-full space-y-4">
+            <h2 className="form-title">فاتورة جديدة</h2>
             <input name="number" required className="field" placeholder="رقم الفاتورة" />
             <select name="clientId" required className="field" defaultValue="">
               <option value="">اختر الموكّل</option>
@@ -85,11 +85,11 @@ export default async function FinancePage() {
               <option value="">بدون اتفاقية</option>
               {contracts.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
             </select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="amountBeforeTaxRiyals" required className="field" placeholder="المبلغ قبل الضريبة" dir="ltr" />
               <input name="taxRate" type="number" defaultValue={15} className="field" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="issueDate" type="date" className="field" />
               <input name="dueDate" type="date" className="field" />
             </div>
@@ -100,8 +100,8 @@ export default async function FinancePage() {
             <button type="submit" className="btn-primary">إضافة فاتورة</button>
           </form>
 
-          <form action={addPaymentFormAction} className="card space-y-3">
-            <h2 className="font-display text-lg font-bold">تسجيل دفعة</h2>
+          <form action={addPaymentFormAction} className="form-panel h-full space-y-4">
+            <h2 className="form-title">تسجيل دفعة</h2>
             <select name="clientId" required className="field" defaultValue="">
               <option value="">اختر الموكّل</option>
               {clientOptions.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
@@ -111,7 +111,7 @@ export default async function FinancePage() {
               {invoices.map((invoice) => <option key={invoice.id} value={invoice.id}>{invoice.number}</option>)}
             </select>
             <input name="amountRiyals" required className="field" placeholder="المبلغ" dir="ltr" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="paidAt" type="date" className="field" />
               <select name="method" className="field" defaultValue="BANK_TRANSFER">
                 {PAYMENT_METHODS.map((method) => <option key={method} value={method}>{PAYMENT_METHOD_LABELS[method]}</option>)}
@@ -122,10 +122,10 @@ export default async function FinancePage() {
             <button type="submit" className="btn-primary">تسجيل دفعة</button>
           </form>
 
-          <form action={saveExpenseFormAction} className="card space-y-3">
-            <h2 className="font-display text-lg font-bold">مصروف قضائي</h2>
+          <form action={saveExpenseFormAction} className="form-panel h-full space-y-4">
+            <h2 className="form-title">مصروف قضائي</h2>
             <input name="title" required className="field" placeholder="عنوان المصروف" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <select name="category" className="field" defaultValue="OTHER">
                 {EXPENSE_CATEGORIES.map((cat) => <option key={cat} value={cat}>{EXPENSE_CATEGORY_LABELS[cat]}</option>)}
               </select>
@@ -142,7 +142,7 @@ export default async function FinancePage() {
               <option value="">بدون قضية</option>
               {cases.map((c) => <option key={c.id} value={c.id}>{c.caseNumber} — {c.title}</option>)}
             </select>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <input name="incurredAt" type="date" className="field" />
               <input name="dueDate" type="date" className="field" />
               <input name="paidAt" type="date" className="field" />
@@ -158,7 +158,7 @@ export default async function FinancePage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">الفواتير</h2>
-          <div className="card overflow-x-auto p-0">
+          <div className="data-panel overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead className="border-b border-line bg-paper/60">
                 <tr><th className="table-th">الرقم</th><th className="table-th">الموكّل</th><th className="table-th">المبلغ</th><th className="table-th">الاستحقاق</th><th className="table-th">الحالة</th></tr>
@@ -184,7 +184,7 @@ export default async function FinancePage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">المصروفات القضائية</h2>
-          <div className="card overflow-x-auto p-0">
+          <div className="data-panel overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead className="border-b border-line bg-paper/60">
                 <tr><th className="table-th">المصروف</th><th className="table-th">التصنيف</th><th className="table-th">المبلغ</th><th className="table-th">القضية</th><th className="table-th">الحالة</th></tr>

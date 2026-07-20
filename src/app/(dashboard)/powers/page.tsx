@@ -34,16 +34,21 @@ export default async function PowersPage() {
   ]);
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title="التوكيلات والتفويضات"
         subtitle="متابعة الوكالات السارية والمنتهية وتنبيهات التجديد"
       />
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="workspace-grid">
         {canManage && (
-          <form action={savePowerFormAction} className="card h-fit space-y-3">
-            <h2 className="font-display text-lg font-bold">وكالة جديدة</h2>
+          <form action={savePowerFormAction} className="form-panel h-fit space-y-4">
+            <div className="form-heading">
+              <div>
+                <h2 className="form-title">وكالة جديدة</h2>
+                <p className="form-subtitle">بيانات التوكيل، صلاحيته، الموكل، والملف المرتبط.</p>
+              </div>
+            </div>
             <input name="number" required className="field" placeholder="رقم الوكالة" />
             <input name="title" required className="field" placeholder="عنوان الوكالة" />
             <select name="status" className="field" defaultValue="ACTIVE">
@@ -65,7 +70,7 @@ export default async function PowersPage() {
                 <option key={c.id} value={c.id}>{c.caseNumber} — {c.title}</option>
               ))}
             </select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="form-grid">
               <input name="issuedAt" type="date" className="field" />
               <input name="expiresAt" type="date" className="field" />
             </div>
@@ -81,7 +86,7 @@ export default async function PowersPage() {
         )}
 
         <div className={canManage ? "" : "lg:col-span-2"}>
-          <div className="card overflow-x-auto p-0">
+          <div className="data-panel overflow-x-auto">
             <table className="w-full min-w-[920px]">
               <thead className="border-b border-line bg-paper/60">
                 <tr>

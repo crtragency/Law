@@ -90,7 +90,7 @@ export default async function CaseDetailPage({
       </div>
 
       {/* بيانات القضية */}
-      <div className="card grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="form-panel form-grid lg:grid-cols-3">
         <Info label="الموكّل" value={c.client.name} />
         <Info label="نوع القضية" value={CASE_TYPE_LABELS[c.caseType]} />
         <Info label="المحكمة" value={c.court ?? "—"} />
@@ -127,7 +127,7 @@ export default async function CaseDetailPage({
         }}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-7 xl:grid-cols-2">
         <DocumentsSection
           caseId={c.id}
           canManage={canManageDocs}

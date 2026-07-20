@@ -47,7 +47,7 @@ export function FirmForm({ firm }: { firm: FirmSettings }) {
   const [state, action] = useActionState(saveFirmAction, EMPTY);
 
   return (
-    <form action={action} className="card space-y-5">
+    <form action={action} className="form-panel space-y-6">
       {state.error && (
         <div className="rounded-md border border-seal-100 bg-seal-50 px-3 py-2 text-sm text-seal-700">
           {state.error}
@@ -59,7 +59,7 @@ export function FirmForm({ firm }: { firm: FirmSettings }) {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="form-grid">
         <div className="sm:col-span-2">
           <Field
             name="name"

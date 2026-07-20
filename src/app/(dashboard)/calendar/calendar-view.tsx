@@ -66,8 +66,8 @@ export function CalendarView({
   const list = tab === "upcoming" ? upcoming : past;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm shadow-black/[0.025]">
         {canManage && (
           <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
             {showNew ? (
@@ -108,7 +108,7 @@ export function CalendarView({
       )}
 
       {list.length === 0 ? (
-        <div className="card text-center text-sm text-gray-500">
+        <div className="data-panel p-8 text-center text-sm text-gray-500">
           لا توجد مواعيد
         </div>
       ) : (
@@ -183,8 +183,8 @@ function EventForm({ cases, onDone }: { cases: Option[]; onDone: () => void }) {
   }, [state, onDone]);
 
   return (
-    <div className="card">
-      <h3 className="mb-4 text-lg font-bold">موعد / جلسة جديدة</h3>
+    <div className="form-panel">
+      <h3 className="form-title mb-5">موعد / جلسة جديدة</h3>
       {state.error && (
         <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}
@@ -195,7 +195,7 @@ function EventForm({ cases, onDone }: { cases: Option[]; onDone: () => void }) {
           {state.success}
         </div>
       )}
-      <form action={action} className="grid gap-4 sm:grid-cols-2">
+      <form action={action} className="form-grid">
         <div className="sm:col-span-2">
           <label className="label">العنوان *</label>
           <input name="title" required className="field" />

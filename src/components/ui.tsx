@@ -15,15 +15,15 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-7">
+    <div className="mb-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="max-w-4xl">
           <h1 className="page-title">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+          {subtitle && <p className="mt-2 max-w-3xl text-sm leading-7 text-gray-500">{subtitle}</p>}
         </div>
         {action}
       </div>
-      <div className="rule-double mt-4" aria-hidden />
+      <div className="rule-double mt-5" aria-hidden />
     </div>
   );
 }
@@ -70,15 +70,15 @@ export function StatCard({
   href?: string;
 }) {
   const inner = (
-    <div className="card flex items-center gap-4 transition hover:border-brand-300">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-700">
+    <div className="card flex min-h-[112px] items-center gap-4 transition hover:-translate-y-0.5 hover:border-brand-300">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
         {icon}
       </div>
       <div className="leading-tight">
-        <div className="font-display text-[26px] font-bold text-ink">
+        <div className="font-display text-[28px] font-bold text-ink">
           {value}
         </div>
-        <div className="mt-0.5 text-[13px] text-gray-500">{label}</div>
+        <div className="mt-1 text-[13px] font-medium text-gray-500">{label}</div>
       </div>
     </div>
   );

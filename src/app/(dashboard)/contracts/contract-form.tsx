@@ -161,7 +161,7 @@ export function ContractForm({
         </div>
       )}
 
-      <div className="card grid gap-4 sm:grid-cols-2">
+      <div className="form-panel form-grid">
         <div>
           <label className="label">رقم الاتفاقية *</label>
           <input
@@ -225,7 +225,7 @@ export function ContractForm({
             placeholder="جدة"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="form-grid">
           <div>
             <label className="label">التاريخ الهجري</label>
             <input
@@ -263,9 +263,9 @@ export function ContractForm({
       </div>
 
       {/* المبالغ والضريبة */}
-      <div className="card space-y-4">
-        <h3 className="font-display font-bold text-ink">الأتعاب والضريبة</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
+      <div className="form-panel space-y-5">
+        <h3 className="form-title">الأتعاب والضريبة</h3>
+        <div className="form-grid-3">
           <div>
             <label className="label">الأتعاب قبل الضريبة (ريال)</label>
             <input
@@ -287,7 +287,7 @@ export function ContractForm({
               onChange={(e) => set("taxRate", toNum(e.target.value))}
             />
           </div>
-          <div className="rounded-md border border-line bg-paper/60 p-3 text-sm">
+          <div className="rounded-2xl border border-line bg-paper/70 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">قبل الضريبة</span>
               <span className="font-medium" dir="ltr">{fmt(calc.base)}</span>
@@ -305,7 +305,7 @@ export function ContractForm({
       </div>
 
       {/* الدفعات */}
-      <div className="card space-y-3">
+      <div className="form-panel space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display font-bold text-ink">الدفعات</h3>
           <div className="flex gap-2">
@@ -320,7 +320,7 @@ export function ContractForm({
 
         <div className="space-y-2">
           {form.installments.map((inst, i) => (
-            <div key={i} className="grid grid-cols-[auto_1fr_1.5fr_auto] items-center gap-2">
+            <div key={i} className="grid gap-3 rounded-xl border border-line bg-paper/50 p-3 lg:grid-cols-[auto_minmax(160px,1fr)_minmax(240px,1.5fr)_auto] lg:items-center">
               <span className="text-xs text-gray-400">دفعة {i + 1}</span>
               <input
                 className="field"
@@ -361,7 +361,7 @@ export function ContractForm({
         </div>
       </div>
 
-      <div className="card">
+      <div className="form-panel">
         <label className="label">ملاحظات داخلية (لا تظهر في العقد)</label>
         <textarea
           className="field"

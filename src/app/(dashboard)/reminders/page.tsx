@@ -95,7 +95,11 @@ export default async function RemindersPage() {
       <PageHeader title="التنبيهات الذكية" subtitle="مواعيد حرجة، انتهاء وكالات، استحقاقات مالية، ومهام قادمة" />
 
       {canManage && (
-        <form action={saveReminderFormAction} className="card grid gap-3 lg:grid-cols-4">
+        <form action={saveReminderFormAction} className="form-panel grid gap-4 lg:grid-cols-4">
+          <div className="lg:col-span-4">
+            <h2 className="form-title">تنبيه جديد</h2>
+            <p className="form-subtitle">موعد مهم، استحقاق مالي، انتهاء توكيل، أو متابعة داخلية.</p>
+          </div>
           <input name="title" required className="field lg:col-span-2" placeholder="عنوان التنبيه" />
           <select name="type" className="field" defaultValue="CUSTOM">
             {TYPES.map((type) => <option key={type} value={type}>{REMINDER_TYPE_LABELS[type]}</option>)}
@@ -122,7 +126,7 @@ export default async function RemindersPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">التنبيهات المفتوحة</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {reminders.length === 0 ? <p className="p-6 text-sm text-gray-500">لا توجد تنبيهات</p> : reminders.map((r) => (
               <div key={r.id} className="flex items-start justify-between gap-3 p-4">
                 <div>
@@ -149,7 +153,7 @@ export default async function RemindersPage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">استحقاقات خلال 14 يوم</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {suggested.length === 0 ? <p className="p-6 text-sm text-gray-500">لا توجد استحقاقات قريبة</p> : suggested.map((item, index) => (
               <Link key={`${item.title}-${index}`} href={item.link} className="block p-4 hover:bg-gray-50">
                 <div className="flex items-center justify-between gap-3">

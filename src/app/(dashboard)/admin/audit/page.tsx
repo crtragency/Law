@@ -58,7 +58,7 @@ export default async function AuditPage({
         title="سجل التدقيق"
         subtitle={`سجل بكل العمليات الحساسة في النظام — ${total} حدث`}
       />
-      <div className="card overflow-x-auto p-0">
+      <div className="data-panel overflow-x-auto">
         <table className="w-full min-w-[720px]">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr>

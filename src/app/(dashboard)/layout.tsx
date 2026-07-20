@@ -88,7 +88,7 @@ export default async function DashboardLayout({
             <IconBell />
           </HeaderButton>
         </header>
-        <main className="dashboard-main flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="dashboard-main mx-auto w-full max-w-[1680px] flex-1 p-5 sm:p-7 lg:p-10">{children}</main>
       </div>
     </div>
   );

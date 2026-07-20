@@ -42,7 +42,7 @@ export default async function NotificationsPage() {
           لا توجد إشعارات بعد
         </div>
       ) : (
-        <div className="card divide-y divide-gray-100 p-0">
+        <div className="data-panel divide-y divide-gray-100">
           {notifications.map((n) => {
             const inner = (
               <div

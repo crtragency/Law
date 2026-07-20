@@ -41,7 +41,7 @@ export default async function ContractsPage() {
           hint={canManage ? "ابدأ بإنشاء اتفاقية أتعاب جديدة" : undefined}
         />
       ) : (
-        <div className="card overflow-x-auto p-0">
+        <div className="data-panel overflow-x-auto">
           <table className="w-full min-w-[720px]">
             <thead className="border-b border-line bg-paper/60">
               <tr>

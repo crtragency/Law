@@ -192,7 +192,7 @@ export default async function ReportsPage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold text-ink">ملخص مالي</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             <FinanceRow label="إجمالي الفواتير" value={formatMoneyLabel(invoiceTotal)} />
             <FinanceRow label="إجمالي التحصيل" value={formatMoneyLabel(paidTotal)} />
             <FinanceRow label="المتبقي للتحصيل" value={formatMoneyLabel(dueTotal)} />
@@ -205,7 +205,7 @@ export default async function ReportsPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section>
           <h2 className="mb-3 font-display text-lg font-bold text-ink">إجراءات التقاضي خلال 14 يوم</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {upcomingLitigation.length === 0 ? (
               <p className="p-5 text-sm text-gray-500">لا توجد إجراءات قريبة</p>
             ) : (
@@ -233,7 +233,7 @@ export default async function ReportsPage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold text-ink">تنبيهات قادمة</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {upcomingReminders.length === 0 ? (
               <p className="p-5 text-sm text-gray-500">لا توجد تنبيهات قريبة</p>
             ) : (
@@ -267,7 +267,7 @@ function ReportSection({ title, children }: { title: string; children: React.Rea
   return (
     <section>
       <h2 className="mb-3 font-display text-lg font-bold text-ink">{title}</h2>
-      <div className="card divide-y divide-gray-100 p-0">{children}</div>
+      <div className="data-panel divide-y divide-gray-100">{children}</div>
     </section>
   );
 }

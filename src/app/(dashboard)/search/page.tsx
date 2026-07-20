@@ -338,7 +338,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             .map((group) => (
               <section key={group.title}>
                 <h2 className="mb-3 font-display text-lg font-bold text-ink">{group.title}</h2>
-                <div className="card divide-y divide-gray-100 p-0">
+                <div className="data-panel divide-y divide-gray-100">
                   {group.results.map((result) => (
                     <Link key={`${group.title}-${result.id}`} href={result.href} className="block p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between gap-3">

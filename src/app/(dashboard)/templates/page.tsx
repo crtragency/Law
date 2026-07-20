@@ -34,9 +34,9 @@ export default async function TemplatesPage() {
       <PageHeader title="النماذج والصياغات القانونية" subtitle="قوالب مذكرات، إنذارات، خطابات، عقود، ولوائح قابلة لإعادة الاستخدام" />
 
       {canManage && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <form action={saveTemplateFormAction} className="card space-y-3">
-            <h2 className="font-display text-lg font-bold">نموذج جديد</h2>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <form action={saveTemplateFormAction} className="form-panel space-y-4">
+            <h2 className="form-title">نموذج جديد</h2>
             <input name="title" required className="field" placeholder="عنوان النموذج" />
             <select name="category" className="field" defaultValue="OTHER">
               {CATEGORIES.map((category) => <option key={category} value={category}>{LEGAL_TEMPLATE_CATEGORY_LABELS[category]}</option>)}
@@ -50,8 +50,8 @@ export default async function TemplatesPage() {
             <button type="submit" className="btn-primary">حفظ النموذج</button>
           </form>
 
-          <form action={saveTemplateOutputFormAction} className="card space-y-3">
-            <h2 className="font-display text-lg font-bold">حفظ مستند من نموذج</h2>
+          <form action={saveTemplateOutputFormAction} className="form-panel space-y-4">
+            <h2 className="form-title">حفظ مستند من نموذج</h2>
             <input name="title" required className="field" placeholder="عنوان المستند" />
             <select name="templateId" className="field" defaultValue="">
               <option value="">بدون نموذج محدد</option>
@@ -74,7 +74,7 @@ export default async function TemplatesPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">مكتبة النماذج</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {templates.length === 0 ? (
               <p className="p-6 text-sm text-gray-500">لا توجد نماذج بعد</p>
             ) : templates.map((template) => (
@@ -96,7 +96,7 @@ export default async function TemplatesPage() {
 
         <section>
           <h2 className="mb-3 font-display text-lg font-bold">المستندات المحفوظة</h2>
-          <div className="card divide-y divide-gray-100 p-0">
+          <div className="data-panel divide-y divide-gray-100">
             {outputs.length === 0 ? (
               <p className="p-6 text-sm text-gray-500">لا توجد مستندات مولدة بعد</p>
             ) : outputs.map((output) => (
