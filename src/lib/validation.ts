@@ -148,6 +148,151 @@ export const serviceRequestSchema = z.object({
   assignedToId: z.string().optional().or(z.literal("")),
 });
 
+export const legalContactSchema = z.object({
+  id: z.string().optional(),
+  type: z.enum([
+    "COURT",
+    "GOVERNMENT",
+    "OPPONENT",
+    "EXPERT",
+    "LAWYER",
+    "SERVICE_PROVIDER",
+    "CLIENT_REPRESENTATIVE",
+    "OTHER",
+  ]),
+  name: z.string().trim().min(2, "اسم الجهة مطلوب").max(200),
+  organization: z.string().trim().max(200).optional().or(z.literal("")),
+  roleTitle: z.string().trim().max(120).optional().or(z.literal("")),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  email: z.string().trim().toLowerCase().max(120).optional().or(z.literal("")),
+  address: z.string().trim().max(300).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+});
+
+export const powerOfAttorneySchema = z.object({
+  id: z.string().optional(),
+  number: z.string().trim().min(1, "رقم الوكالة مطلوب").max(100),
+  title: z.string().trim().min(2, "عنوان الوكالة مطلوب").max(200),
+  status: z.enum(["ACTIVE", "EXPIRING", "EXPIRED", "REVOKED", "ARCHIVED"]),
+  issuedAt: z.string().optional().or(z.literal("")),
+  expiresAt: z.string().optional().or(z.literal("")),
+  issuer: z.string().trim().max(160).optional().or(z.literal("")),
+  representative: z.string().trim().max(160).optional().or(z.literal("")),
+  scope: z.string().trim().max(4000).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  documentUrl: z.string().trim().max(1000).optional().or(z.literal("")),
+  clientId: z.string().min(1, "اختر الموكّل"),
+  caseId: z.string().optional().or(z.literal("")),
+});
+
+export const litigationStepSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "عنوان الإجراء مطلوب").max(200),
+  stage: z.enum([
+    "FILING",
+    "FIRST_INSTANCE",
+    "APPEAL",
+    "CASSATION",
+    "EXECUTION",
+    "SETTLEMENT",
+    "CLOSURE",
+    "OTHER",
+  ]),
+  status: z.enum(["PLANNED", "IN_PROGRESS", "DONE", "WAITING", "CANCELLED"]),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  court: z.string().trim().max(160).optional().or(z.literal("")),
+  circuit: z.string().trim().max(160).optional().or(z.literal("")),
+  sessionDate: z.string().optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+  outcome: z.string().trim().max(2000).optional().or(z.literal("")),
+  nextAction: z.string().trim().max(2000).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  caseId: z.string().min(1, "اختر القضية"),
+  assignedToId: z.string().optional().or(z.literal("")),
+});
+
+export const invoiceSchema = z.object({
+  id: z.string().optional(),
+  number: z.string().trim().min(1, "رقم الفاتورة مطلوب").max(80),
+  status: z.enum(["DRAFT", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"]),
+  issueDate: z.string().optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+  amountBeforeTaxRiyals: z.string().min(1, "المبلغ مطلوب"),
+  taxRate: z.coerce.number().min(0).max(100),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  clientId: z.string().min(1, "اختر الموكّل"),
+  caseId: z.string().optional().or(z.literal("")),
+  contractId: z.string().optional().or(z.literal("")),
+});
+
+export const paymentSchema = z.object({
+  amountRiyals: z.string().min(1, "المبلغ مطلوب"),
+  paidAt: z.string().optional().or(z.literal("")),
+  method: z.enum(["CASH", "BANK_TRANSFER", "CARD", "CHECK", "ONLINE", "OTHER"]),
+  reference: z.string().trim().max(160).optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  invoiceId: z.string().optional().or(z.literal("")),
+  clientId: z.string().min(1, "اختر الموكّل"),
+});
+
+export const judicialExpenseSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "عنوان المصروف مطلوب").max(200),
+  category: z.enum([
+    "COURT_FEE",
+    "EXPERT_FEE",
+    "ENFORCEMENT",
+    "PUBLICATION",
+    "TRANSPORTATION",
+    "TRANSLATION",
+    "GOVERNMENT_FEE",
+    "OTHER",
+  ]),
+  status: z.enum(["PENDING", "APPROVED", "PAID", "REIMBURSED", "REJECTED"]),
+  amountRiyals: z.string().min(1, "المبلغ مطلوب"),
+  incurredAt: z.string().optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+  paidAt: z.string().optional().or(z.literal("")),
+  vendor: z.string().trim().max(160).optional().or(z.literal("")),
+  receiptUrl: z.string().trim().max(1000).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+});
+
+export const legalTemplateSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "عنوان النموذج مطلوب").max(200),
+  category: z.enum(["CONTRACT", "MEMO", "WARNING", "LETTER", "POWER", "LAWSUIT", "EXECUTION", "OTHER"]),
+  body: z.string().trim().min(10, "اكتب محتوى النموذج").max(20000),
+  variables: z.string().trim().max(1000).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  isActive: z.coerce.boolean().default(true),
+});
+
+export const templateOutputSchema = z.object({
+  title: z.string().trim().min(2, "عنوان المستند مطلوب").max(200),
+  content: z.string().trim().min(10, "محتوى المستند مطلوب").max(30000),
+  templateId: z.string().optional().or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+});
+
+export const reminderSchema = z.object({
+  id: z.string().optional(),
+  type: z.enum(["HEARING", "TASK", "SERVICE_REQUEST", "POWER_EXPIRY", "INVOICE_DUE", "EXPENSE_DUE", "CUSTOM"]),
+  status: z.enum(["OPEN", "DONE", "SNOOZED", "CANCELLED"]).default("OPEN"),
+  title: z.string().trim().min(2, "عنوان التنبيه مطلوب").max(200),
+  dueAt: z.string().min(1, "حدد موعد التنبيه"),
+  link: z.string().trim().max(500).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+  userId: z.string().optional().or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+});
+
 export const commentSchema = z.object({
   body: z.string().trim().min(1, "اكتب الملاحظة").max(2000),
 });

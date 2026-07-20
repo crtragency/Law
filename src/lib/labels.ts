@@ -157,6 +157,149 @@ export const SERVICE_PRIORITY_COLORS: Record<string, string> = {
   URGENT: "bg-seal-50 text-seal-700",
 };
 
+export const CONTACT_TYPE_LABELS: Record<string, string> = {
+  COURT: "محكمة / دائرة",
+  GOVERNMENT: "جهة حكومية",
+  OPPONENT: "خصم أو طرف مقابل",
+  EXPERT: "خبير",
+  LAWYER: "محامٍ",
+  SERVICE_PROVIDER: "مزود خدمة",
+  CLIENT_REPRESENTATIVE: "ممثل موكّل",
+  OTHER: "أخرى",
+};
+
+export const POWER_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "سارية",
+  EXPIRING: "قاربت الانتهاء",
+  EXPIRED: "منتهية",
+  REVOKED: "ملغاة",
+  ARCHIVED: "مؤرشفة",
+};
+
+export const POWER_STATUS_COLORS: Record<string, string> = {
+  ACTIVE: "bg-brand-50 text-brand-800",
+  EXPIRING: "bg-brass-100 text-brass-800",
+  EXPIRED: "bg-seal-50 text-seal-700",
+  REVOKED: "bg-seal-50 text-seal-700",
+  ARCHIVED: "bg-gray-100 text-gray-600",
+};
+
+export const LITIGATION_STAGE_LABELS: Record<string, string> = {
+  FILING: "قيد الدعوى",
+  FIRST_INSTANCE: "درجة أولى",
+  APPEAL: "استئناف",
+  CASSATION: "نقض / عليا",
+  EXECUTION: "تنفيذ",
+  SETTLEMENT: "تسوية",
+  CLOSURE: "إغلاق",
+  OTHER: "أخرى",
+};
+
+export const LITIGATION_STEP_STATUS_LABELS: Record<string, string> = {
+  PLANNED: "مخطط",
+  IN_PROGRESS: "جار التنفيذ",
+  DONE: "منجز",
+  WAITING: "بانتظار",
+  CANCELLED: "ملغى",
+};
+
+export const LITIGATION_STEP_STATUS_COLORS: Record<string, string> = {
+  PLANNED: "bg-gray-100 text-gray-700",
+  IN_PROGRESS: "bg-brass-50 text-brass-700",
+  DONE: "bg-brand-50 text-brand-800",
+  WAITING: "bg-brass-100 text-brass-800",
+  CANCELLED: "bg-seal-50 text-seal-700",
+};
+
+export const INVOICE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "مسودة",
+  SENT: "مرسلة",
+  PARTIALLY_PAID: "مدفوعة جزئياً",
+  PAID: "مدفوعة",
+  OVERDUE: "متأخرة",
+  CANCELLED: "ملغاة",
+};
+
+export const INVOICE_STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-gray-100 text-gray-600",
+  SENT: "bg-brand-50 text-brand-800",
+  PARTIALLY_PAID: "bg-brass-50 text-brass-800",
+  PAID: "bg-brand-100 text-brand-900",
+  OVERDUE: "bg-seal-50 text-seal-700",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  CASH: "نقداً",
+  BANK_TRANSFER: "تحويل بنكي",
+  CARD: "بطاقة",
+  CHECK: "شيك",
+  ONLINE: "دفع إلكتروني",
+  OTHER: "أخرى",
+};
+
+export const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
+  COURT_FEE: "رسوم محكمة",
+  EXPERT_FEE: "أتعاب خبير",
+  ENFORCEMENT: "تنفيذ",
+  PUBLICATION: "إعلان ونشر",
+  TRANSPORTATION: "انتقالات",
+  TRANSLATION: "ترجمة",
+  GOVERNMENT_FEE: "رسوم حكومية",
+  OTHER: "أخرى",
+};
+
+export const EXPENSE_STATUS_LABELS: Record<string, string> = {
+  PENDING: "قيد المراجعة",
+  APPROVED: "معتمد",
+  PAID: "مدفوع",
+  REIMBURSED: "مسترد",
+  REJECTED: "مرفوض",
+};
+
+export const EXPENSE_STATUS_COLORS: Record<string, string> = {
+  PENDING: "bg-brass-50 text-brass-800",
+  APPROVED: "bg-brand-50 text-brand-800",
+  PAID: "bg-brand-100 text-brand-900",
+  REIMBURSED: "bg-gray-100 text-gray-700",
+  REJECTED: "bg-seal-50 text-seal-700",
+};
+
+export const LEGAL_TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
+  CONTRACT: "عقد",
+  MEMO: "مذكرة",
+  WARNING: "إنذار",
+  LETTER: "خطاب",
+  POWER: "وكالة",
+  LAWSUIT: "لائحة دعوى",
+  EXECUTION: "تنفيذ",
+  OTHER: "أخرى",
+};
+
+export const REMINDER_TYPE_LABELS: Record<string, string> = {
+  HEARING: "جلسة",
+  TASK: "مهمة",
+  SERVICE_REQUEST: "طلب خدمة",
+  POWER_EXPIRY: "انتهاء وكالة",
+  INVOICE_DUE: "استحقاق فاتورة",
+  EXPENSE_DUE: "استحقاق مصروف",
+  CUSTOM: "مخصص",
+};
+
+export const REMINDER_STATUS_LABELS: Record<string, string> = {
+  OPEN: "مفتوح",
+  DONE: "منجز",
+  SNOOZED: "مؤجل",
+  CANCELLED: "ملغى",
+};
+
+export const REMINDER_STATUS_COLORS: Record<string, string> = {
+  OPEN: "bg-brand-50 text-brand-800",
+  DONE: "bg-brand-100 text-brand-900",
+  SNOOZED: "bg-brass-50 text-brass-800",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
 /** تنسيق التاريخ بالعربية. */
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "—";

@@ -16,6 +16,9 @@ import {
   IconCheck,
   IconCalendar,
   IconFileText,
+  IconShield,
+  IconBuilding,
+  IconBell,
 } from "@/components/icons";
 import Link from "next/link";
 
@@ -28,6 +31,7 @@ export default async function DashboardPage({
   const { error } = await searchParams;
 
   const now = new Date();
+  const soon = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
   const [
     caseCount,
@@ -35,6 +39,9 @@ export default async function DashboardPage({
     clientCount,
     myTaskCount,
     openServiceRequestCount,
+    activePowerCount,
+    unpaidInvoiceCount,
+    upcomingReminderCount,
     upcomingEvents,
     recentCases,
   ] = await Promise.all([
@@ -46,6 +53,15 @@ export default async function DashboardPage({
     }),
     prisma.serviceRequest.count({
       where: { status: { notIn: ["COMPLETED", "CANCELLED"] } },
+    }),
+    prisma.powerOfAttorney.count({
+      where: { status: { in: ["ACTIVE", "EXPIRING"] } },
+    }),
+    prisma.invoice.count({
+      where: { status: { notIn: ["PAID", "CANCELLED"] } },
+    }),
+    prisma.reminder.count({
+      where: { status: "OPEN", dueAt: { gte: now, lte: soon } },
     }),
     prisma.event.findMany({
       where: { startAt: { gte: now } },
@@ -111,6 +127,30 @@ export default async function DashboardPage({
             value={openServiceRequestCount}
             icon={<IconFileText />}
             href="/services"
+          />
+        )}
+        {hasPermission(user.role, "powers.view") && (
+          <StatCard
+            label="توكيلات نشطة"
+            value={activePowerCount}
+            icon={<IconShield />}
+            href="/powers"
+          />
+        )}
+        {hasPermission(user.role, "finance.view") && (
+          <StatCard
+            label="فواتير غير مدفوعة"
+            value={unpaidInvoiceCount}
+            icon={<IconBuilding />}
+            href="/finance"
+          />
+        )}
+        {hasPermission(user.role, "reminders.view") && (
+          <StatCard
+            label="تنبيهات قريبة"
+            value={upcomingReminderCount}
+            icon={<IconBell />}
+            href="/reminders"
           />
         )}
       </div>

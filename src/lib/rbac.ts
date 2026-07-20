@@ -19,6 +19,20 @@ export type Permission =
   | "events.manage"
   | "services.view" // عرض كتالوج الخدمات وطلبات الخدمات القانونية
   | "services.manage" // إنشاء ومتابعة طلبات الخدمات القانونية
+  | "contacts.view"
+  | "contacts.manage"
+  | "powers.view"
+  | "powers.manage"
+  | "litigation.view"
+  | "litigation.manage"
+  | "finance.view"
+  | "finance.manage"
+  | "templates.view"
+  | "templates.manage"
+  | "search.view"
+  | "reports.view"
+  | "reminders.view"
+  | "reminders.manage"
   | "contracts.view" // عرض اتفاقيات الأتعاب
   | "contracts.manage" // إنشاء/تعديل الاتفاقيات
   | "firm.manage" // تعديل بيانات الشركة (أدمن فقط)
@@ -40,6 +54,20 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "contacts.view",
+    "contacts.manage",
+    "powers.view",
+    "powers.manage",
+    "litigation.view",
+    "litigation.manage",
+    "finance.view",
+    "finance.manage",
+    "templates.view",
+    "templates.manage",
+    "search.view",
+    "reports.view",
+    "reminders.view",
+    "reminders.manage",
     "contracts.view",
     "contracts.manage",
     "firm.manage",
@@ -59,6 +87,19 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "contacts.view",
+    "contacts.manage",
+    "powers.view",
+    "powers.manage",
+    "litigation.view",
+    "litigation.manage",
+    "finance.view",
+    "templates.view",
+    "templates.manage",
+    "search.view",
+    "reports.view",
+    "reminders.view",
+    "reminders.manage",
     "contracts.view",
     "contracts.manage",
   ],
@@ -74,6 +115,18 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "contacts.view",
+    "contacts.manage",
+    "powers.view",
+    "powers.manage",
+    "litigation.view",
+    "litigation.manage",
+    "templates.view",
+    "templates.manage",
+    "search.view",
+    "reports.view",
+    "reminders.view",
+    "reminders.manage",
   ],
   SECRETARY: [
     "clients.view",
@@ -85,6 +138,15 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "contacts.view",
+    "contacts.manage",
+    "powers.view",
+    "powers.manage",
+    "litigation.view",
+    "search.view",
+    "reports.view",
+    "reminders.view",
+    "reminders.manage",
     "contracts.view",
   ],
   ACCOUNTANT: [
@@ -92,10 +154,16 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "cases.view",
     "tasks.view",
     "events.view",
-    "contracts.view",
-    "contracts.manage",
     "services.view",
     "services.manage",
+    "contacts.view",
+    "finance.view",
+    "finance.manage",
+    "contracts.view",
+    "contracts.manage",
+    "search.view",
+    "reports.view",
+    "reminders.view",
   ],
 };
 

@@ -21,14 +21,30 @@ export default async function DashboardLayout({
     items.push({ href: "/services", label: "الخدمات والوحدات", icon: "scale" });
   if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
+  if (hasPermission(user.role, "litigation.view"))
+    items.push({ href: "/litigation", label: "التقاضي", icon: "gavel" });
   if (hasPermission(user.role, "clients.view"))
     items.push({ href: "/clients", label: "الموكّلون", icon: "users" });
+  if (hasPermission(user.role, "contacts.view"))
+    items.push({ href: "/contacts", label: "جهات الاتصال", icon: "users" });
+  if (hasPermission(user.role, "powers.view"))
+    items.push({ href: "/powers", label: "التوكيلات", icon: "shield" });
   if (hasPermission(user.role, "tasks.view"))
     items.push({ href: "/tasks", label: "المهام", icon: "check" });
   if (hasPermission(user.role, "events.view"))
     items.push({ href: "/calendar", label: "التقويم", icon: "calendar" });
   if (hasPermission(user.role, "contracts.view"))
     items.push({ href: "/contracts", label: "اتفاقيات الأتعاب", icon: "file" });
+  if (hasPermission(user.role, "finance.view"))
+    items.push({ href: "/finance", label: "المالية", icon: "building" });
+  if (hasPermission(user.role, "templates.view"))
+    items.push({ href: "/templates", label: "النماذج القانونية", icon: "pen" });
+  if (hasPermission(user.role, "reminders.view"))
+    items.push({ href: "/reminders", label: "التنبيهات", icon: "bell" });
+  if (hasPermission(user.role, "reports.view"))
+    items.push({ href: "/reports", label: "التقارير", icon: "file" });
+  if (hasPermission(user.role, "search.view"))
+    items.push({ href: "/search", label: "البحث العام", icon: "search" });
   items.push({ href: "/messages", label: "الرسائل", icon: "message" });
   if (hasPermission(user.role, "users.manage"))
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });

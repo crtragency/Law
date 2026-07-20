@@ -54,6 +54,17 @@ model User {
   createdServiceRequests  ServiceRequest[]     @relation("ServiceRequestCreatedBy")
   assignedServiceRequests ServiceRequest[]     @relation("ServiceRequestAssignedTo")
   serviceRequestNotes     ServiceRequestNote[]
+  createdContacts         LegalContact[]       @relation("LegalContactCreatedBy")
+  createdPowers           PowerOfAttorney[]    @relation("PowerCreatedBy")
+  createdLitigationSteps  LitigationStep[]     @relation("LitigationStepCreatedBy")
+  assignedLitigationSteps LitigationStep[]     @relation("LitigationStepAssignedTo")
+  createdInvoices         Invoice[]            @relation("InvoiceCreatedBy")
+  createdPayments         Payment[]            @relation("PaymentCreatedBy")
+  createdExpenses         JudicialExpense[]    @relation("ExpenseCreatedBy")
+  createdTemplates        LegalTemplate[]      @relation("TemplateCreatedBy")
+  createdTemplateOutputs  TemplateOutput[]     @relation("TemplateOutputCreatedBy")
+  createdReminders        Reminder[]           @relation("ReminderCreatedBy")
+  assignedReminders       Reminder[]           @relation("ReminderAssignedTo")
 
   notifications     Notification[] @relation("UserNotifications")
   messagesSent      Message[]      @relation("MessagesSent")
@@ -155,6 +166,13 @@ model Client {
   cases           Case[]
   contracts       Contract[]
   serviceRequests ServiceRequest[]
+  legalContacts   LegalContact[]
+  powersOfAttorney PowerOfAttorney[]
+  invoices        Invoice[]
+  payments        Payment[]
+  expenses        JudicialExpense[]
+  templateOutputs TemplateOutput[]
+  reminders       Reminder[]
   portalSessions  ClientSession[]
 
   @@index([name])
@@ -226,6 +244,13 @@ model Case {
   events          Event[]
   contracts       Contract[]
   serviceRequests ServiceRequest[]
+  legalContacts   LegalContact[]
+  powersOfAttorney PowerOfAttorney[]
+  litigationSteps LitigationStep[]
+  invoices        Invoice[]
+  expenses        JudicialExpense[]
+  templateOutputs TemplateOutput[]
+  reminders       Reminder[]
 
   @@index([status])
   @@index([caseType])
@@ -257,6 +282,9 @@ model Document {
   storageKey   String // مسار/مفتاح الملف في التخزين
   mimeType     String?
   sizeBytes    Int?
+  category     String?
+  tags         String?
+  visibility   DocumentVisibility @default(PORTAL)
   caseId       String
   case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   uploadedById String?
@@ -413,6 +441,8 @@ model Contract {
   createdById String?
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
+  invoices Invoice[]
+
   @@index([clientId])
   @@index([status])
 }
@@ -437,6 +467,11 @@ enum ServiceArea {
   CLIENT_PORTAL // خدمات بوابة العميل
   CONTRACTS // العقود واتفاقيات الأتعاب
   OTHER // أخرى
+}
+
+enum DocumentVisibility {
+  INTERNAL
+  PORTAL
 }
 
 enum ServiceRequestStatus {
@@ -498,6 +533,374 @@ model ServiceRequestNote {
   createdAt DateTime       @default(now())
 
   @@index([requestId])
+}
+
+// ===========================================================================
+//  دليل الجهات والتوكيلات والتقاضي  —  Contacts, Powers & Litigation
+// ===========================================================================
+
+enum LegalContactType {
+  COURT
+  GOVERNMENT
+  OPPONENT
+  EXPERT
+  LAWYER
+  SERVICE_PROVIDER
+  CLIENT_REPRESENTATIVE
+  OTHER
+}
+
+model LegalContact {
+  id           String           @id @default(cuid())
+  type         LegalContactType @default(OTHER)
+  name         String
+  organization String?
+  roleTitle    String?
+  phone        String?
+  email        String?
+  address      String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("LegalContactCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([name])
+  @@index([clientId])
+  @@index([caseId])
+}
+
+enum PowerStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  REVOKED
+  ARCHIVED
+}
+
+model PowerOfAttorney {
+  id             String      @id @default(cuid())
+  number         String
+  title          String
+  status         PowerStatus @default(ACTIVE)
+  issuedAt       DateTime?
+  expiresAt      DateTime?
+  issuer         String?
+  representative String?
+  scope          String?
+  notes          String?
+  documentUrl    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("PowerCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([number])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([clientId])
+  @@index([caseId])
+}
+
+enum LitigationStage {
+  FILING
+  FIRST_INSTANCE
+  APPEAL
+  CASSATION
+  EXECUTION
+  SETTLEMENT
+  CLOSURE
+  OTHER
+}
+
+enum LitigationStepStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+  WAITING
+  CANCELLED
+}
+
+model LitigationStep {
+  id          String               @id @default(cuid())
+  title       String
+  stage       LitigationStage      @default(OTHER)
+  status      LitigationStepStatus @default(PLANNED)
+  priority    TaskPriority         @default(MEDIUM)
+  court       String?
+  circuit     String?
+  sessionDate DateTime?
+  dueDate     DateTime?
+  outcome     String?
+  nextAction  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation("LitigationStepCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("LitigationStepAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([stage])
+  @@index([status])
+  @@index([sessionDate])
+  @@index([dueDate])
+  @@index([assignedToId])
+}
+
+// ===========================================================================
+//  المالية والمصروفات  —  Finance & Judicial Expenses
+// ===========================================================================
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  number          String        @unique
+  status          InvoiceStatus @default(DRAFT)
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime?
+  amountBeforeTax Int
+  taxRate         Int           @default(15)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  contractId String?
+  contract   Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("InvoiceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  payments Payment[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([contractId])
+  @@index([dueDate])
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  CHECK
+  ONLINE
+  OTHER
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  amount    Int
+  paidAt    DateTime      @default(now())
+  method    PaymentMethod @default(BANK_TRANSFER)
+  reference String?
+  notes     String?
+  createdAt DateTime      @default(now())
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  createdById String?
+  createdBy   User?   @relation("PaymentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([clientId])
+  @@index([paidAt])
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  PAID
+  REIMBURSED
+  REJECTED
+}
+
+enum ExpenseCategory {
+  COURT_FEE
+  EXPERT_FEE
+  ENFORCEMENT
+  PUBLICATION
+  TRANSPORTATION
+  TRANSLATION
+  GOVERNMENT_FEE
+  OTHER
+}
+
+model JudicialExpense {
+  id        String          @id @default(cuid())
+  title     String
+  category  ExpenseCategory @default(OTHER)
+  status    ExpenseStatus   @default(PENDING)
+  amount    Int
+  incurredAt DateTime       @default(now())
+  dueDate    DateTime?
+  paidAt     DateTime?
+  vendor     String?
+  receiptUrl String?
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("ExpenseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([status])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([dueDate])
+}
+
+// ===========================================================================
+//  النماذج القانونية والتذكيرات  —  Templates & Reminders
+// ===========================================================================
+
+enum LegalTemplateCategory {
+  CONTRACT
+  MEMO
+  WARNING
+  LETTER
+  POWER
+  LAWSUIT
+  EXECUTION
+  OTHER
+}
+
+model LegalTemplate {
+  id        String                @id @default(cuid())
+  title     String
+  category  LegalTemplateCategory @default(OTHER)
+  body      String
+  variables String?
+  notes     String?
+  isActive  Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("TemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  outputs TemplateOutput[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model TemplateOutput {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+
+  templateId String?
+  template   LegalTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("TemplateOutputCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([clientId])
+  @@index([caseId])
+}
+
+enum ReminderType {
+  HEARING
+  TASK
+  SERVICE_REQUEST
+  POWER_EXPIRY
+  INVOICE_DUE
+  EXPENSE_DUE
+  CUSTOM
+}
+
+enum ReminderStatus {
+  OPEN
+  DONE
+  SNOOZED
+  CANCELLED
+}
+
+model Reminder {
+  id        String         @id @default(cuid())
+  type      ReminderType   @default(CUSTOM)
+  status    ReminderStatus @default(OPEN)
+  title     String
+  dueAt     DateTime
+  link      String?
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  userId String?
+  user   User? @relation("ReminderAssignedTo", fields: [userId], references: [id], onDelete: SetNull)
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("ReminderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([dueAt])
+  @@index([userId])
+  @@index([clientId])
+  @@index([caseId])
 }
 // ===========================================================================
 //  سجل التدقيق  —  Audit Log
