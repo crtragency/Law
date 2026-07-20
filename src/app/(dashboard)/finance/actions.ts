@@ -6,8 +6,10 @@ import { ensurePermission, AuthError } from "@/lib/auth";
 import { invoiceSchema, judicialExpenseSchema, paymentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
-import { riyalsToHalalas } from "@/lib/money";
+import { computeTax, formatMoneyLabel, riyalsToHalalas } from "@/lib/money";
 import { caseBelongsToClient, dateOrNow, dateOrNull, nullIfEmpty } from "@/lib/action-form";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import { INVOICE_STATUS_LABELS, PAYMENT_METHOD_LABELS, formatDate } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -70,6 +72,19 @@ export async function saveInvoiceAction(
     }
     throw e;
   }
+  if (data.caseId) {
+    const total = computeTax(data.amountBeforeTax, data.taxRate).total;
+    await notifyClientCaseUpdate(data.caseId, {
+      subject: `تحديث فاتورة: ${data.number}`,
+      heading: parsed.data.id ? "تم تحديث فاتورة مرتبطة بقضيتك" : "تم إصدار فاتورة مرتبطة بقضيتك",
+      lines: [
+        `رقم الفاتورة: ${data.number}`,
+        `الحالة: ${INVOICE_STATUS_LABELS[data.status] ?? data.status}`,
+        `الإجمالي: ${formatMoneyLabel(total)}`,
+        ...(data.dueDate ? [`تاريخ الاستحقاق: ${formatDate(data.dueDate)}`] : []),
+      ],
+    });
+  }
 
   revalidatePath("/finance");
   return { ok: true, success: "تم حفظ الفاتورة" };
@@ -105,6 +120,24 @@ export async function addPaymentAction(
     },
   });
   await audit({ action: "payment.create", userId: actor.id, entity: "Payment", entityId: payment.id, ip: await getClientIp() });
+  if (payment.invoiceId) {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: payment.invoiceId },
+      select: { number: true, caseId: true },
+    });
+    if (invoice?.caseId) {
+      await notifyClientCaseUpdate(invoice.caseId, {
+        subject: `تسجيل دفعة على الفاتورة: ${invoice.number}`,
+        heading: "تم تسجيل دفعة مرتبطة بقضيتك",
+        lines: [
+          `رقم الفاتورة: ${invoice.number}`,
+          `المبلغ: ${formatMoneyLabel(payment.amount)}`,
+          `طريقة الدفع: ${PAYMENT_METHOD_LABELS[payment.method] ?? payment.method}`,
+          `تاريخ الدفع: ${formatDate(payment.paidAt)}`,
+        ],
+      });
+    }
+  }
   revalidatePath("/finance");
   return { ok: true, success: "تم تسجيل الدفعة" };
 }

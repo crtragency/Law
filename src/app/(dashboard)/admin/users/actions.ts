@@ -12,6 +12,7 @@ import {
 } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
+import { sendEmail, appUrl } from "@/lib/email";
 
 export interface ActionResult {
   ok: boolean;
@@ -76,6 +77,20 @@ export async function createUserAction(
     entityId: user.id,
     ip: await getClientIp(),
     details: { email: user.email, role: user.role },
+  });
+  const url = appUrl();
+  await sendEmail({
+    to: user.email,
+    subject: "تم إنشاء حسابك في نظام مكتب المحاماة",
+    heading: "تم إنشاء حسابك",
+    lines: [
+      `مرحبًا ${user.name}`,
+      `بريد الدخول: ${user.email}`,
+      `كلمة المرور المؤقتة: ${parsed.data.password}`,
+      "يمكنك تسجيل الدخول ومتابعة المهام والإشعارات الخاصة بك من لوحة المكتب.",
+    ],
+    actionLabel: url ? "تسجيل الدخول" : undefined,
+    actionUrl: url ? `${url}/login` : undefined,
   });
 
   revalidatePath("/admin/users");
@@ -156,9 +171,10 @@ export async function resetPasswordAction(
   const strength = validatePasswordStrength(parsed.data.password);
   if (strength) return { ok: false, error: strength };
 
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: parsed.data.id },
     data: { passwordHash: await hashPassword(parsed.data.password) },
+    select: { email: true, name: true },
   });
 
   // ألغِ كل الجلسات القائمة لهذا المستخدم حتى يدخل بكلمة السر الجديدة.
@@ -170,6 +186,19 @@ export async function resetPasswordAction(
     entity: "User",
     entityId: parsed.data.id,
     ip: await getClientIp(),
+  });
+  const url = appUrl();
+  await sendEmail({
+    to: user.email,
+    subject: "تم تعيين كلمة مرور جديدة لحسابك",
+    heading: "تم تحديث كلمة المرور",
+    lines: [
+      `مرحبًا ${user.name}`,
+      `كلمة المرور الجديدة: ${parsed.data.password}`,
+      "تم إنهاء جلساتك السابقة، برجاء تسجيل الدخول بكلمة المرور الجديدة.",
+    ],
+    actionLabel: url ? "تسجيل الدخول" : undefined,
+    actionUrl: url ? `${url}/login` : undefined,
   });
 
   revalidatePath("/admin/users");

@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, appUrl } from "@/lib/email";
 
 interface NotifyInput {
   userId: string; // المستلِم
@@ -7,6 +8,40 @@ interface NotifyInput {
   title: string;
   body?: string;
   link?: string;
+}
+
+function makeAbsoluteUrl(path?: string): string | undefined {
+  const base = appUrl();
+  if (!base || !path) return undefined;
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+async function sendUserNotificationEmails(
+  userIds: string[],
+  data: Omit<NotifyInput, "userId">
+): Promise<void> {
+  if (userIds.length === 0) return;
+  try {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds }, isActive: true },
+      select: { email: true },
+    });
+    const actionUrl = makeAbsoluteUrl(data.link);
+    await Promise.all(
+      users.map((user) =>
+        sendEmail({
+          to: user.email,
+          subject: data.title,
+          heading: data.title,
+          lines: [data.body ?? "لديك إشعار جديد داخل نظام إدارة مكتب المحاماة."],
+          actionLabel: actionUrl ? "فتح الإشعار" : undefined,
+          actionUrl,
+        })
+      )
+    );
+  } catch (err) {
+    console.error("فشل إرسال إشعار البريد للموظف:", err);
+  }
 }
 
 /**
@@ -24,6 +59,7 @@ export async function notify(input: NotifyInput): Promise<void> {
         link: input.link,
       },
     });
+    await sendUserNotificationEmails([input.userId], input);
   } catch (err) {
     console.error("فشل إنشاء الإشعار:", err);
   }
@@ -46,6 +82,7 @@ export async function notifyMany(
         link: data.link,
       })),
     });
+    await sendUserNotificationEmails(unique, data);
   } catch (err) {
     console.error("فشل إنشاء الإشعارات:", err);
   }

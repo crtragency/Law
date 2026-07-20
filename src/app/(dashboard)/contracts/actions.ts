@@ -7,7 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { ensurePermission, AuthError } from "@/lib/auth";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
-import { riyalsToHalalas } from "@/lib/money";
+import { computeTax, formatMoneyLabel, riyalsToHalalas } from "@/lib/money";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import { CONTRACT_STATUS_LABELS, formatDate } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -127,6 +129,19 @@ export async function saveContractAction(
       entity: "Contract",
       entityId: id,
       ip,
+    });
+  }
+  if (data.caseId) {
+    const total = computeTax(data.amountBeforeTax, data.taxRate).total;
+    await notifyClientCaseUpdate(data.caseId, {
+      subject: `تحديث اتفاقية أتعاب: ${data.number}`,
+      heading: parsed.data.id ? "تم تحديث اتفاقية مرتبطة بقضيتك" : "تم إنشاء اتفاقية مرتبطة بقضيتك",
+      lines: [
+        `رقم الاتفاقية: ${data.number}`,
+        `الحالة: ${CONTRACT_STATUS_LABELS[data.status] ?? data.status}`,
+        `الإجمالي: ${formatMoneyLabel(total)}`,
+        ...(data.dateGregorian ? [`تاريخ الاتفاقية: ${formatDate(data.dateGregorian)}`] : []),
+      ],
     });
   }
 

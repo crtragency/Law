@@ -102,6 +102,15 @@ export async function saveCaseAction(
         entityId: created.id,
         ip,
       });
+      await notifyClientCaseUpdate(created.id, {
+        subject: `تم فتح قضية جديدة: ${created.title}`,
+        heading: "تم فتح قضية جديدة لك",
+        lines: [
+          `قضية: ${created.title} (${created.caseNumber})`,
+          `الحالة الحالية: ${CASE_STATUS_LABELS[created.status] ?? created.status}`,
+          ...(created.court ? [`المحكمة: ${created.court}`] : []),
+        ],
+      });
     }
   } catch (e: unknown) {
     // خطأ تفرّد رقم القضية.
@@ -227,7 +236,7 @@ export async function addDocumentAction(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
   }
 
-  await prisma.document.create({
+  const document = await prisma.document.create({
     data: {
       caseId: parsed.data.caseId,
       title: parsed.data.title,
@@ -243,6 +252,16 @@ export async function addDocumentAction(
     entityId: parsed.data.caseId,
     ip: await getClientIp(),
   });
+  if (document.visibility === "PORTAL") {
+    await notifyClientCaseUpdate(parsed.data.caseId, {
+      subject: `مستند جديد على قضيتك: ${document.title}`,
+      heading: "تمت إضافة مستند جديد لقضيتك",
+      lines: [
+        `المستند: ${document.title}`,
+        `الملف: ${document.fileName}`,
+      ],
+    });
+  }
 
   revalidatePath(`/cases/${parsed.data.caseId}`);
   return { ok: true, success: "تمت إضافة المستند" };
@@ -346,7 +365,7 @@ export async function registerUploadedDocumentAction(input: {
     return { ok: false, error: "مسار غير صالح" };
   }
 
-  await prisma.document.create({
+  const document = await prisma.document.create({
     data: {
       caseId: parsed.data.caseId,
       title: parsed.data.title,
@@ -365,6 +384,16 @@ export async function registerUploadedDocumentAction(input: {
     ip: await getClientIp(),
     details: { fileName: parsed.data.fileName, sizeBytes: parsed.data.sizeBytes },
   });
+  if (document.visibility === "PORTAL") {
+    await notifyClientCaseUpdate(parsed.data.caseId, {
+      subject: `مستند جديد على قضيتك: ${document.title}`,
+      heading: "تم رفع مستند جديد لقضيتك",
+      lines: [
+        `المستند: ${document.title}`,
+        `الملف: ${document.fileName}`,
+      ],
+    });
+  }
 
   revalidatePath(`/cases/${parsed.data.caseId}`);
   return { ok: true, success: "تم رفع المستند" };

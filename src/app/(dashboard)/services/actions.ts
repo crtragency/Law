@@ -7,6 +7,13 @@ import { serviceRequestSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { notify } from "@/lib/notifications";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import {
+  SERVICE_AREA_LABELS,
+  SERVICE_PRIORITY_LABELS,
+  SERVICE_STATUS_LABELS,
+  formatDate,
+} from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -115,6 +122,19 @@ export async function saveServiceRequestAction(
       link: "/services",
     });
   }
+  if (data.caseId) {
+    await notifyClientCaseUpdate(data.caseId, {
+      subject: `تحديث طلب خدمة: ${parsed.data.title}`,
+      heading: parsed.data.id ? "تم تحديث طلب خدمة مرتبط بقضيتك" : "تم إنشاء طلب خدمة مرتبط بقضيتك",
+      lines: [
+        `الطلب: ${parsed.data.title}`,
+        `الخدمة: ${SERVICE_AREA_LABELS[data.serviceArea] ?? data.serviceArea}`,
+        `الحالة: ${SERVICE_STATUS_LABELS[data.status] ?? data.status}`,
+        `الأولوية: ${SERVICE_PRIORITY_LABELS[data.priority] ?? data.priority}`,
+        ...(data.dueDate ? [`تاريخ الاستحقاق: ${formatDate(data.dueDate)}`] : []),
+      ],
+    });
+  }
 
   revalidatePath("/services");
   return { ok: true, success: parsed.data.id ? "تم حفظ طلب الخدمة" : "تم إنشاء طلب الخدمة" };
@@ -134,9 +154,10 @@ export async function updateServiceRequestStatusAction(
     return { ok: false, error: "قيمة غير صالحة" };
   }
 
-  await prisma.serviceRequest.update({
+  const request = await prisma.serviceRequest.update({
     where: { id },
     data: { status: status as "NEW" | "IN_REVIEW" | "IN_PROGRESS" | "WAITING_CLIENT" | "COMPLETED" | "CANCELLED" },
+    select: { title: true, caseId: true },
   });
 
   await audit({
@@ -147,6 +168,16 @@ export async function updateServiceRequestStatusAction(
     ip: await getClientIp(),
     details: { status },
   });
+  if (request.caseId) {
+    await notifyClientCaseUpdate(request.caseId, {
+      subject: `تحديث حالة طلب خدمة: ${request.title}`,
+      heading: "تم تحديث حالة طلب خدمة مرتبط بقضيتك",
+      lines: [
+        `الطلب: ${request.title}`,
+        `الحالة الجديدة: ${SERVICE_STATUS_LABELS[status] ?? status}`,
+      ],
+    });
+  }
 
   revalidatePath("/services");
   return { ok: true, success: "تم تحديث الحالة" };

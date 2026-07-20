@@ -7,6 +7,8 @@ import { powerOfAttorneySchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { caseBelongsToClient, dateOrNull, nullIfEmpty } from "@/lib/action-form";
+import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import { POWER_STATUS_LABELS, formatDate } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -64,6 +66,19 @@ export async function savePowerAction(
   } else {
     const created = await prisma.powerOfAttorney.create({ data: { ...data, createdById: actor.id } });
     await audit({ action: "power.create", userId: actor.id, entity: "PowerOfAttorney", entityId: created.id, ip });
+  }
+  if (data.caseId) {
+    await notifyClientCaseUpdate(data.caseId, {
+      subject: `تحديث وكالة: ${data.title}`,
+      heading: parsed.data.id ? "تم تحديث وكالة مرتبطة بقضيتك" : "تمت إضافة وكالة مرتبطة بقضيتك",
+      lines: [
+        `الوكالة: ${data.title}`,
+        `رقم الوكالة: ${data.number}`,
+        `الحالة: ${POWER_STATUS_LABELS[data.status] ?? data.status}`,
+        ...(data.issuedAt ? [`تاريخ الإصدار: ${formatDate(data.issuedAt)}`] : []),
+        ...(data.expiresAt ? [`تاريخ الانتهاء: ${formatDate(data.expiresAt)}`] : []),
+      ],
+    });
   }
 
   revalidatePath("/powers");

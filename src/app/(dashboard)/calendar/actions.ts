@@ -68,6 +68,17 @@ export async function saveEventAction(
       entityId: parsed.data.id,
       ip,
     });
+    if (data.caseId) {
+      await notifyClientCaseUpdate(data.caseId, {
+        subject: `تحديث موعد على قضيتك: ${data.title}`,
+        heading: "تم تحديث موعد مرتبط بقضيتك",
+        lines: [
+          `${EVENT_TYPE_LABELS[data.type] ?? "موعد"}: ${data.title}`,
+          `التاريخ: ${formatDateTime(data.startAt)}`,
+          ...(data.location ? [`المكان: ${data.location}`] : []),
+        ],
+      });
+    }
   } else {
     const created = await prisma.event.create({
       data: { ...data, createdById: actor.id },

@@ -164,7 +164,13 @@ export const legalContactSchema = z.object({
   organization: z.string().trim().max(200).optional().or(z.literal("")),
   roleTitle: z.string().trim().max(120).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
-  email: z.string().trim().toLowerCase().max(120).optional().or(z.literal("")),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("بريد غير صحيح")
+    .optional()
+    .or(z.literal("")),
   address: z.string().trim().max(300).optional().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   clientId: z.string().optional().or(z.literal("")),

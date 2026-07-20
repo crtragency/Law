@@ -7,6 +7,8 @@ import { reminderSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { dateOrNull, nullIfEmpty } from "@/lib/action-form";
+import { notify } from "@/lib/notifications";
+import { REMINDER_TYPE_LABELS, formatDateTime } from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -14,11 +16,11 @@ export interface ActionResult {
   success?: string;
 }
 
-async function guard(): Promise<{ id: string } | ActionResult> {
+async function guard(): Promise<{ id: string; name: string } | ActionResult> {
   if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
   try {
     const user = await ensurePermission("reminders.manage");
-    return { id: user.id };
+    return { id: user.id, name: user.name };
   } catch (e) {
     if (e instanceof AuthError) return { ok: false, error: e.message };
     throw e;
@@ -59,6 +61,15 @@ export async function saveReminderAction(
   } else {
     const created = await prisma.reminder.create({ data: { ...data, createdById: actor.id } });
     await audit({ action: "reminder.create", userId: actor.id, entity: "Reminder", entityId: created.id, ip });
+  }
+  if (data.userId && data.userId !== actor.id) {
+    await notify({
+      userId: data.userId,
+      type: "reminder.assigned",
+      title: "تم إسناد تنبيه إليك",
+      body: `${actor.name}: ${data.title} - ${REMINDER_TYPE_LABELS[data.type] ?? data.type} في ${formatDateTime(data.dueAt)}`,
+      link: data.link ?? "/reminders",
+    });
   }
   revalidatePath("/reminders");
   return { ok: true, success: "تم حفظ التنبيه" };
