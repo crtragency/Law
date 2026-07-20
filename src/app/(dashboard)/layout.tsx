@@ -4,7 +4,8 @@ import { hasPermission } from "@/lib/rbac";
 import { ROLE_LABELS } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { Sidebar, type NavItem } from "@/components/sidebar";
-import { IconBell, IconMessage, IconSearch } from "@/components/icons";
+import { SearchCommand } from "@/components/search-command";
+import { IconBell, IconMessage } from "@/components/icons";
 
 export default async function DashboardLayout({
   children,
@@ -43,8 +44,6 @@ export default async function DashboardLayout({
     items.push({ href: "/reminders", label: "التنبيهات", icon: "bell" });
   if (hasPermission(user.role, "reports.view"))
     items.push({ href: "/reports", label: "التقارير", icon: "file" });
-  if (hasPermission(user.role, "search.view"))
-    items.push({ href: "/search", label: "البحث العام", icon: "search" });
   items.push({ href: "/messages", label: "الرسائل", icon: "message" });
   if (hasPermission(user.role, "users.manage"))
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });
@@ -58,6 +57,7 @@ export default async function DashboardLayout({
     prisma.notification.count({ where: { userId: user.id, read: false } }),
     prisma.message.count({ where: { recipientId: user.id, read: false } }),
   ]);
+  const canSearch = hasPermission(user.role, "search.view");
 
   return (
     <div className="dashboard-shell flex min-h-screen flex-col bg-paper lg:flex-row">
@@ -65,14 +65,11 @@ export default async function DashboardLayout({
         items={items}
         userName={user.name}
         roleLabel={ROLE_LABELS[user.role]}
+        canSearch={canSearch}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-paper/90 px-4 py-3 shadow-sm shadow-black/[0.02] backdrop-blur-xl sm:px-6 lg:px-8">
-          {hasPermission(user.role, "search.view") && (
-            <HeaderButton href="/search" count={0} label="البحث العام">
-              <IconSearch />
-            </HeaderButton>
-          )}
+          {canSearch && <SearchCommand />}
           <HeaderButton
             href="/messages"
             count={unreadMessages}

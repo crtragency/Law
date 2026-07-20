@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logoutAction } from "@/app/(dashboard)/logout/actions";
+import { SearchCommand } from "@/components/search-command";
 import {
   Icon,
   IconChevronLeft,
@@ -23,6 +24,7 @@ interface SidebarProps {
   items: NavItem[];
   userName: string;
   roleLabel: string;
+  canSearch: boolean;
 }
 
 const NAV_GROUPS = [
@@ -36,7 +38,7 @@ const NAV_GROUPS = [
   },
   {
     label: "المال والمتابعة",
-    match: ["/finance", "/reminders", "/reports", "/search"],
+    match: ["/finance", "/reminders", "/reports"],
   },
   {
     label: "الإدارة",
@@ -56,7 +58,7 @@ function groupItems(items: NavItem[]) {
   return remaining.length > 0 ? [...groups, { label: "أخرى", items: remaining }] : groups;
 }
 
-export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
+export function Sidebar({ items, userName, roleLabel, canSearch }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const initials = userName.trim().charAt(0) || "؟";
@@ -97,15 +99,7 @@ export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
           </button>
         </div>
 
-        <Link
-          href="/search"
-          onClick={() => setOpen(false)}
-          className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2.5 text-xs font-medium text-brand-100 transition duration-200 hover:border-brass-300/35 hover:bg-white/[0.09] hover:text-white"
-        >
-          <Icon name="search" className="h-4 w-4 text-brass-200" />
-          <span className="flex-1">بحث سريع داخل المكتب</span>
-          <span className="rounded-md border border-white/10 px-1.5 py-0.5 text-[10px] text-brand-200">/</span>
-        </Link>
+        {canSearch && <SearchCommand variant="sidebar" onOpen={() => setOpen(false)} />}
       </div>
 
       <nav className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-3 lg:px-4" aria-label="القائمة الرئيسية">
