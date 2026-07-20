@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui";
 import { IconSearch } from "@/components/icons";
 import type { DashboardSearchResponse } from "@/lib/search-types";
 
-type SearchCommandVariant = "header" | "sidebar";
-
 const EMPTY_RESPONSE: DashboardSearchResponse = {
   query: "",
   total: 0,
@@ -20,13 +18,7 @@ function isTypingTarget(target: EventTarget | null) {
   return tag === "input" || tag === "textarea" || target.isContentEditable;
 }
 
-export function SearchCommand({
-  variant = "header",
-  onOpen,
-}: {
-  variant?: SearchCommandVariant;
-  onOpen?: () => void;
-}) {
+export function SearchCommand() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState<DashboardSearchResponse>(EMPTY_RESPONSE);
@@ -35,9 +27,8 @@ export function SearchCommand({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const openDialog = useCallback(() => {
-    onOpen?.();
     setOpen(true);
-  }, [onOpen]);
+  }, []);
 
   const closeDialog = useCallback(() => {
     setOpen(false);
@@ -112,29 +103,18 @@ export function SearchCommand({
 
   return (
     <>
-      {variant === "sidebar" ? (
-        <button
-          type="button"
-          onClick={openDialog}
-          className="mt-4 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2.5 text-xs font-medium text-brand-100 transition duration-200 hover:border-brass-300/35 hover:bg-white/[0.09] hover:text-white"
-        >
-          <IconSearch className="h-4 w-4 text-brass-200" />
-          <span className="flex-1 text-right">بحث سريع داخل المكتب</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={openDialog}
-          aria-label="البحث العام"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white/95 text-gray-500 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:text-brand-700"
-        >
-          <IconSearch />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={openDialog}
+        aria-label="البحث العام"
+        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white/95 text-gray-500 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:text-brand-700"
+      >
+        <IconSearch />
+      </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-[90] bg-brand-950/35 p-3 backdrop-blur-sm sm:p-6"
+          className="search-bubble-overlay fixed inset-0 z-[90] bg-brand-950/35 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="global-search-title"
@@ -142,8 +122,8 @@ export function SearchCommand({
             if (event.target === event.currentTarget) closeDialog();
           }}
         >
-          <div className="mx-auto mt-8 flex max-h-[min(760px,calc(100vh-4rem))] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/50 bg-white shadow-2xl shadow-brand-950/20 sm:mt-12">
-            <div className="border-b border-line bg-[linear-gradient(135deg,#ffffff_0%,#f6f3ea_100%)] p-4 sm:p-5">
+          <div className="search-bubble-panel mx-auto mt-8 flex max-h-[min(760px,calc(100vh-4rem))] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/60 bg-white shadow-2xl shadow-brand-950/20 sm:mt-12">
+            <div className="search-bubble-content border-b border-line bg-[radial-gradient(circle_at_12%_18%,rgba(205,175,99,0.20),transparent_32%),linear-gradient(135deg,#ffffff_0%,#f6f3ea_100%)] p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-700 text-white shadow-lg shadow-brand-900/15">
                   <IconSearch className="h-5 w-5" />
@@ -173,7 +153,7 @@ export function SearchCommand({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto bg-paper/65 p-3 sm:p-4">
+            <div className="search-bubble-content min-h-0 flex-1 overflow-y-auto bg-paper/65 p-3 sm:p-4">
               {error ? (
                 <div className="rounded-xl border border-seal-100 bg-seal-50 px-4 py-3 text-sm text-seal-700">
                   {error}

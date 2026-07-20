@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logoutAction } from "@/app/(dashboard)/logout/actions";
-import { SearchCommand } from "@/components/search-command";
 import {
   Icon,
   IconChevronLeft,
@@ -24,7 +23,6 @@ interface SidebarProps {
   items: NavItem[];
   userName: string;
   roleLabel: string;
-  canSearch: boolean;
 }
 
 const NAV_GROUPS = [
@@ -58,7 +56,7 @@ function groupItems(items: NavItem[]) {
   return remaining.length > 0 ? [...groups, { label: "أخرى", items: remaining }] : groups;
 }
 
-export function Sidebar({ items, userName, roleLabel, canSearch }: SidebarProps) {
+export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const initials = userName.trim().charAt(0) || "؟";
@@ -98,8 +96,6 @@ export function Sidebar({ items, userName, roleLabel, canSearch }: SidebarProps)
             <IconChevronLeft className="h-4 w-4" />
           </button>
         </div>
-
-        {canSearch && <SearchCommand variant="sidebar" onOpen={() => setOpen(false)} />}
       </div>
 
       <nav className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-3 lg:px-4" aria-label="القائمة الرئيسية">

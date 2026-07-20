@@ -65,7 +65,6 @@ export default async function DashboardLayout({
         items={items}
         userName={user.name}
         roleLabel={ROLE_LABELS[user.role]}
-        canSearch={canSearch}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-paper/90 px-4 py-3 shadow-sm shadow-black/[0.02] backdrop-blur-xl sm:px-6 lg:px-8">
