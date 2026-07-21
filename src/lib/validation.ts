@@ -286,6 +286,38 @@ export const templateOutputSchema = z.object({
   caseId: z.string().optional().or(z.literal("")),
 });
 
+export const templateGenerateSchema = z.object({
+  title: z.string().trim().max(200).optional().or(z.literal("")),
+  templateId: z.string().min(1, "اختر النموذج"),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+  variables: z.string().trim().max(6000).optional().or(z.literal("")),
+});
+
+export const messageTemplateSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "عنوان قالب الرسالة مطلوب").max(200),
+  channel: z.enum(["EMAIL", "WHATSAPP", "PORTAL"]),
+  trigger: z.string().trim().max(160).optional().or(z.literal("")),
+  subject: z.string().trim().max(200).optional().or(z.literal("")),
+  body: z.string().trim().min(5, "نص الرسالة مطلوب").max(5000),
+  isActive: z.coerce.boolean().default(true),
+});
+
+export const approvalRequestSchema = z.object({
+  title: z.string().trim().min(2, "عنوان الموافقة مطلوب").max(200),
+  type: z.enum(["CONTRACT_APPROVAL", "DOCUMENT_VISIBILITY", "DELETE_REQUEST", "FINANCE_DISCOUNT", "GENERAL"]),
+  entityType: z.string().trim().max(80).optional().or(z.literal("")),
+  entityId: z.string().trim().max(120).optional().or(z.literal("")),
+  reason: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+export const approvalDecisionSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(["APPROVED", "REJECTED", "CANCELLED"]),
+  decisionNote: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
 export const reminderSchema = z.object({
   id: z.string().optional(),
   type: z.enum(["HEARING", "TASK", "SERVICE_REQUEST", "POWER_EXPIRY", "INVOICE_DUE", "EXPENSE_DUE", "CUSTOM"]),

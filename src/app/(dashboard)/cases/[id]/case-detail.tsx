@@ -15,6 +15,8 @@ import {
   type ActionResult,
 } from "../actions";
 import {
+  DOCUMENT_OCR_STATUS_COLORS,
+  DOCUMENT_OCR_STATUS_LABELS,
   DOCUMENT_REQUEST_STATUS_COLORS,
   DOCUMENT_REQUEST_STATUS_LABELS,
   formatDate,
@@ -50,6 +52,8 @@ interface DocItem {
   visibility: string;
   expiresAt: string | null;
   notes: string | null;
+  extractedText: string | null;
+  ocrStatus: string;
   uploaderName: string | null;
   createdAt: string;
 }
@@ -174,6 +178,7 @@ export function DocumentsSection({
   const visibilityRef = useRef<HTMLSelectElement>(null);
   const expiresAtRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
+  const extractedTextRef = useRef<HTMLTextAreaElement>(null);
   const requestRef = useRef<HTMLSelectElement>(null);
   const openDocumentRequests = documentRequests.filter((request) => request.status === "REQUESTED");
 
@@ -221,6 +226,7 @@ export function DocumentsSection({
         visibility: (visibilityRef.current?.value as "INTERNAL" | "PORTAL" | undefined) || "PORTAL",
         expiresAt: expiresAtRef.current?.value || undefined,
         notes: notesRef.current?.value.trim() || undefined,
+        extractedText: extractedTextRef.current?.value.trim() || undefined,
         storageKey: prep.storageKey,
         fileName: file.name,
         mimeType: file.type || undefined,
@@ -236,6 +242,7 @@ export function DocumentsSection({
       if (visibilityRef.current) visibilityRef.current.value = "PORTAL";
       if (expiresAtRef.current) expiresAtRef.current.value = "";
       if (notesRef.current) notesRef.current.value = "";
+      if (extractedTextRef.current) extractedTextRef.current.value = "";
       if (requestRef.current) requestRef.current.value = "";
       setUploadOk(true);
       router.refresh();
@@ -340,6 +347,12 @@ export function DocumentsSection({
                 className="field sm:col-span-2"
                 placeholder="ملاحظات داخلية أو تعليمات عن المستند..."
               />
+              <textarea
+                ref={extractedTextRef}
+                rows={4}
+                className="field sm:col-span-2"
+                placeholder="نص المستند المقروء أو المستخرج OCR ليظهر في البحث العام..."
+              />
               <div className="sm:col-span-2">
                 {uploadError && (
                   <p className="mb-2 text-sm text-seal-600">{uploadError}</p>
@@ -391,6 +404,12 @@ export function DocumentsSection({
                 rows={2}
                 className="field sm:col-span-2"
                 placeholder="ملاحظات عن المستند..."
+              />
+              <textarea
+                name="extractedText"
+                rows={4}
+                className="field sm:col-span-2"
+                placeholder="نص المستند المقروء أو المستخرج OCR ليظهر في البحث العام..."
               />
               <div className="sm:col-span-2">
                 {addState.error && (
@@ -471,6 +490,16 @@ export function DocumentsSection({
                     {d.category ?? "بدون تصنيف"} — {d.visibility === "PORTAL" ? "ظاهر للعميل" : "داخلي فقط"} —{" "}
                     {d.uploaderName ?? "—"} — {formatDateTime(d.createdAt)}
                   </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge className={DOCUMENT_OCR_STATUS_COLORS[d.ocrStatus] ?? "bg-gray-100 text-gray-600"}>
+                      {DOCUMENT_OCR_STATUS_LABELS[d.ocrStatus] ?? d.ocrStatus}
+                    </Badge>
+                    {d.extractedText && (
+                      <span className="max-w-xl truncate text-xs text-gray-500">
+                        مفهرس: {d.extractedText.slice(0, 90)}{d.extractedText.length > 90 ? "..." : ""}
+                      </span>
+                    )}
+                  </div>
                   {d.expiresAt && (
                     <p className="mt-1 text-xs font-semibold text-brass-700">
                       ينتهي في {formatDate(d.expiresAt)}

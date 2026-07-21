@@ -281,6 +281,20 @@ export const DOCUMENT_REQUEST_STATUS_COLORS: Record<string, string> = {
   WAIVED: "bg-gray-100 text-gray-600",
 };
 
+export const DOCUMENT_OCR_STATUS_LABELS: Record<string, string> = {
+  NOT_INDEXED: "غير مفهرس",
+  INDEXED: "مفهرس",
+  NEEDS_OCR: "يحتاج قراءة",
+  FAILED: "فشل الفهرسة",
+};
+
+export const DOCUMENT_OCR_STATUS_COLORS: Record<string, string> = {
+  NOT_INDEXED: "bg-gray-100 text-gray-600",
+  INDEXED: "bg-brand-50 text-brand-800",
+  NEEDS_OCR: "bg-brass-50 text-brass-800",
+  FAILED: "bg-seal-50 text-seal-700",
+};
+
 export const LEGAL_TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   CONTRACT: "عقد",
   MEMO: "مذكرة",
@@ -290,6 +304,34 @@ export const LEGAL_TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   LAWSUIT: "لائحة دعوى",
   EXECUTION: "تنفيذ",
   OTHER: "أخرى",
+};
+
+export const MESSAGE_TEMPLATE_CHANNEL_LABELS: Record<string, string> = {
+  EMAIL: "بريد إلكتروني",
+  WHATSAPP: "واتساب",
+  PORTAL: "بوابة العميل",
+};
+
+export const APPROVAL_STATUS_LABELS: Record<string, string> = {
+  PENDING: "بانتظار الاعتماد",
+  APPROVED: "معتمد",
+  REJECTED: "مرفوض",
+  CANCELLED: "ملغى",
+};
+
+export const APPROVAL_STATUS_COLORS: Record<string, string> = {
+  PENDING: "bg-brass-50 text-brass-800",
+  APPROVED: "bg-brand-50 text-brand-800",
+  REJECTED: "bg-seal-50 text-seal-700",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
+export const APPROVAL_TYPE_LABELS: Record<string, string> = {
+  CONTRACT_APPROVAL: "اعتماد عقد",
+  DOCUMENT_VISIBILITY: "إظهار مستند للعميل",
+  DELETE_REQUEST: "طلب حذف",
+  FINANCE_DISCOUNT: "خصم أو تعديل مالي",
+  GENERAL: "اعتماد عام",
 };
 
 export const REMINDER_TYPE_LABELS: Record<string, string> = {

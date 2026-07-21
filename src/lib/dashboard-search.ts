@@ -3,6 +3,8 @@ import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import {
+  APPROVAL_STATUS_LABELS,
+  APPROVAL_TYPE_LABELS,
   CASE_STATUS_LABELS,
   CONTACT_TYPE_LABELS,
   CONTRACT_STATUS_LABELS,
@@ -14,6 +16,7 @@ import {
   LEGAL_TEMPLATE_CATEGORY_LABELS,
   LITIGATION_STAGE_LABELS,
   LITIGATION_STEP_STATUS_LABELS,
+  MESSAGE_TEMPLATE_CHANNEL_LABELS,
   PAYMENT_METHOD_LABELS,
   POWER_STATUS_COLORS,
   POWER_STATUS_LABELS,
@@ -94,6 +97,31 @@ export async function runDashboardSearch(
           })),
         }))
     );
+    jobs.push(
+      prisma.messageTemplate
+        .findMany({
+          where: {
+            OR: [
+              { title: textFilter },
+              { trigger: textFilter },
+              { subject: textFilter },
+              { body: textFilter },
+            ],
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((templates) => ({
+          title: "قوالب الرسائل",
+          results: templates.map((item) => ({
+            id: `message-template-${item.id}`,
+            title: item.title,
+            href: "/templates",
+            subtitle: item.subject ?? item.trigger ?? undefined,
+            badge: MESSAGE_TEMPLATE_CHANNEL_LABELS[item.channel],
+          })),
+        }))
+    );
   }
 
   if (hasPermission(user.role, "cases.view")) {
@@ -136,6 +164,8 @@ export async function runDashboardSearch(
               { fileName: textFilter },
               { category: textFilter },
               { tags: textFilter },
+              { notes: textFilter },
+              { extractedText: textFilter },
             ],
           },
           include: { case: { select: { id: true, title: true, caseNumber: true } } },
@@ -150,7 +180,7 @@ export async function runDashboardSearch(
             href: `/cases/${item.caseId}`,
             subtitle: `${item.case.caseNumber} - ${item.case.title}`,
             badge: item.visibility === "PORTAL" ? "ظاهر للعميل" : "داخلي",
-            meta: item.fileName,
+            meta: item.category ?? item.fileName,
           })),
         }))
     );
@@ -481,6 +511,43 @@ export async function runDashboardSearch(
             href: "/templates",
             subtitle: item.notes ?? undefined,
             badge: LEGAL_TEMPLATE_CATEGORY_LABELS[item.category],
+          })),
+        }))
+    );
+  }
+
+  if (hasPermission(user.role, "approvals.view")) {
+    const canManageApprovals = hasPermission(user.role, "approvals.manage");
+    jobs.push(
+      prisma.approvalRequest
+        .findMany({
+          where: {
+            AND: [
+              canManageApprovals ? {} : { requestedById: user.id },
+              {
+                OR: [
+                  { title: textFilter },
+                  { entityType: textFilter },
+                  { entityId: textFilter },
+                  { reason: textFilter },
+                  { decisionNote: textFilter },
+                ],
+              },
+            ],
+          },
+          include: { requestedBy: { select: { name: true } } },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((requests) => ({
+          title: "الموافقات",
+          results: requests.map((item) => ({
+            id: `approval-${item.id}`,
+            title: item.title,
+            href: "/approvals",
+            subtitle: item.requestedBy?.name ?? undefined,
+            badge: APPROVAL_STATUS_LABELS[item.status],
+            meta: APPROVAL_TYPE_LABELS[item.type],
           })),
         }))
     );

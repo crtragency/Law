@@ -40,6 +40,8 @@ export default async function DashboardLayout({
     items.push({ href: "/finance", label: "المالية", icon: "building" });
   if (hasPermission(user.role, "templates.view"))
     items.push({ href: "/templates", label: "النماذج القانونية", icon: "pen" });
+  if (hasPermission(user.role, "approvals.view"))
+    items.push({ href: "/approvals", label: "الموافقات", icon: "shield" });
   if (hasPermission(user.role, "reminders.view"))
     items.push({ href: "/reminders", label: "التنبيهات", icon: "bell" });
   if (hasPermission(user.role, "reports.view"))

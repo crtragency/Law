@@ -64,8 +64,11 @@ model User {
   createdExpenses         JudicialExpense[]    @relation("ExpenseCreatedBy")
   createdTemplates        LegalTemplate[]      @relation("TemplateCreatedBy")
   createdTemplateOutputs  TemplateOutput[]     @relation("TemplateOutputCreatedBy")
+  createdMessageTemplates MessageTemplate[]    @relation("MessageTemplateCreatedBy")
   createdReminders        Reminder[]           @relation("ReminderCreatedBy")
   assignedReminders       Reminder[]           @relation("ReminderAssignedTo")
+  approvalRequests        ApprovalRequest[]    @relation("ApprovalRequestedBy")
+  approvalDecisions       ApprovalRequest[]    @relation("ApprovalDecidedBy")
 
   notifications     Notification[] @relation("UserNotifications")
   messagesSent      Message[]      @relation("MessagesSent")
@@ -283,6 +286,13 @@ enum DocumentRequestStatus {
   WAIVED
 }
 
+enum DocumentOcrStatus {
+  NOT_INDEXED
+  INDEXED
+  NEEDS_OCR
+  FAILED
+}
+
 model Document {
   id           String   @id @default(cuid())
   title        String
@@ -295,6 +305,9 @@ model Document {
   visibility   DocumentVisibility @default(PORTAL)
   expiresAt    DateTime?
   notes        String?
+  extractedText String?
+  ocrStatus    DocumentOcrStatus @default(NOT_INDEXED)
+  indexedAt    DateTime?
   caseId       String
   case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   uploadedById String?
@@ -305,6 +318,7 @@ model Document {
   @@index([category])
   @@index([visibility])
   @@index([expiresAt])
+  @@index([ocrStatus])
 }
 
 model DocumentRequest {
@@ -889,6 +903,70 @@ model TemplateOutput {
   @@index([templateId])
   @@index([clientId])
   @@index([caseId])
+}
+
+enum MessageTemplateChannel {
+  EMAIL
+  WHATSAPP
+  PORTAL
+}
+
+model MessageTemplate {
+  id        String                 @id @default(cuid())
+  title     String
+  channel   MessageTemplateChannel @default(EMAIL)
+  trigger   String?
+  subject   String?
+  body      String
+  isActive  Boolean                @default(true)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("MessageTemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([channel])
+  @@index([isActive])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ApprovalType {
+  CONTRACT_APPROVAL
+  DOCUMENT_VISIBILITY
+  DELETE_REQUEST
+  FINANCE_DISCOUNT
+  GENERAL
+}
+
+model ApprovalRequest {
+  id           String         @id @default(cuid())
+  title        String
+  type         ApprovalType   @default(GENERAL)
+  status       ApprovalStatus @default(PENDING)
+  entityType   String?
+  entityId     String?
+  reason       String?
+  decisionNote String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  decidedAt    DateTime?
+
+  requestedById String?
+  requestedBy   User?   @relation("ApprovalRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  decidedById String?
+  decidedBy   User?   @relation("ApprovalDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([type])
+  @@index([entityType, entityId])
+  @@index([requestedById])
 }
 
 enum ReminderType {

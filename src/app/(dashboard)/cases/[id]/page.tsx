@@ -365,6 +365,8 @@ export default async function CaseDetailPage({
             visibility: d.visibility,
             expiresAt: d.expiresAt?.toISOString() ?? null,
             notes: d.notes,
+            extractedText: d.extractedText,
+            ocrStatus: d.ocrStatus,
             uploaderName: d.uploadedBy?.name ?? null,
             createdAt: d.createdAt.toISOString(),
           }))}

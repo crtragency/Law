@@ -35,6 +35,8 @@ export type Permission =
   | "reminders.manage"
   | "contracts.view" // عرض اتفاقيات الأتعاب
   | "contracts.manage" // إنشاء/تعديل الاتفاقيات
+  | "approvals.view"
+  | "approvals.manage"
   | "firm.manage" // تعديل بيانات الشركة (أدمن فقط)
   | "audit.view"; // عرض سجل التدقيق (أدمن فقط)
 
@@ -70,6 +72,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "reminders.manage",
     "contracts.view",
     "contracts.manage",
+    "approvals.view",
+    "approvals.manage",
     "firm.manage",
     "audit.view",
   ],
@@ -102,6 +106,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "reminders.manage",
     "contracts.view",
     "contracts.manage",
+    "approvals.view",
+    "approvals.manage",
   ],
   PARALEGAL: [
     "clients.view",
@@ -127,6 +133,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "reports.view",
     "reminders.view",
     "reminders.manage",
+    "approvals.view",
   ],
   SECRETARY: [
     "clients.view",
@@ -148,6 +155,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "reminders.view",
     "reminders.manage",
     "contracts.view",
+    "approvals.view",
   ],
   ACCOUNTANT: [
     "clients.view",
@@ -164,6 +172,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "search.view",
     "reports.view",
     "reminders.view",
+    "approvals.view",
   ],
 };
 

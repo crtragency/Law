@@ -234,6 +234,7 @@ const documentSchema = z.object({
   visibility: z.enum(["INTERNAL", "PORTAL"]).default("PORTAL"),
   expiresAt: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  extractedText: z.string().trim().max(30000).optional().or(z.literal("")),
 });
 
 const documentRequestSchema = z.object({
@@ -278,6 +279,7 @@ export async function addDocumentAction(
     visibility: formData.get("visibility") || "PORTAL",
     expiresAt: formData.get("expiresAt") ?? "",
     notes: formData.get("notes") ?? "",
+    extractedText: formData.get("extractedText") ?? "",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
@@ -296,6 +298,9 @@ export async function addDocumentAction(
       visibility: parsed.data.visibility,
       expiresAt,
       notes: parsed.data.notes || null,
+      extractedText: parsed.data.extractedText || null,
+      ocrStatus: parsed.data.extractedText ? "INDEXED" : "NEEDS_OCR",
+      indexedAt: parsed.data.extractedText ? new Date() : null,
       uploadedById: actor.id,
     },
   });
@@ -393,6 +398,7 @@ const registerUploadSchema = z.object({
   visibility: z.enum(["INTERNAL", "PORTAL"]).default("PORTAL"),
   expiresAt: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  extractedText: z.string().trim().max(30000).optional().or(z.literal("")),
   requestId: z.string().optional().or(z.literal("")),
 });
 
@@ -408,6 +414,7 @@ export async function registerUploadedDocumentAction(input: {
   visibility?: "INTERNAL" | "PORTAL";
   expiresAt?: string;
   notes?: string;
+  extractedText?: string;
   requestId?: string;
 }): Promise<ActionResult> {
   if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
@@ -443,6 +450,9 @@ export async function registerUploadedDocumentAction(input: {
       visibility: parsed.data.visibility,
       expiresAt,
       notes: parsed.data.notes || null,
+      extractedText: parsed.data.extractedText || null,
+      ocrStatus: parsed.data.extractedText ? "INDEXED" : "NEEDS_OCR",
+      indexedAt: parsed.data.extractedText ? new Date() : null,
       uploadedById: actor.id,
     },
   });
