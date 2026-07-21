@@ -1,6 +1,7 @@
 import "server-only";
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import { prisma } from "@/lib/prisma";
 
 // ===========================================================================
 //  إرسال البريد الإلكتروني عبر Gmail SMTP
@@ -39,7 +40,7 @@ function getTransporter(): Transporter | null {
   return globalForMail.mailer;
 }
 
-interface SendInput {
+export interface SendInput {
   to: string;
   subject: string;
   heading: string;
@@ -72,7 +73,7 @@ function renderHtml(input: SendInput): string {
 }
 
 /** إرسال بريد. يُرجع true عند النجاح. لا يرمي استثناءً. */
-export async function sendEmail(input: SendInput): Promise<boolean> {
+export async function sendEmailNow(input: SendInput): Promise<boolean> {
   const transporter = getTransporter();
   if (!transporter) {
     console.warn("إعدادات Gmail غير مضبوطة — لن يُرسل البريد.");
@@ -90,5 +91,113 @@ export async function sendEmail(input: SendInput): Promise<boolean> {
   } catch (err) {
     console.error("فشل إرسال البريد:", err);
     return false;
+  }
+}
+
+function queueEnabled() {
+  return process.env.EMAIL_QUEUE_DISABLED !== "true";
+}
+
+function inlineProcessingEnabled() {
+  return process.env.EMAIL_QUEUE_INLINE !== "false";
+}
+
+function nextAttemptDate(attempts: number) {
+  const minutes = Math.min(60, Math.max(1, 2 ** Math.max(0, attempts - 1)));
+  return new Date(Date.now() + minutes * 60 * 1000);
+}
+
+function parseQueuedLines(linesJson: string): string[] {
+  try {
+    const parsed = JSON.parse(linesJson);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function enqueueEmail(input: SendInput) {
+  return prisma.emailDelivery.create({
+    data: {
+      to: input.to.trim().toLowerCase(),
+      subject: input.subject,
+      heading: input.heading,
+      linesJson: JSON.stringify(input.lines),
+      actionLabel: input.actionLabel,
+      actionUrl: input.actionUrl,
+      nextAttemptAt: new Date(),
+    },
+  });
+}
+
+export async function processEmailQueue(options: { limit?: number; id?: string } = {}) {
+  const now = new Date();
+  const limit = Math.min(Math.max(options.limit ?? 10, 1), 50);
+  const deliveries = await prisma.emailDelivery.findMany({
+    where: options.id
+      ? { id: options.id, status: { in: ["QUEUED", "FAILED"] } }
+      : {
+          status: { in: ["QUEUED", "FAILED"] },
+          attempts: { lt: 3 },
+          nextAttemptAt: { lte: now },
+        },
+    orderBy: { nextAttemptAt: "asc" },
+    take: limit,
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const delivery of deliveries) {
+    const sending = await prisma.emailDelivery.update({
+      where: { id: delivery.id },
+      data: { status: "SENDING", attempts: { increment: 1 }, lastError: null },
+    });
+    const input: SendInput = {
+      to: sending.to,
+      subject: sending.subject,
+      heading: sending.heading,
+      lines: parseQueuedLines(sending.linesJson),
+      actionLabel: sending.actionLabel ?? undefined,
+      actionUrl: sending.actionUrl ?? undefined,
+    };
+
+    try {
+      const ok = await sendEmailNow(input);
+      if (!ok) throw new Error("SMTP not configured or rejected the message");
+      await prisma.emailDelivery.update({
+        where: { id: sending.id },
+        data: { status: "SENT", sentAt: new Date(), lastError: null },
+      });
+      sent += 1;
+    } catch (err) {
+      failed += 1;
+      const lastError = err instanceof Error ? err.message : "Unknown email error";
+      await prisma.emailDelivery.update({
+        where: { id: sending.id },
+        data: {
+          status: "FAILED",
+          lastError,
+          nextAttemptAt: nextAttemptDate(sending.attempts),
+        },
+      });
+    }
+  }
+
+  return { picked: deliveries.length, sent, failed };
+}
+
+/** يسجل البريد في طابور قابل لإعادة المحاولة، مع محاولة إرسال فورية افتراضيًا. */
+export async function sendEmail(input: SendInput): Promise<boolean> {
+  if (!queueEnabled()) return sendEmailNow(input);
+  try {
+    const queued = await enqueueEmail(input);
+    if (inlineProcessingEnabled()) {
+      await processEmailQueue({ id: queued.id, limit: 1 });
+    }
+    return true;
+  } catch (err) {
+    console.error("فشل تسجيل البريد في الطابور، سيتم محاولة الإرسال المباشر:", err);
+    return sendEmailNow(input);
   }
 }

@@ -9,6 +9,7 @@ import {
   addDocumentAction,
   deleteDocumentAction,
   createUploadUrlAction,
+  reindexDocumentAction,
   registerUploadedDocumentAction,
   requestDocumentFromClientAction,
   updateDocumentRequestStatusAction,
@@ -507,13 +508,31 @@ export function DocumentsSection({
                   )}
                   {d.notes && <p className="mt-1 text-sm text-gray-500">{d.notes}</p>}
                 </div>
-                {canManage && <DeleteDoc id={d.id} caseId={caseId} />}
+                {canManage && (
+                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                    <ReindexDoc id={d.id} caseId={caseId} />
+                    <DeleteDoc id={d.id} caseId={caseId} />
+                  </div>
+                )}
               </div>
             );
           })
         )}
       </div>
     </div>
+  );
+}
+
+function ReindexDoc({ id, caseId }: { id: string; caseId: string }) {
+  const [, action] = useActionState(reindexDocumentAction, EMPTY);
+  return (
+    <form action={action}>
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="caseId" value={caseId} />
+      <button type="submit" className="text-sm font-medium text-brand-700 hover:underline">
+        فهرسة
+      </button>
+    </form>
   );
 }
 

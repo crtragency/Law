@@ -929,6 +929,35 @@ model MessageTemplate {
   @@index([isActive])
 }
 
+enum EmailDeliveryStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model EmailDelivery {
+  id            String              @id @default(cuid())
+  to            String
+  subject       String
+  heading       String
+  linesJson     String
+  actionLabel   String?
+  actionUrl     String?
+  status        EmailDeliveryStatus @default(QUEUED)
+  attempts      Int                 @default(0)
+  maxAttempts   Int                 @default(3)
+  lastError     String?
+  nextAttemptAt DateTime            @default(now())
+  sentAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([createdAt])
+}
+
 enum ApprovalStatus {
   PENDING
   APPROVED

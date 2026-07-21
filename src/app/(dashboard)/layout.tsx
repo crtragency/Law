@@ -53,6 +53,10 @@ export default async function DashboardLayout({
     items.push({ href: "/admin/firm", label: "بيانات الشركة", icon: "building" });
   if (hasPermission(user.role, "audit.view"))
     items.push({ href: "/admin/audit", label: "سجل التدقيق", icon: "file" });
+  if (hasPermission(user.role, "audit.view"))
+    items.push({ href: "/admin/email-queue", label: "طابور البريد", icon: "message" });
+  if (hasPermission(user.role, "audit.view"))
+    items.push({ href: "/admin/production", label: "جاهزية التشغيل", icon: "shield" });
 
   // عدّادات غير المقروء للإشعارات والرسائل.
   const [unreadNotifications, unreadMessages] = await Promise.all([

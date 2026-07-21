@@ -312,6 +312,22 @@ export const MESSAGE_TEMPLATE_CHANNEL_LABELS: Record<string, string> = {
   PORTAL: "بوابة العميل",
 };
 
+export const EMAIL_DELIVERY_STATUS_LABELS: Record<string, string> = {
+  QUEUED: "في الطابور",
+  SENDING: "جاري الإرسال",
+  SENT: "تم الإرسال",
+  FAILED: "فشل الإرسال",
+  CANCELLED: "ملغى",
+};
+
+export const EMAIL_DELIVERY_STATUS_COLORS: Record<string, string> = {
+  QUEUED: "bg-brass-50 text-brass-800",
+  SENDING: "bg-brand-50 text-brand-800",
+  SENT: "bg-brand-100 text-brand-900",
+  FAILED: "bg-seal-50 text-seal-700",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
 export const APPROVAL_STATUS_LABELS: Record<string, string> = {
   PENDING: "بانتظار الاعتماد",
   APPROVED: "معتمد",

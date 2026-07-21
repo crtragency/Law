@@ -139,7 +139,7 @@ export default async function ReportsPage() {
         <StatCard label="المصروفات" value={formatMoneyLabel(expenseTotal)} icon={<IconFolder />} href="/finance" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="columns-1 gap-6 xl:columns-2">
         <ReportSection title="حالات القضايا">
           {Object.keys(CASE_STATUS_LABELS).map((status) => (
             <MetricRow
@@ -190,7 +190,7 @@ export default async function ReportsPage() {
           ))}
         </ReportSection>
 
-        <section>
+        <section className="mb-6 break-inside-avoid">
           <h2 className="mb-3 font-display text-lg font-bold text-ink">ملخص مالي</h2>
           <div className="data-panel divide-y divide-gray-100">
             <FinanceRow label="إجمالي الفواتير" value={formatMoneyLabel(invoiceTotal)} />
@@ -202,8 +202,8 @@ export default async function ReportsPage() {
         </section>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <section>
+      <div className="columns-1 gap-6 xl:columns-2">
+        <section className="mb-6 break-inside-avoid">
           <h2 className="mb-3 font-display text-lg font-bold text-ink">إجراءات التقاضي خلال 14 يوم</h2>
           <div className="data-panel divide-y divide-gray-100">
             {upcomingLitigation.length === 0 ? (
@@ -231,7 +231,7 @@ export default async function ReportsPage() {
           </div>
         </section>
 
-        <section>
+        <section className="mb-6 break-inside-avoid">
           <h2 className="mb-3 font-display text-lg font-bold text-ink">تنبيهات قادمة</h2>
           <div className="data-panel divide-y divide-gray-100">
             {upcomingReminders.length === 0 ? (
@@ -265,7 +265,7 @@ export default async function ReportsPage() {
 
 function ReportSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="mb-6 break-inside-avoid">
       <h2 className="mb-3 font-display text-lg font-bold text-ink">{title}</h2>
       <div className="data-panel divide-y divide-gray-100">{children}</div>
     </section>

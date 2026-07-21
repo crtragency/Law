@@ -11,6 +11,7 @@ import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { notifyMany } from "@/lib/notifications";
 import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import { extractDocumentTextFromStorage } from "@/lib/document-ocr";
 import { createSignedUploadUrl, storageConfigured } from "@/lib/storage";
 import {
   CASE_STATUS_LABELS,
@@ -257,6 +258,32 @@ function parseOptionalDate(value?: string) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+async function resolveDocumentIndex(input: {
+  manualText?: string;
+  storageKey: string;
+  fileName: string;
+  mimeType?: string | null;
+}) {
+  const manualText = input.manualText?.trim();
+  if (manualText) {
+    return {
+      extractedText: manualText,
+      ocrStatus: "INDEXED" as const,
+      indexedAt: new Date(),
+    };
+  }
+  const result = await extractDocumentTextFromStorage({
+    storageKey: input.storageKey,
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+  });
+  return {
+    extractedText: result.text,
+    ocrStatus: result.status,
+    indexedAt: result.text ? new Date() : null,
+  };
+}
+
 export async function addDocumentAction(
   _prev: ActionResult,
   formData: FormData
@@ -287,6 +314,11 @@ export async function addDocumentAction(
 
   const expiresAt = parseOptionalDate(parsed.data.expiresAt);
   if (parsed.data.expiresAt && !expiresAt) return { ok: false, error: "تاريخ انتهاء غير صالح" };
+  const index = await resolveDocumentIndex({
+    manualText: parsed.data.extractedText,
+    storageKey: parsed.data.storageKey,
+    fileName: parsed.data.fileName || parsed.data.title,
+  });
 
   const document = await prisma.document.create({
     data: {
@@ -298,9 +330,9 @@ export async function addDocumentAction(
       visibility: parsed.data.visibility,
       expiresAt,
       notes: parsed.data.notes || null,
-      extractedText: parsed.data.extractedText || null,
-      ocrStatus: parsed.data.extractedText ? "INDEXED" : "NEEDS_OCR",
-      indexedAt: parsed.data.extractedText ? new Date() : null,
+      extractedText: index.extractedText,
+      ocrStatus: index.ocrStatus,
+      indexedAt: index.indexedAt,
       uploadedById: actor.id,
     },
   });
@@ -437,6 +469,12 @@ export async function registerUploadedDocumentAction(input: {
   if (!parsed.data.storageKey.startsWith(`cases/${parsed.data.caseId}/`)) {
     return { ok: false, error: "مسار غير صالح" };
   }
+  const index = await resolveDocumentIndex({
+    manualText: parsed.data.extractedText,
+    storageKey: parsed.data.storageKey,
+    fileName: parsed.data.fileName,
+    mimeType: parsed.data.mimeType || null,
+  });
 
   const document = await prisma.document.create({
     data: {
@@ -450,9 +488,9 @@ export async function registerUploadedDocumentAction(input: {
       visibility: parsed.data.visibility,
       expiresAt,
       notes: parsed.data.notes || null,
-      extractedText: parsed.data.extractedText || null,
-      ocrStatus: parsed.data.extractedText ? "INDEXED" : "NEEDS_OCR",
-      indexedAt: parsed.data.extractedText ? new Date() : null,
+      extractedText: index.extractedText,
+      ocrStatus: index.ocrStatus,
+      indexedAt: index.indexedAt,
       uploadedById: actor.id,
     },
   });
@@ -615,4 +653,57 @@ export async function deleteDocumentAction(
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true, success: "تم حذف المستند" };
+}
+
+export async function reindexDocumentAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("documents.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const id = String(formData.get("id") ?? "");
+  const caseId = String(formData.get("caseId") ?? "");
+  if (!id || !caseId) return { ok: false, error: "معرّف غير صالح" };
+
+  const document = await prisma.document.findFirst({
+    where: { id, caseId },
+    select: { id: true, storageKey: true, fileName: true, mimeType: true },
+  });
+  if (!document) return { ok: false, error: "المستند غير موجود" };
+
+  const result = await extractDocumentTextFromStorage({
+    storageKey: document.storageKey,
+    fileName: document.fileName,
+    mimeType: document.mimeType,
+  });
+  await prisma.document.update({
+    where: { id },
+    data: {
+      extractedText: result.text,
+      ocrStatus: result.status,
+      indexedAt: result.text ? new Date() : null,
+    },
+  });
+  await audit({
+    action: "document.reindex",
+    userId: actor.id,
+    entity: "Document",
+    entityId: id,
+    ip: await getClientIp(),
+    details: { status: result.status, error: result.error },
+  });
+
+  revalidatePath(`/cases/${caseId}`);
+  return {
+    ok: result.status === "INDEXED",
+    success: result.status === "INDEXED" ? "تمت فهرسة المستند" : undefined,
+    error: result.status === "INDEXED" ? undefined : result.error ?? "لم يتم العثور على نص قابل للفهرسة",
+  };
 }
