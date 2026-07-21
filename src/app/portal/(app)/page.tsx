@@ -6,6 +6,8 @@ import {
   CASE_STATUS_COLORS,
   CASE_STATUS_LABELS,
   CASE_TYPE_LABELS,
+  CONTRACT_STATUS_COLORS,
+  CONTRACT_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
   INVOICE_STATUS_LABELS,
   formatDate,
@@ -24,7 +26,7 @@ export default async function PortalHomePage() {
   const client = await requirePortalClient();
   const now = new Date();
 
-  const [cases, nextEvent, visibleDocumentCount, invoices, openServiceCount] = await Promise.all([
+  const [cases, nextEvent, visibleDocumentCount, invoices, contracts, openServiceCount] = await Promise.all([
     prisma.case.findMany({
       where: { clientId: client.id },
       orderBy: { createdAt: "desc" },
@@ -50,6 +52,14 @@ export default async function PortalHomePage() {
       where: { clientId: client.id, status: { notIn: ["PAID", "CANCELLED"] } },
       include: { payments: true },
       take: 100,
+    }),
+    prisma.contract.findMany({
+      where: {
+        clientId: client.id,
+        status: { in: ["SENT", "CLIENT_SIGNED", "ACTIVE"] },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
     }),
     prisma.serviceRequest.count({
       where: {
@@ -94,12 +104,41 @@ export default async function PortalHomePage() {
         <StatCard label="قضايا نشطة" value={activeCases} icon={<IconScale />} />
         <StatCard label="مستندات متاحة" value={visibleDocumentCount} icon={<IconFileText />} />
         <StatCard label="مستحقات مفتوحة" value={formatMoneyLabel(dueTotal)} icon={<IconCalendar />} />
+        <StatCard label="اتفاقيات أتعاب" value={contracts.length} icon={<IconFileText />} />
       </div>
 
       {openServiceCount > 0 && (
         <div className="rounded-2xl border border-brass-100 bg-brass-50/70 p-4 text-sm text-brass-800">
           لديك {openServiceCount} طلب خدمة قيد المتابعة من المكتب.
         </div>
+      )}
+
+      {contracts.length > 0 && (
+        <section>
+          <h2 className="section-title mb-3">اتفاقيات الأتعاب</h2>
+          <div className="data-panel divide-y divide-gray-100">
+            {contracts.map((contract) => {
+              const total = computeTax(contract.amountBeforeTax, contract.taxRate).total;
+              return (
+                <Link
+                  key={contract.id}
+                  href={`/portal/contracts/${contract.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 p-4 transition hover:bg-gray-50"
+                >
+                  <div>
+                    <p className="font-semibold text-ink" dir="ltr">{contract.number}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      الإجمالي شامل الضريبة: {formatMoneyLabel(total)}
+                    </p>
+                  </div>
+                  <Badge className={CONTRACT_STATUS_COLORS[contract.status]}>
+                    {CONTRACT_STATUS_LABELS[contract.status]}
+                  </Badge>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <section>

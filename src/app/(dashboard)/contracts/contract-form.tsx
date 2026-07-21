@@ -23,21 +23,38 @@ export interface ContractFormValues {
   taxRate: number;
   installments: { amountRiyals: string; note: string; paid: boolean }[];
   notes?: string | null;
-  status: "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+  status: "DRAFT" | "SENT" | "CLIENT_SIGNED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
 }
 
 const STATUS: ContractFormValues["status"][] = [
   "DRAFT",
+  "SENT",
+  "CLIENT_SIGNED",
   "ACTIVE",
   "COMPLETED",
   "CANCELLED",
 ];
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "مسودّة",
+  SENT: "مرسلة للعميل",
+  CLIENT_SIGNED: "وقّع العميل",
   ACTIVE: "سارية",
   COMPLETED: "منتهية",
   CANCELLED: "ملغاة",
 };
+
+const SCOPE_SUGGESTIONS = [
+  "التمثيل النظامي للطرف الثاني أمام الجهات المختصة.",
+  "تقديم دعوى لدى التسوية الودية والمرافعة بشأن المطالبات محل الاتفاق.",
+  "إقامة الدعوى القضائية لدى المحكمة المختصة عند تعذر الوصول إلى تسوية.",
+  "حضور الجلسات وصياغة اللوائح والمذكرات وتقديم الاعتراضات حتى صدور حكم نهائي.",
+];
+
+function defaultInstallmentNote(index: number) {
+  if (index === 0) return "تدفع عند توقيع هذه الاتفاقية";
+  if (index === 1) return "تدفع بعد شهر من تاريخ توقيع هذه الاتفاقية";
+  return "";
+}
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -97,6 +114,32 @@ export function ContractForm({
     }));
   }
 
+  function setInstallmentCount(count: number) {
+    const nextCount = Math.max(1, Math.min(24, Math.floor(count || 1)));
+    setForm((f) => ({
+      ...f,
+      installments: Array.from(
+        { length: nextCount },
+        (_, i) =>
+          f.installments[i] ?? {
+            amountRiyals: "",
+            note: defaultInstallmentNote(i),
+            paid: false,
+          }
+      ),
+    }));
+  }
+
+  function addScopeSuggestion(line: string) {
+    setForm((f) => {
+      const current = (f.scope ?? "").trim();
+      return {
+        ...f,
+        scope: current ? `${current}\n${line}` : line,
+      };
+    });
+  }
+
   /** توزيع الإجمالي (شامل الضريبة) بالتساوي على عدد الدفعات الحالي. */
   function autoSplit() {
     const n = form.installments.length || 1;
@@ -116,13 +159,23 @@ export function ContractForm({
   function addInstallment() {
     setForm((f) => ({
       ...f,
-      installments: [...f.installments, { amountRiyals: "", note: "", paid: false }],
+      installments: [
+        ...f.installments,
+        {
+          amountRiyals: "",
+          note: defaultInstallmentNote(f.installments.length),
+          paid: false,
+        },
+      ],
     }));
   }
   function removeInstallment(i: number) {
     setForm((f) => ({
       ...f,
-      installments: f.installments.filter((_, idx) => idx !== i),
+      installments:
+        f.installments.length <= 1
+          ? [{ amountRiyals: "", note: defaultInstallmentNote(0), paid: false }]
+          : f.installments.filter((_, idx) => idx !== i),
     }));
   }
 
@@ -259,6 +312,19 @@ export function ContractForm({
           <p className="mt-1 text-xs text-gray-400">
             كل سطر يظهر كبند مستقل في العقد.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SCOPE_SUGGESTIONS.map((line) => (
+              <button
+                key={line}
+                type="button"
+                onClick={() => addScopeSuggestion(line)}
+                title={line}
+                className="rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-brand-700 transition hover:border-brand-200 hover:bg-brand-50"
+              >
+                إضافة: {line.length > 34 ? `${line.slice(0, 34)}...` : line}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -308,7 +374,17 @@ export function ContractForm({
       <div className="form-panel space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-display font-bold text-ink">الدفعات</h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex items-center gap-2 rounded-xl border border-line bg-paper px-3 py-1.5 text-xs font-semibold text-gray-600">
+              عدد الدفعات
+              <input
+                className="h-8 w-16 rounded-lg border border-line bg-white px-2 text-center text-sm font-bold text-ink outline-none focus:border-brand-500"
+                dir="ltr"
+                inputMode="numeric"
+                value={form.installments.length}
+                onChange={(e) => setInstallmentCount(toNum(e.target.value))}
+              />
+            </label>
             <button type="button" onClick={autoSplit} className="btn-secondary text-xs">
               توزيع تلقائي بالتساوي
             </button>

@@ -9,6 +9,8 @@ import { CONTRACT_STATUS_LABELS, CONTRACT_STATUS_COLORS } from "@/lib/labels";
 import { ContractDocument } from "./contract-document";
 import { ContractActionsBar } from "./actions-bar";
 
+const FLOW_STEPS = ["DRAFT", "SENT", "CLIENT_SIGNED", "ACTIVE", "COMPLETED"] as const;
+
 export default async function ContractDetailPage({
   params,
 }: {
@@ -27,6 +29,9 @@ export default async function ContractDetailPage({
   ]);
 
   if (!contract) notFound();
+  const currentStep = FLOW_STEPS.includes(contract.status as (typeof FLOW_STEPS)[number])
+    ? FLOW_STEPS.indexOf(contract.status as (typeof FLOW_STEPS)[number])
+    : -1;
 
   return (
     <div className="space-y-5">
@@ -42,7 +47,27 @@ export default async function ContractDetailPage({
             </Badge>
           </div>
         </div>
-        <ContractActionsBar id={contract.id} canManage={canManage} />
+        <ContractActionsBar id={contract.id} canManage={canManage} status={contract.status} />
+      </div>
+
+      <div className="no-print data-panel p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {FLOW_STEPS.map((step, index) => {
+            const done = currentStep >= index;
+            return (
+              <div
+                key={step}
+                className={`flex min-w-[150px] flex-1 items-center justify-center rounded-xl border px-3 py-2 text-center text-xs font-bold ${
+                  done
+                    ? "border-brand-100 bg-brand-50 text-brand-800"
+                    : "border-line bg-paper text-gray-400"
+                }`}
+              >
+                {CONTRACT_STATUS_LABELS[step]}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <ContractDocument

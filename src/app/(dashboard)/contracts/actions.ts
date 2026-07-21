@@ -7,8 +7,16 @@ import { prisma } from "@/lib/prisma";
 import { ensurePermission, AuthError } from "@/lib/auth";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
-import { computeTax, formatMoneyLabel, riyalsToHalalas } from "@/lib/money";
-import { notifyClientCaseUpdate } from "@/lib/client-notify";
+import {
+  computeTax,
+  formatMoneyLabel,
+  parseInstallments,
+  riyalsToHalalas,
+} from "@/lib/money";
+import {
+  notifyClientCaseUpdate,
+  notifyClientContractUpdate,
+} from "@/lib/client-notify";
 import { CONTRACT_STATUS_LABELS, formatDate } from "@/lib/labels";
 
 export interface ActionResult {
@@ -23,21 +31,42 @@ const installmentSchema = z.object({
   paid: z.boolean().default(false),
 });
 
-const contractSchema = z.object({
-  id: z.string().optional(),
-  number: z.string().trim().min(1, "رقم الاتفاقية مطلوب").max(60),
-  clientId: z.string().min(1, "اختر الموكّل"),
-  caseId: z.string().optional().or(z.literal("")),
-  city: z.string().trim().max(80).optional().or(z.literal("")),
-  dateHijri: z.string().trim().max(40).optional().or(z.literal("")),
-  dateGregorian: z.string().optional().or(z.literal("")),
-  scope: z.string().trim().min(3, "اكتب مهام الاتفاقية").max(6000),
-  amountBeforeTax: z.number().nonnegative("المبلغ غير صحيح"),
-  taxRate: z.number().min(0).max(100),
-  installments: z.array(installmentSchema),
-  notes: z.string().trim().max(2000).optional().or(z.literal("")),
-  status: z.enum(["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"]),
-});
+const CONTRACT_STATUSES = [
+  "DRAFT",
+  "SENT",
+  "CLIENT_SIGNED",
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
+type ContractStatusInput = (typeof CONTRACT_STATUSES)[number];
+
+const contractSchema = z
+  .object({
+    id: z.string().optional(),
+    number: z.string().trim().min(1, "رقم الاتفاقية مطلوب").max(60),
+    clientId: z.string().min(1, "اختر الموكّل"),
+    caseId: z.string().optional().or(z.literal("")),
+    city: z.string().trim().max(80).optional().or(z.literal("")),
+    dateHijri: z.string().trim().max(40).optional().or(z.literal("")),
+    dateGregorian: z.string().optional().or(z.literal("")),
+    scope: z.string().trim().max(6000),
+    amountBeforeTax: z.number().nonnegative("المبلغ غير صحيح"),
+    taxRate: z.number().min(0).max(100),
+    installments: z.array(installmentSchema),
+    notes: z.string().trim().max(2000).optional().or(z.literal("")),
+    status: z.enum(CONTRACT_STATUSES),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status !== "DRAFT" && data.scope.length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["scope"],
+        message: "اكتب مهام الاتفاقية قبل إرسالها أو اعتمادها",
+      });
+    }
+  });
 
 export interface ContractInput {
   id?: string;
@@ -52,7 +81,7 @@ export interface ContractInput {
   taxRate: number;
   installments: { amountRiyals: string; note: string; paid: boolean }[];
   notes?: string;
-  status: "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+  status: ContractStatusInput;
 }
 
 export async function saveContractAction(
@@ -131,7 +160,7 @@ export async function saveContractAction(
       ip,
     });
   }
-  if (data.caseId) {
+  if (data.caseId && data.status !== "DRAFT") {
     const total = computeTax(data.amountBeforeTax, data.taxRate).total;
     await notifyClientCaseUpdate(data.caseId, {
       subject: `تحديث اتفاقية أتعاب: ${data.number}`,
@@ -147,6 +176,119 @@ export async function saveContractAction(
 
   revalidatePath("/contracts");
   return { ok: true, id, success: "تم حفظ الاتفاقية" };
+}
+
+export async function updateContractStatusAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("contracts.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  const parsed = z.object({
+    id: z.string().min(1),
+    status: z.enum(CONTRACT_STATUSES),
+  }).safeParse({ id, status });
+  if (!parsed.success) return { ok: false, error: "بيانات تغيير الحالة غير صحيحة" };
+
+  const contract = await prisma.contract.findUnique({
+    where: { id: parsed.data.id },
+    include: {
+      case: { select: { id: true, title: true, caseNumber: true } },
+    },
+  });
+  if (!contract) return { ok: false, error: "الاتفاقية غير موجودة" };
+
+  const nextStatus = parsed.data.status;
+  const { beforeTax, tax, total } = computeTax(contract.amountBeforeTax, contract.taxRate);
+  const installments = parseInstallments(contract.installments);
+  const allocated = installments.reduce((sum, installment) => sum + installment.amount, 0);
+
+  if (["SENT", "CLIENT_SIGNED", "ACTIVE"].includes(nextStatus)) {
+    if (contract.scope.trim().length < 3) {
+      return { ok: false, error: "اكتب مهام الاتفاقية قبل إرسالها للعميل" };
+    }
+    if (contract.amountBeforeTax <= 0) {
+      return { ok: false, error: "أدخل الأتعاب قبل الضريبة قبل إرسال الاتفاقية" };
+    }
+    if (installments.length === 0 || allocated !== total) {
+      return {
+        ok: false,
+        error: "إجمالي الدفعات يجب أن يساوي الإجمالي شامل الضريبة",
+      };
+    }
+  }
+
+  await prisma.contract.update({
+    where: { id: contract.id },
+    data: { status: nextStatus },
+  });
+  await audit({
+    action: "contract.status",
+    userId: actor.id,
+    entity: "Contract",
+    entityId: contract.id,
+    ip: await getClientIp(),
+    details: { from: contract.status, to: nextStatus },
+  });
+
+  if (nextStatus === "SENT") {
+    await notifyClientContractUpdate(contract.id, {
+      subject: `اتفاقية أتعاب للتوقيع: ${contract.number}`,
+      heading: "تم إرسال اتفاقية أتعاب للتوقيع",
+      actionLabel: "عرض وتوقيع الاتفاقية",
+      lines: [
+        `رقم الاتفاقية: ${contract.number}`,
+        `الأتعاب قبل الضريبة: ${formatMoneyLabel(beforeTax)}`,
+        `ضريبة القيمة المضافة (${contract.taxRate}%): ${formatMoneyLabel(tax)}`,
+        `الإجمالي شامل الضريبة: ${formatMoneyLabel(total)}`,
+        "يمكن توقيع الاتفاقية ورقياً أو إلكترونياً من بوابة العميل عند توفر الدخول.",
+      ],
+    });
+  }
+
+  if (nextStatus === "ACTIVE") {
+    await notifyClientContractUpdate(contract.id, {
+      subject: `تم اعتماد اتفاقية الأتعاب: ${contract.number}`,
+      heading: "تم اعتماد اتفاقية الأتعاب وأصبحت سارية",
+      lines: [
+        `رقم الاتفاقية: ${contract.number}`,
+        `الحالة: ${CONTRACT_STATUS_LABELS[nextStatus]}`,
+        `الإجمالي شامل الضريبة: ${formatMoneyLabel(total)}`,
+      ],
+    });
+  }
+
+  if (contract.caseId) {
+    await notifyClientCaseUpdate(contract.caseId, {
+      subject: `تحديث اتفاقية أتعاب: ${contract.number}`,
+      heading: "تم تحديث حالة اتفاقية أتعاب مرتبطة بقضيتك",
+      lines: [
+        `رقم الاتفاقية: ${contract.number}`,
+        `الحالة: ${CONTRACT_STATUS_LABELS[nextStatus] ?? nextStatus}`,
+        `القضية: ${contract.case?.title ?? contract.case?.caseNumber ?? ""}`,
+      ],
+    });
+  }
+
+  revalidatePath("/contracts");
+  revalidatePath(`/contracts/${contract.id}`);
+  revalidatePath("/portal");
+  revalidatePath(`/portal/contracts/${contract.id}`);
+  if (contract.caseId) revalidatePath(`/portal/cases/${contract.caseId}`);
+
+  return {
+    ok: true,
+    success: `تم تحديث حالة الاتفاقية إلى ${CONTRACT_STATUS_LABELS[nextStatus] ?? nextStatus}`,
+  };
 }
 
 export async function deleteContractAction(

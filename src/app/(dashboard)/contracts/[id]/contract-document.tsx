@@ -52,7 +52,7 @@ export function ContractDocument({
   client: ClientData;
   contract: ContractData;
 }) {
-  const { tax, total } = computeTax(contract.amountBeforeTax, contract.taxRate);
+  const { beforeTax, tax, total } = computeTax(contract.amountBeforeTax, contract.taxRate);
   const installments = parseInstallments(contract.installments);
   const city = contract.city || firm.city || firm.address || "";
   const scopeLines = contract.scope
@@ -152,10 +152,25 @@ export function ContractDocument({
           </ul>
         </li>
         <li>
-          <b>{ORDINALS[2]}:</b> اتفق الطرفان على أن تكون أتعاب الطرف الأول مبلغاً وقدره{" "}
-          <b dir="ltr">({formatMoneyLabel(total)})</b> شاملة لضريبة القيمة المضافة بنسبة{" "}
-          {contract.taxRate}% (قيمتها <span dir="ltr">{formatMoneyLabel(tax)}</span>) وغير شاملة
-          لتكاليف التقاضي وأي رسوم تُطلب، وتُدفع على النحو التالي:
+          <b>{ORDINALS[2]}:</b> اتفق الطرفان على أن تكون أتعاب الطرف الأول قبل ضريبة القيمة المضافة مبلغاً وقدره{" "}
+          <b dir="ltr">({formatMoneyLabel(beforeTax)})</b>، وتضاف إليها ضريبة القيمة المضافة المستقلة بنسبة{" "}
+          {contract.taxRate}% وقيمتها <span dir="ltr">{formatMoneyLabel(tax)}</span>، ليكون الإجمالي المستحق شاملاً
+          الضريبة <b dir="ltr">({formatMoneyLabel(total)})</b>، وغير شامل لتكاليف التقاضي وأي رسوم تُطلب، وتُدفع على
+          النحو التالي:
+          <div className="my-3 overflow-hidden rounded-lg border border-gray-200 text-xs">
+            <div className="grid grid-cols-2 border-b border-gray-200 bg-gray-50">
+              <span className="p-2 font-semibold">الأتعاب قبل الضريبة</span>
+              <span className="p-2 font-semibold" dir="ltr">{formatMoneyLabel(beforeTax)}</span>
+            </div>
+            <div className="grid grid-cols-2 border-b border-gray-200">
+              <span className="p-2">ضريبة القيمة المضافة ({contract.taxRate}%)</span>
+              <span className="p-2" dir="ltr">{formatMoneyLabel(tax)}</span>
+            </div>
+            <div className="grid grid-cols-2 bg-brand-50">
+              <span className="p-2 font-bold">الإجمالي شامل الضريبة</span>
+              <span className="p-2 font-bold" dir="ltr">{formatMoneyLabel(total)}</span>
+            </div>
+          </div>
           {installments.length > 0 && (
             <ul className="mr-5 mt-1 list-disc space-y-1">
               {installments.map((inst, i) => (
@@ -201,19 +216,29 @@ export function ContractDocument({
           منفصل عن هذه الاتفاقية.
         </li>
         <li>
-          <b>الحادي عشر:</b> تعتبر هذه الاتفاقية ملزمة لطرفيها ولخلفاء الطرف الثاني أو من يمثلونه.
+          <b>الحادي عشر:</b> تكون الإشعارات والإخطارات المتبادلة بين الطرفين عبر وسائل التواصل المبيّنة في هذه
+          الاتفاقية، بما في ذلك البريد الإلكتروني أو تطبيقات المراسلة أو بوابة العميل متى كانت مفعّلة، ويُعتد بها
+          عند الرجوع إليها في حال حدوث خلاف بين الطرفين.
         </li>
         <li>
-          <b>الثاني عشر:</b> في حال وقوع أي خلاف بين الطرفين بشأن تفسير أو تطبيق هذه الاتفاقية يكون
+          <b>الثاني عشر:</b> تعتبر هذه الاتفاقية ملزمة لطرفيها ولخلفاء الطرف الثاني أو من يمثلونه.
+        </li>
+        <li>
+          <b>الثالث عشر:</b> في حال وقوع أي خلاف بين الطرفين بشأن تفسير أو تطبيق هذه الاتفاقية يكون
           الفصل فيه من اختصاص الجهات المختصة نظاماً في مدينة {city || "—"} بالمملكة العربية السعودية.
         </li>
         <li>
-          <b>الثالث عشر:</b> أقرّ كلا الطرفين بأنهما اطّلعا على كافة بنود هذه الاتفاقية واستوعبا
+          <b>الرابع عشر:</b> أقرّ كلا الطرفين بأنهما اطّلعا على كافة بنود هذه الاتفاقية واستوعبا
           مقاصدها وقبلاها قبولاً تاماً ينفي الجهالة، وأنهما ملتزمان بها جملةً وتفصيلاً.
+        </li>
+        <li>
+          <b>الخامس عشر:</b> تحرر هذه الاتفاقية في نسخة ورقية أو إلكترونية، وتعتبر النسخة المرسلة إلى الطرف
+          الثاني عبر البريد الإلكتروني أو بوابة العميل أو أي وسيلة مراسلة معتمدة نسخة أصلية منتجة لآثارها متى تم
+          توقيعها من الطرفين، ويلتزم الطرف الثاني بإعادة النسخة الموقعة للطرف الأول لاعتمادها.
         </li>
       </ol>
 
-      <p className="mt-6 text-sm">وعليه تم الإيجاب والقبول بين الطرفين وتم التوقيع، والله ولي التوفيق.</p>
+      <p className="mt-6 text-sm">وعليه تم الإيجاب والقبول بين الطرفين وتم التوقيع عليها، والتزم الطرفان بموجبها حال توقيعها، والله ولي التوفيق.</p>
 
       {/* التواقيع */}
       <div className="mt-12 grid grid-cols-2 gap-6 text-center text-sm">

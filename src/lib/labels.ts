@@ -60,6 +60,8 @@ export const TASK_PRIORITY_COLORS: Record<string, string> = {
 
 export const CONTRACT_STATUS_LABELS: Record<string, string> = {
   DRAFT: "مسودّة",
+  SENT: "مرسلة للعميل",
+  CLIENT_SIGNED: "وقّع العميل",
   ACTIVE: "سارية",
   COMPLETED: "منتهية",
   CANCELLED: "ملغاة",
@@ -67,6 +69,8 @@ export const CONTRACT_STATUS_LABELS: Record<string, string> = {
 
 export const CONTRACT_STATUS_COLORS: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
+  SENT: "bg-brass-50 text-brass-800",
+  CLIENT_SIGNED: "bg-brand-50 text-brand-800",
   ACTIVE: "bg-brand-50 text-brand-800",
   COMPLETED: "bg-brand-100 text-brand-900",
   CANCELLED: "bg-seal-50 text-seal-700",

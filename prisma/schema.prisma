@@ -408,6 +408,8 @@ model FirmSettings {
 
 enum ContractStatus {
   DRAFT // مسودّة
+  SENT // مرسلة للعميل بانتظار التوقيع
+  CLIENT_SIGNED // وقّع العميل وبانتظار اعتماد المكتب
   ACTIVE // سارية
   COMPLETED // منتهية
   CANCELLED // ملغاة

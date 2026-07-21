@@ -47,3 +47,57 @@ export async function notifyClientCaseUpdate(
     console.error("فشل إشعار العميل:", err);
   }
 }
+
+/** إشعار العميل باتفاقية أتعاب مستقلة، مع رابط بوابة العقد عند توفره. */
+export async function notifyClientContractUpdate(
+  contractId: string,
+  input: { subject: string; heading: string; lines: string[]; actionLabel?: string }
+): Promise<void> {
+  try {
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        number: true,
+        client: {
+          select: {
+            email: true,
+            portalEnabled: true,
+            portalEmail: true,
+          },
+        },
+      },
+    });
+    if (!contract?.client) return;
+
+    const recipients = [contract.client.email, contract.client.portalEmail]
+      .map((email) => email?.trim().toLowerCase())
+      .filter((email): email is string => !!email);
+    const uniqueRecipients = [...new Set(recipients)];
+    if (uniqueRecipients.length === 0) return;
+
+    const url = appUrl();
+    const portalUrl =
+      url && contract.client.portalEnabled
+        ? `${url}/portal/contracts/${contractId}`
+        : undefined;
+
+    await Promise.all(
+      uniqueRecipients.map((to) =>
+        sendEmail({
+          to,
+          subject: input.subject,
+          heading: input.heading,
+          lines: input.lines.length
+            ? input.lines
+            : [`رقم اتفاقية الأتعاب: ${contract.number}`],
+          actionLabel: portalUrl
+            ? input.actionLabel ?? "عرض اتفاقية الأتعاب"
+            : undefined,
+          actionUrl: portalUrl,
+        })
+      )
+    );
+  } catch (err) {
+    console.error("فشل إشعار العميل باتفاقية الأتعاب:", err);
+  }
+}

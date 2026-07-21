@@ -7,6 +7,8 @@ import {
   CASE_STATUS_COLORS,
   CASE_STATUS_LABELS,
   CASE_TYPE_LABELS,
+  CONTRACT_STATUS_COLORS,
+  CONTRACT_STATUS_LABELS,
   EVENT_TYPE_COLORS,
   EVENT_TYPE_LABELS,
   INVOICE_STATUS_COLORS,
@@ -48,6 +50,10 @@ export default async function PortalCasePage({
       serviceRequests: {
         orderBy: { createdAt: "desc" },
         take: 20,
+      },
+      contracts: {
+        where: { status: { in: ["SENT", "CLIENT_SIGNED", "ACTIVE", "COMPLETED"] } },
+        orderBy: { createdAt: "desc" },
       },
       invoices: {
         orderBy: { createdAt: "desc" },
@@ -187,6 +193,34 @@ export default async function PortalCasePage({
           </div>
         </section>
       </div>
+
+      {c.contracts.length > 0 && (
+        <section>
+          <h2 className="section-title mb-3">اتفاقيات الأتعاب المرتبطة</h2>
+          <div className="data-panel divide-y divide-gray-100">
+            {c.contracts.map((contract) => {
+              const total = computeTax(contract.amountBeforeTax, contract.taxRate).total;
+              return (
+                <Link
+                  key={contract.id}
+                  href={`/portal/contracts/${contract.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 p-4 transition hover:bg-gray-50"
+                >
+                  <div>
+                    <p className="font-semibold text-ink" dir="ltr">{contract.number}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      الإجمالي شامل الضريبة: {formatMoneyLabel(total)}
+                    </p>
+                  </div>
+                  <Badge className={CONTRACT_STATUS_COLORS[contract.status]}>
+                    {CONTRACT_STATUS_LABELS[contract.status]}
+                  </Badge>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-7 xl:grid-cols-2">
         <section>

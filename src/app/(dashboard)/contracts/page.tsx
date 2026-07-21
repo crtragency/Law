@@ -3,7 +3,7 @@ import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import { PageHeader, Badge, EmptyState } from "@/components/ui";
-import { IconPlus, IconFileText } from "@/components/icons";
+import { IconPlus, IconFileText, IconPen } from "@/components/icons";
 import { CONTRACT_STATUS_LABELS, CONTRACT_STATUS_COLORS, formatDate } from "@/lib/labels";
 import { formatMoneyLabel, computeTax } from "@/lib/money";
 
@@ -42,19 +42,22 @@ export default async function ContractsPage() {
         />
       ) : (
         <div className="data-panel overflow-x-auto">
-          <table className="w-full min-w-[720px]">
+          <table className="w-full min-w-[960px]">
             <thead className="border-b border-line bg-paper/60">
               <tr>
                 <th className="table-th">رقم الاتفاقية</th>
                 <th className="table-th">الموكّل</th>
-                <th className="table-th">الإجمالي (شامل الضريبة)</th>
+                <th className="table-th">قبل الضريبة</th>
+                <th className="table-th">الضريبة</th>
+                <th className="table-th">الإجمالي</th>
                 <th className="table-th">التاريخ</th>
                 <th className="table-th">الحالة</th>
+                <th className="table-th">إجراء</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {contracts.map((c) => {
-                const { total } = computeTax(c.amountBeforeTax, c.taxRate);
+                const { beforeTax, tax, total } = computeTax(c.amountBeforeTax, c.taxRate);
                 const clientName =
                   c.client.type === "COMPANY" && c.client.companyName
                     ? c.client.companyName
@@ -67,6 +70,8 @@ export default async function ContractsPage() {
                       </Link>
                     </td>
                     <td className="table-td">{clientName}</td>
+                    <td className="table-td" dir="ltr">{formatMoneyLabel(beforeTax)}</td>
+                    <td className="table-td" dir="ltr">{formatMoneyLabel(tax)}</td>
                     <td className="table-td" dir="ltr">{formatMoneyLabel(total)}</td>
                     <td className="table-td text-xs text-gray-500">
                       {c.dateHijri || formatDate(c.dateGregorian)}
@@ -75,6 +80,26 @@ export default async function ContractsPage() {
                       <Badge className={CONTRACT_STATUS_COLORS[c.status]}>
                         {CONTRACT_STATUS_LABELS[c.status]}
                       </Badge>
+                    </td>
+                    <td className="table-td">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Link
+                          href={`/contracts/${c.id}`}
+                          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+                        >
+                          <IconFileText className="h-4 w-4" />
+                          فتح
+                        </Link>
+                        {canManage && (
+                          <Link
+                            href={`/contracts/${c.id}/edit`}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-brass-700 transition hover:bg-brass-50"
+                          >
+                            <IconPen className="h-4 w-4" />
+                            تعديل
+                          </Link>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
