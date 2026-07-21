@@ -2,6 +2,7 @@
 
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ensurePermission, AuthError } from "@/lib/auth";
@@ -138,8 +139,21 @@ export async function deleteCaseAction(
 
   const id = String(formData.get("id") ?? "");
   if (!id) return { ok: false, error: "معرّف غير صالح" };
+  const redirectTo = String(formData.get("redirectTo") ?? "");
 
-  await prisma.case.delete({ where: { id } });
+  try {
+    await prisma.case.delete({ where: { id } });
+  } catch (e: unknown) {
+    if (
+      typeof e === "object" &&
+      e !== null &&
+      "code" in e &&
+      (e as { code?: string }).code === "P2025"
+    ) {
+      return { ok: false, error: "القضية غير موجودة أو تم حذفها بالفعل" };
+    }
+    throw e;
+  }
   await audit({
     action: "case.delete",
     userId: g.id,
@@ -149,6 +163,8 @@ export async function deleteCaseAction(
   });
 
   revalidatePath("/cases");
+  revalidatePath("/dashboard");
+  if (redirectTo === "/cases") redirect("/cases");
   return { ok: true, success: "تم حذف القضية" };
 }
 

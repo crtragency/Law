@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CaseForm } from "./case-form";
+import { DeleteCaseButton } from "./delete-case-button";
 import { Badge } from "@/components/ui";
 import { IconPlus, IconSearch } from "@/components/icons";
 import {
@@ -97,7 +98,7 @@ export function CasesList({
       )}
 
       <div className="data-panel overflow-x-auto">
-        <table className="w-full min-w-[720px]">
+        <table className="w-full min-w-[820px]">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr>
               <th className="table-th">رقم القضية</th>
@@ -106,12 +107,13 @@ export function CasesList({
               <th className="table-th">النوع</th>
               <th className="table-th">المحامي</th>
               <th className="table-th">الحالة</th>
+              {canManage && <th className="table-th">إجراء</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-sm text-gray-500">
+                <td colSpan={canManage ? 7 : 6} className="p-6 text-center text-sm text-gray-500">
                   لا توجد قضايا مطابقة
                 </td>
               </tr>
@@ -138,6 +140,14 @@ export function CasesList({
                       {CASE_STATUS_LABELS[c.status]}
                     </Badge>
                   </td>
+                  {canManage && (
+                    <td className="table-td">
+                      <DeleteCaseButton
+                        id={c.id}
+                        caseLabel={`${c.caseNumber} - ${c.title}`}
+                      />
+                    </td>
+                  )}
                 </tr>
               ))
             )}

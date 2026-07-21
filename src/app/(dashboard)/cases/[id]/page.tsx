@@ -19,6 +19,7 @@ import {
   NotesSection,
   DocumentsSection,
 } from "./case-detail";
+import { DeleteCaseButton } from "../delete-case-button";
 import { IconCheck, IconCalendar } from "@/components/icons";
 
 export default async function CaseDetailPage({
@@ -82,9 +83,19 @@ export default async function CaseDetailPage({
               {c.caseNumber}
             </p>
           </div>
-          <Badge className={CASE_STATUS_COLORS[c.status]}>
-            {CASE_STATUS_LABELS[c.status]}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={CASE_STATUS_COLORS[c.status]}>
+              {CASE_STATUS_LABELS[c.status]}
+            </Badge>
+            {canManage && (
+              <DeleteCaseButton
+                id={c.id}
+                caseLabel={`${c.caseNumber} - ${c.title}`}
+                redirectTo="/cases"
+                variant="button"
+              />
+            )}
+          </div>
         </div>
         <div className="rule-double mt-4" aria-hidden />
       </div>
