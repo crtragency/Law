@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ensurePermission, AuthError } from "@/lib/auth";
-import { caseSchema, commentSchema } from "@/lib/validation";
+import { caseMessageSchema, caseSchema, commentSchema } from "@/lib/validation";
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { notifyMany } from "@/lib/notifications";
@@ -224,6 +224,63 @@ export async function addCaseNoteAction(
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true, success: "تمت إضافة الملاحظة" };
+}
+
+export async function addCaseMessageAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("cases.view");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const parsed = caseMessageSchema.safeParse({
+    caseId: formData.get("caseId"),
+    body: formData.get("body"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "اكتب رسالة صحيحة" };
+  }
+
+  const caseInfo = await prisma.case.findUnique({
+    where: { id: parsed.data.caseId },
+    select: { id: true, title: true, caseNumber: true },
+  });
+  if (!caseInfo) return { ok: false, error: "القضية غير موجودة" };
+
+  const message = await prisma.caseMessage.create({
+    data: {
+      caseId: caseInfo.id,
+      body: parsed.data.body,
+      authorType: "STAFF",
+      staffAuthorId: actor.id,
+    },
+  });
+  await audit({
+    action: "case.message.staff",
+    userId: actor.id,
+    entity: "CaseMessage",
+    entityId: message.id,
+    ip: await getClientIp(),
+    details: { caseId: caseInfo.id },
+  });
+  await notifyClientCaseUpdate(caseInfo.id, {
+    subject: `رسالة جديدة بخصوص قضيتك: ${caseInfo.title}`,
+    heading: "رسالة جديدة من المكتب",
+    lines: [
+      `القضية: ${caseInfo.title} (${caseInfo.caseNumber})`,
+      `${actor.name}: ${parsed.data.body.slice(0, 240)}`,
+    ],
+  });
+
+  revalidatePath(`/cases/${caseInfo.id}`);
+  revalidatePath(`/portal/cases/${caseInfo.id}`);
+  return { ok: true, success: "تم إرسال الرسالة للعميل" };
 }
 
 const documentSchema = z.object({

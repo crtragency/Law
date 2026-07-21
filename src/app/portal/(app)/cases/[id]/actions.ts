@@ -9,6 +9,7 @@ import { requirePortalClient } from "@/lib/portal-session";
 import { getClientIp, verifySameOrigin } from "@/lib/request";
 import { notifyMany } from "@/lib/notifications";
 import { createSignedUploadUrl, storageConfigured } from "@/lib/storage";
+import { caseMessageSchema } from "@/lib/validation";
 
 export interface PortalActionResult {
   ok: boolean;
@@ -87,6 +88,60 @@ export async function createPortalCaseRequestAction(
   revalidatePath("/services");
   revalidatePath(`/portal/cases/${caseInfo.id}`);
   return { ok: true, success: "تم إرسال الطلب للمكتب" };
+}
+
+export async function addPortalCaseMessageAction(
+  _prev: PortalActionResult,
+  formData: FormData
+): Promise<PortalActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  const client = await requirePortalClient();
+
+  const parsed = caseMessageSchema.safeParse({
+    caseId: formData.get("caseId"),
+    body: formData.get("body"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "اكتب الرسالة" };
+  }
+
+  const caseInfo = await prisma.case.findFirst({
+    where: { id: parsed.data.caseId, clientId: client.id },
+    select: {
+      id: true,
+      title: true,
+      caseNumber: true,
+      assignedLawyerId: true,
+      createdById: true,
+    },
+  });
+  if (!caseInfo) return { ok: false, error: "القضية غير موجودة" };
+
+  const message = await prisma.caseMessage.create({
+    data: {
+      caseId: caseInfo.id,
+      body: parsed.data.body,
+      authorType: "CLIENT",
+      clientAuthorId: client.id,
+    },
+  });
+  await audit({
+    action: "portal.case.message",
+    entity: "CaseMessage",
+    entityId: message.id,
+    ip: await getClientIp(),
+    details: { clientId: client.id, caseId: caseInfo.id },
+  });
+  await notifyMany([caseInfo.assignedLawyerId, caseInfo.createdById], {
+    type: "portal.case.message",
+    title: "رسالة جديدة من العميل",
+    body: `${client.name}: ${caseInfo.caseNumber}`,
+    link: `/cases/${caseInfo.id}`,
+  });
+
+  revalidatePath(`/portal/cases/${caseInfo.id}`);
+  revalidatePath(`/cases/${caseInfo.id}`);
+  return { ok: true, success: "تم إرسال الرسالة للمكتب" };
 }
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;

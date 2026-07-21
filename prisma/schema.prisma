@@ -35,22 +35,22 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   // من أنشأ هذا الحساب (الأدمن)
-  createdById String?
-  createdBy   User?   @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdUsers User[] @relation("UserCreatedBy")
+  createdById  String?
+  createdBy    User?   @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers User[]  @relation("UserCreatedBy")
 
-  sessions        Session[]
-  createdClients  Client[]   @relation("ClientCreatedBy")
-  createdCases    Case[]     @relation("CaseCreatedBy")
-  assignedCases   Case[]     @relation("CaseAssignedLawyer")
-  uploadedDocs    Document[]
-  createdTasks    Task[]     @relation("TaskCreatedBy")
-  assignedTasks   Task[]     @relation("TaskAssignedTo")
-  taskComments    TaskComment[]
-  caseNotes       CaseNote[]
-  createdEvents   Event[]
-  auditLogs       AuditLog[]
-  createdContracts Contract[]
+  sessions                Session[]
+  createdClients          Client[]             @relation("ClientCreatedBy")
+  createdCases            Case[]               @relation("CaseCreatedBy")
+  assignedCases           Case[]               @relation("CaseAssignedLawyer")
+  uploadedDocs            Document[]
+  createdTasks            Task[]               @relation("TaskCreatedBy")
+  assignedTasks           Task[]               @relation("TaskAssignedTo")
+  taskComments            TaskComment[]
+  caseNotes               CaseNote[]
+  createdEvents           Event[]
+  auditLogs               AuditLog[]
+  createdContracts        Contract[]
   createdServiceRequests  ServiceRequest[]     @relation("ServiceRequestCreatedBy")
   assignedServiceRequests ServiceRequest[]     @relation("ServiceRequestAssignedTo")
   serviceRequestNotes     ServiceRequestNote[]
@@ -58,7 +58,7 @@ model User {
   createdPowers           PowerOfAttorney[]    @relation("PowerCreatedBy")
   createdLitigationSteps  LitigationStep[]     @relation("LitigationStepCreatedBy")
   assignedLitigationSteps LitigationStep[]     @relation("LitigationStepAssignedTo")
-  createdDocumentRequests DocumentRequest[]     @relation("DocumentRequestCreatedBy")
+  createdDocumentRequests DocumentRequest[]    @relation("DocumentRequestCreatedBy")
   createdInvoices         Invoice[]            @relation("InvoiceCreatedBy")
   createdPayments         Payment[]            @relation("PaymentCreatedBy")
   createdExpenses         JudicialExpense[]    @relation("ExpenseCreatedBy")
@@ -70,9 +70,13 @@ model User {
   approvalRequests        ApprovalRequest[]    @relation("ApprovalRequestedBy")
   approvalDecisions       ApprovalRequest[]    @relation("ApprovalDecidedBy")
 
-  notifications     Notification[] @relation("UserNotifications")
-  messagesSent      Message[]      @relation("MessagesSent")
-  messagesReceived  Message[]      @relation("MessagesReceived")
+  notifications         Notification[]      @relation("UserNotifications")
+  messagesSent          Message[]           @relation("MessagesSent")
+  messagesReceived      Message[]           @relation("MessagesReceived")
+  caseMessages          CaseMessage[]       @relation("CaseMessageStaffAuthor")
+  createdConsultations  LegalConsultation[] @relation("ConsultationCreatedBy")
+  assignedConsultations LegalConsultation[] @relation("ConsultationAssignedTo")
+  createdLibraryEntries LegalLibraryEntry[] @relation("LibraryEntryCreatedBy")
 
   @@index([role])
   @@index([isActive])
@@ -141,23 +145,23 @@ enum ClientType {
 }
 
 model Client {
-  id         String     @id @default(cuid())
-  type       ClientType @default(INDIVIDUAL)
-  name       String // اسم الشخص أو الممثّل
+  id            String     @id @default(cuid())
+  type          ClientType @default(INDIVIDUAL)
+  name          String // اسم الشخص أو الممثّل
   // بيانات الفرد
-  nationalId  String? // رقم الهوية الوطنية
-  nationality String? // الجنسية
+  nationalId    String? // رقم الهوية الوطنية
+  nationality   String? // الجنسية
   // بيانات المنشأة التجارية
   companyName   String? // اسم الشركة
   unifiedNumber String? // الرقم الوطني الموحّد
   taxNumber     String? // الرقم الضريبي
   // بيانات التواصل
-  phone     String?
-  email     String?
-  address   String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  phone         String?
+  email         String?
+  address       String?
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   // بوابة العميل — دخول منفصل عن الموظفين
   portalEnabled      Boolean @default(false)
@@ -167,17 +171,19 @@ model Client {
   createdById String?
   createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  cases           Case[]
-  contracts       Contract[]
-  serviceRequests ServiceRequest[]
-  legalContacts   LegalContact[]
+  cases            Case[]
+  contracts        Contract[]
+  serviceRequests  ServiceRequest[]
+  legalContacts    LegalContact[]
   powersOfAttorney PowerOfAttorney[]
-  invoices        Invoice[]
-  payments        Payment[]
-  expenses        JudicialExpense[]
-  templateOutputs TemplateOutput[]
-  reminders       Reminder[]
-  portalSessions  ClientSession[]
+  invoices         Invoice[]
+  payments         Payment[]
+  expenses         JudicialExpense[]
+  templateOutputs  TemplateOutput[]
+  reminders        Reminder[]
+  portalSessions   ClientSession[]
+  consultations    LegalConsultation[]
+  caseMessages     CaseMessage[]       @relation("CaseMessageClientAuthor")
 
   @@index([name])
 }
@@ -242,20 +248,22 @@ model Case {
   assignedLawyerId String?
   assignedLawyer   User?   @relation("CaseAssignedLawyer", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
 
-  documents Document[]
+  documents        Document[]
   documentRequests DocumentRequest[]
-  tasks           Task[]
-  notes           CaseNote[]
-  events          Event[]
-  contracts       Contract[]
-  serviceRequests ServiceRequest[]
-  legalContacts   LegalContact[]
+  tasks            Task[]
+  notes            CaseNote[]
+  events           Event[]
+  contracts        Contract[]
+  serviceRequests  ServiceRequest[]
+  legalContacts    LegalContact[]
   powersOfAttorney PowerOfAttorney[]
-  litigationSteps LitigationStep[]
-  invoices        Invoice[]
-  expenses        JudicialExpense[]
-  templateOutputs TemplateOutput[]
-  reminders       Reminder[]
+  litigationSteps  LitigationStep[]
+  invoices         Invoice[]
+  expenses         JudicialExpense[]
+  templateOutputs  TemplateOutput[]
+  reminders        Reminder[]
+  consultations    LegalConsultation[]
+  caseMessages     CaseMessage[]
 
   @@index([status])
   @@index([caseType])
@@ -294,25 +302,25 @@ enum DocumentOcrStatus {
 }
 
 model Document {
-  id           String   @id @default(cuid())
-  title        String
-  fileName     String
-  storageKey   String // مسار/مفتاح الملف في التخزين
-  mimeType     String?
-  sizeBytes    Int?
-  category     String?
-  tags         String?
-  visibility   DocumentVisibility @default(PORTAL)
-  expiresAt    DateTime?
-  notes        String?
+  id            String             @id @default(cuid())
+  title         String
+  fileName      String
+  storageKey    String // مسار/مفتاح الملف في التخزين
+  mimeType      String?
+  sizeBytes     Int?
+  category      String?
+  tags          String?
+  visibility    DocumentVisibility @default(PORTAL)
+  expiresAt     DateTime?
+  notes         String?
   extractedText String?
-  ocrStatus    DocumentOcrStatus @default(NOT_INDEXED)
-  indexedAt    DateTime?
-  caseId       String
-  case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  uploadedById String?
-  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now())
+  ocrStatus     DocumentOcrStatus  @default(NOT_INDEXED)
+  indexedAt     DateTime?
+  caseId        String
+  case          Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedById  String?
+  uploadedBy    User?              @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime           @default(now())
 
   @@index([caseId])
   @@index([category])
@@ -589,6 +597,69 @@ model ServiceRequestNote {
 //  دليل الجهات والتوكيلات والتقاضي  —  Contacts, Powers & Litigation
 // ===========================================================================
 
+enum ConsultationStatus {
+  NEW
+  IN_REVIEW
+  OPINION_READY
+  CONVERTED
+  CLOSED
+  CANCELLED
+}
+
+enum ConsultationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ConsultationSource {
+  PUBLIC_SITE
+  CLIENT_PORTAL
+  PHONE
+  OFFICE
+  EMAIL
+  OTHER
+}
+
+model LegalConsultation {
+  id             String               @id @default(cuid())
+  title          String
+  question       String
+  legalOpinion   String?
+  recommendation String?
+  status         ConsultationStatus   @default(NEW)
+  priority       ConsultationPriority @default(MEDIUM)
+  source         ConsultationSource   @default(OFFICE)
+  requesterName  String?
+  requesterPhone String?
+  requesterEmail String?
+  reviewedAt     DateTime?
+  convertedAt    DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("ConsultationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("ConsultationAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([source])
+  @@index([priority])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
 enum LegalContactType {
   COURT
   GOVERNMENT
@@ -610,8 +681,8 @@ model LegalContact {
   email        String?
   address      String?
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -648,8 +719,8 @@ model PowerOfAttorney {
   scope          String?
   notes          String?
   documentUrl    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   clientId String
   client   Client @relation(fields: [clientId], references: [id], onDelete: Restrict)
@@ -699,8 +770,8 @@ model LitigationStep {
   outcome     String?
   nextAction  String?
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   caseId String
   case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -817,19 +888,19 @@ enum ExpenseCategory {
 }
 
 model JudicialExpense {
-  id        String          @id @default(cuid())
-  title     String
-  category  ExpenseCategory @default(OTHER)
-  status    ExpenseStatus   @default(PENDING)
-  amount    Int
-  incurredAt DateTime       @default(now())
+  id         String          @id @default(cuid())
+  title      String
+  category   ExpenseCategory @default(OTHER)
+  status     ExpenseStatus   @default(PENDING)
+  amount     Int
+  incurredAt DateTime        @default(now())
   dueDate    DateTime?
   paidAt     DateTime?
   vendor     String?
   receiptUrl String?
   notes      String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -860,6 +931,37 @@ enum LegalTemplateCategory {
   LAWSUIT
   EXECUTION
   OTHER
+}
+
+enum LibraryEntryType {
+  PRINCIPLE
+  JUDGMENT
+  NOTE
+  PROCEDURE
+  FORM
+  OTHER
+}
+
+model LegalLibraryEntry {
+  id           String           @id @default(cuid())
+  title        String
+  type         LibraryEntryType @default(NOTE)
+  summary      String?
+  content      String
+  tags         String?
+  jurisdiction String?
+  court        String?
+  sourceUrl    String?
+  isPublished  Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("LibraryEntryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([isPublished])
+  @@index([createdAt])
 }
 
 model LegalTemplate {
@@ -958,6 +1060,30 @@ model EmailDelivery {
   @@index([createdAt])
 }
 
+enum CaseMessageAuthorType {
+  STAFF
+  CLIENT
+}
+
+model CaseMessage {
+  id         String                @id @default(cuid())
+  body       String
+  authorType CaseMessageAuthorType
+  createdAt  DateTime              @default(now())
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  staffAuthorId String?
+  staffAuthor   User?   @relation("CaseMessageStaffAuthor", fields: [staffAuthorId], references: [id], onDelete: SetNull)
+
+  clientAuthorId String?
+  clientAuthor   Client? @relation("CaseMessageClientAuthor", fields: [clientAuthorId], references: [id], onDelete: SetNull)
+
+  @@index([caseId, createdAt])
+  @@index([authorType])
+}
+
 enum ApprovalStatus {
   PENDING
   APPROVED
@@ -1027,7 +1153,7 @@ model Reminder {
   updatedAt DateTime       @updatedAt
 
   userId String?
-  user   User? @relation("ReminderAssignedTo", fields: [userId], references: [id], onDelete: SetNull)
+  user   User?   @relation("ReminderAssignedTo", fields: [userId], references: [id], onDelete: SetNull)
 
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -1045,6 +1171,7 @@ model Reminder {
   @@index([clientId])
   @@index([caseId])
 }
+
 // ===========================================================================
 //  سجل التدقيق  —  Audit Log
 // ===========================================================================

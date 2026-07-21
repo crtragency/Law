@@ -161,6 +161,56 @@ export const SERVICE_PRIORITY_COLORS: Record<string, string> = {
   URGENT: "bg-seal-50 text-seal-700",
 };
 
+export const CONSULTATION_STATUS_LABELS: Record<string, string> = {
+  NEW: "جديدة",
+  IN_REVIEW: "قيد الدراسة",
+  OPINION_READY: "الرأي جاهز",
+  CONVERTED: "تم تحويلها",
+  CLOSED: "مغلقة",
+  CANCELLED: "ملغاة",
+};
+
+export const CONSULTATION_STATUS_COLORS: Record<string, string> = {
+  NEW: "bg-brand-50 text-brand-800",
+  IN_REVIEW: "bg-brass-50 text-brass-800",
+  OPINION_READY: "bg-brand-100 text-brand-900",
+  CONVERTED: "bg-gray-100 text-gray-700",
+  CLOSED: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-seal-50 text-seal-700",
+};
+
+export const CONSULTATION_PRIORITY_LABELS: Record<string, string> = {
+  LOW: "منخفضة",
+  MEDIUM: "متوسطة",
+  HIGH: "عالية",
+  URGENT: "عاجلة",
+};
+
+export const CONSULTATION_PRIORITY_COLORS: Record<string, string> = {
+  LOW: "bg-gray-100 text-gray-600",
+  MEDIUM: "bg-brand-50 text-brand-700",
+  HIGH: "bg-brass-100 text-brass-800",
+  URGENT: "bg-seal-50 text-seal-700",
+};
+
+export const CONSULTATION_SOURCE_LABELS: Record<string, string> = {
+  PUBLIC_SITE: "الموقع العام",
+  CLIENT_PORTAL: "بوابة العميل",
+  PHONE: "هاتف",
+  OFFICE: "زيارة المكتب",
+  EMAIL: "بريد إلكتروني",
+  OTHER: "أخرى",
+};
+
+export const LIBRARY_ENTRY_TYPE_LABELS: Record<string, string> = {
+  PRINCIPLE: "مبدأ قانوني",
+  JUDGMENT: "حكم / سابقة",
+  NOTE: "مذكرة معرفة",
+  PROCEDURE: "إجراء عملي",
+  FORM: "صيغة / نموذج",
+  OTHER: "أخرى",
+};
+
 export const CONTACT_TYPE_LABELS: Record<string, string> = {
   COURT: "محكمة / دائرة",
   GOVERNMENT: "جهة حكومية",

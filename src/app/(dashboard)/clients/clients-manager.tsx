@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import {
@@ -50,9 +51,11 @@ function Submit({ label }: { label: string }) {
 export function ClientsManager({
   clients,
   canManage,
+  canViewFinance,
 }: {
   clients: ClientRow[];
   canManage: boolean;
+  canViewFinance: boolean;
 }) {
   const [editing, setEditing] = useState<ClientRow | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -158,15 +161,27 @@ export function ClientsManager({
                   </p>
                 )}
               </div>
-              {canManage && (
-                <div className="mt-3 flex gap-3 border-t border-gray-100 pt-3">
-                  <button
-                    onClick={() => openEdit(c)}
-                    className="text-sm font-medium text-brand-600 hover:underline"
-                  >
-                    تعديل
-                  </button>
-                  <DeleteButton id={c.id} disabled={c.caseCount > 0} />
+              {(canManage || canViewFinance) && (
+                <div className="mt-3 flex flex-wrap gap-3 border-t border-gray-100 pt-3">
+                  {canViewFinance && (
+                    <Link
+                      href={`/clients/${c.id}/statement`}
+                      className="text-sm font-medium text-brand-600 hover:underline"
+                    >
+                      كشف الحساب
+                    </Link>
+                  )}
+                  {canManage && (
+                    <>
+                      <button
+                        onClick={() => openEdit(c)}
+                        className="text-sm font-medium text-brand-600 hover:underline"
+                      >
+                        تعديل
+                      </button>
+                      <DeleteButton id={c.id} disabled={c.caseCount > 0} />
+                    </>
+                  )}
                 </div>
               )}
             </div>

@@ -1,14 +1,16 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  addPortalCaseMessageAction,
   createPortalCaseRequestAction,
   createPortalCaseUploadUrlAction,
   registerPortalCaseDocumentAction,
   type PortalActionResult,
 } from "./actions";
 import { IconPaperclip, IconSend } from "@/components/icons";
+import { formatDateTime } from "@/lib/labels";
 
 const EMPTY: PortalActionResult = { ok: false };
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
@@ -17,6 +19,14 @@ interface DocumentRequestOption {
   id: string;
   title: string;
   category: string | null;
+}
+
+interface PortalMessageItem {
+  id: string;
+  body: string;
+  authorType: "STAFF" | "CLIENT";
+  authorName: string;
+  createdAt: string;
 }
 
 export function PortalCaseActions({
@@ -67,6 +77,78 @@ export function PortalCaseActions({
 
       <PortalDocumentUpload caseId={caseId} documentRequests={documentRequests} />
     </div>
+  );
+}
+
+export function PortalCaseMessages({
+  caseId,
+  messages,
+}: {
+  caseId: string;
+  messages: PortalMessageItem[];
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, action] = useActionState(addPortalCaseMessageAction, EMPTY);
+
+  useEffect(() => {
+    if (state.ok) formRef.current?.reset();
+  }, [state.ok]);
+
+  return (
+    <section className="form-panel">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="section-title">محادثة القضية</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            تواصل مباشر مع المكتب بخصوص هذه القضية.
+          </p>
+        </div>
+        <span className="badge bg-brand-50 text-brand-800">{messages.length} رسالة</span>
+      </div>
+
+      <div className="mb-5 max-h-[420px] space-y-3 overflow-y-auto rounded-2xl border border-line bg-paper/60 p-4">
+        {messages.length === 0 ? (
+          <p className="text-center text-sm text-gray-500">لا توجد رسائل بعد.</p>
+        ) : (
+          messages.map((message) => {
+            const mine = message.authorType === "CLIENT";
+            return (
+              <div key={message.id} className={`flex ${mine ? "justify-start" : "justify-end"}`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl border px-4 py-3 text-sm shadow-sm ${
+                    mine
+                      ? "border-brand-100 bg-brand-50/80 text-brand-950"
+                      : "border-line bg-white text-ink"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap leading-7">{message.body}</p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {message.authorName} - {formatDateTime(message.createdAt)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <form ref={formRef} action={action} className="space-y-3">
+        <input type="hidden" name="caseId" value={caseId} />
+        <textarea
+          name="body"
+          rows={3}
+          required
+          className="field"
+          placeholder="اكتب رسالتك للمكتب..."
+        />
+        {state.error && <p className="text-sm text-seal-600">{state.error}</p>}
+        {state.success && <p className="text-sm text-brand-700">{state.success}</p>}
+        <button type="submit" className="btn-primary">
+          <IconSend className="h-4 w-4" />
+          إرسال الرسالة
+        </button>
+      </form>
+    </section>
   );
 }
 

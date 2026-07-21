@@ -31,6 +31,7 @@ import { buildCaseChecklist } from "@/lib/case-checklists";
 import { computeTax, formatMoneyLabel } from "@/lib/money";
 import {
   CaseEditSection,
+  CaseConversationSection,
   NotesSection,
   DocumentsSection,
 } from "./case-detail";
@@ -70,6 +71,13 @@ export default async function CaseDetailPage({
       notes: {
         orderBy: { createdAt: "desc" },
         include: { author: { select: { name: true } } },
+      },
+      caseMessages: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          staffAuthor: { select: { name: true } },
+          clientAuthor: { select: { name: true } },
+        },
       },
       tasks: {
         orderBy: { createdAt: "desc" },
@@ -353,32 +361,17 @@ export default async function CaseDetailPage({
       </div>
 
       <div className="grid gap-7 xl:grid-cols-2">
-        <DocumentsSection
+        <CaseConversationSection
           caseId={c.id}
-          canManage={canManageDocs}
-          documents={c.documents.map((d) => ({
-            id: d.id,
-            title: d.title,
-            storageKey: d.storageKey,
-            fileName: d.fileName,
-            category: d.category,
-            visibility: d.visibility,
-            expiresAt: d.expiresAt?.toISOString() ?? null,
-            notes: d.notes,
-            extractedText: d.extractedText,
-            ocrStatus: d.ocrStatus,
-            uploaderName: d.uploadedBy?.name ?? null,
-            createdAt: d.createdAt.toISOString(),
-          }))}
-          documentRequests={c.documentRequests.map((request) => ({
-            id: request.id,
-            title: request.title,
-            category: request.category,
-            description: request.description,
-            dueDate: request.dueDate?.toISOString() ?? null,
-            status: request.status,
-            createdByName: request.createdBy?.name ?? null,
-            createdAt: request.createdAt.toISOString(),
+          messages={c.caseMessages.map((message) => ({
+            id: message.id,
+            body: message.body,
+            authorType: message.authorType,
+            authorName:
+              message.authorType === "STAFF"
+                ? message.staffAuthor?.name ?? "المكتب"
+                : message.clientAuthor?.name ?? c.client.name,
+            createdAt: message.createdAt.toISOString(),
           }))}
         />
         <NotesSection
@@ -391,6 +384,35 @@ export default async function CaseDetailPage({
           }))}
         />
       </div>
+
+      <DocumentsSection
+        caseId={c.id}
+        canManage={canManageDocs}
+        documents={c.documents.map((d) => ({
+          id: d.id,
+          title: d.title,
+          storageKey: d.storageKey,
+          fileName: d.fileName,
+          category: d.category,
+          visibility: d.visibility,
+          expiresAt: d.expiresAt?.toISOString() ?? null,
+          notes: d.notes,
+          extractedText: d.extractedText,
+          ocrStatus: d.ocrStatus,
+          uploaderName: d.uploadedBy?.name ?? null,
+          createdAt: d.createdAt.toISOString(),
+        }))}
+        documentRequests={c.documentRequests.map((request) => ({
+          id: request.id,
+          title: request.title,
+          category: request.category,
+          description: request.description,
+          dueDate: request.dueDate?.toISOString() ?? null,
+          status: request.status,
+          createdByName: request.createdBy?.name ?? null,
+          createdAt: request.createdAt.toISOString(),
+        }))}
+      />
 
       <div className="data-panel p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

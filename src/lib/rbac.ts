@@ -19,6 +19,10 @@ export type Permission =
   | "events.manage"
   | "services.view" // عرض كتالوج الخدمات وطلبات الخدمات القانونية
   | "services.manage" // إنشاء ومتابعة طلبات الخدمات القانونية
+  | "consultations.view"
+  | "consultations.manage"
+  | "library.view"
+  | "library.manage"
   | "contacts.view"
   | "contacts.manage"
   | "powers.view"
@@ -56,6 +60,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "consultations.view",
+    "consultations.manage",
+    "library.view",
+    "library.manage",
     "contacts.view",
     "contacts.manage",
     "powers.view",
@@ -91,6 +99,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "consultations.view",
+    "consultations.manage",
+    "library.view",
+    "library.manage",
     "contacts.view",
     "contacts.manage",
     "powers.view",
@@ -121,6 +133,10 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "consultations.view",
+    "consultations.manage",
+    "library.view",
+    "library.manage",
     "contacts.view",
     "contacts.manage",
     "powers.view",
@@ -145,6 +161,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.manage",
     "services.view",
     "services.manage",
+    "consultations.view",
+    "consultations.manage",
+    "library.view",
     "contacts.view",
     "contacts.manage",
     "powers.view",
@@ -164,6 +183,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "events.view",
     "services.view",
     "services.manage",
+    "consultations.view",
     "contacts.view",
     "finance.view",
     "finance.manage",

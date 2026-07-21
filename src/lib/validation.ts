@@ -331,6 +331,61 @@ export const reminderSchema = z.object({
   caseId: z.string().optional().or(z.literal("")),
 });
 
+export const publicConsultationSchema = z.object({
+  requesterName: z.string().trim().min(2, "اكتب الاسم").max(120),
+  requesterPhone: z.string().trim().min(5, "اكتب رقم تواصل صحيح").max(40),
+  requesterEmail: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("بريد غير صحيح")
+    .optional()
+    .or(z.literal("")),
+  title: z.string().trim().min(3, "اكتب عنوان مختصر").max(160),
+  question: z.string().trim().min(10, "اكتب تفاصيل الاستشارة").max(4000),
+});
+
+export const legalConsultationSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(3, "عنوان الاستشارة مطلوب").max(180),
+  question: z.string().trim().min(5, "تفاصيل الاستشارة مطلوبة").max(6000),
+  legalOpinion: z.string().trim().max(12000).optional().or(z.literal("")),
+  recommendation: z.string().trim().max(4000).optional().or(z.literal("")),
+  status: z.enum(["NEW", "IN_REVIEW", "OPINION_READY", "CONVERTED", "CLOSED", "CANCELLED"]),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  source: z.enum(["PUBLIC_SITE", "CLIENT_PORTAL", "PHONE", "OFFICE", "EMAIL", "OTHER"]),
+  requesterName: z.string().trim().max(120).optional().or(z.literal("")),
+  requesterPhone: z.string().trim().max(40).optional().or(z.literal("")),
+  requesterEmail: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("بريد غير صحيح")
+    .optional()
+    .or(z.literal("")),
+  clientId: z.string().optional().or(z.literal("")),
+  caseId: z.string().optional().or(z.literal("")),
+  assignedToId: z.string().optional().or(z.literal("")),
+});
+
+export const caseMessageSchema = z.object({
+  caseId: z.string().min(1),
+  body: z.string().trim().min(1, "اكتب الرسالة").max(3000),
+});
+
+export const libraryEntrySchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(3, "عنوان المدخل مطلوب").max(180),
+  type: z.enum(["PRINCIPLE", "JUDGMENT", "NOTE", "PROCEDURE", "FORM", "OTHER"]),
+  summary: z.string().trim().max(1200).optional().or(z.literal("")),
+  content: z.string().trim().min(10, "اكتب المحتوى").max(30000),
+  tags: z.string().trim().max(500).optional().or(z.literal("")),
+  jurisdiction: z.string().trim().max(120).optional().or(z.literal("")),
+  court: z.string().trim().max(160).optional().or(z.literal("")),
+  sourceUrl: z.string().trim().max(1000).optional().or(z.literal("")),
+  isPublished: z.coerce.boolean().default(true),
+});
+
 export const commentSchema = z.object({
   body: z.string().trim().min(1, "اكتب الملاحظة").max(2000),
 });

@@ -30,6 +30,10 @@ export function middleware(request: NextRequest) {
   }
 
   // منطقة الموظفين
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   const hasSession = request.cookies.has(SESSION_COOKIE);
   const isLogin = pathname === "/login";
   if (isLogin && hasSession) {

@@ -20,6 +20,8 @@ export default async function DashboardLayout({
   ];
   if (hasPermission(user.role, "services.view"))
     items.push({ href: "/services", label: "الخدمات والوحدات", icon: "scale" });
+  if (hasPermission(user.role, "consultations.view"))
+    items.push({ href: "/consultations", label: "الاستشارات", icon: "message" });
   if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
   if (hasPermission(user.role, "litigation.view"))
@@ -40,6 +42,8 @@ export default async function DashboardLayout({
     items.push({ href: "/finance", label: "المالية", icon: "building" });
   if (hasPermission(user.role, "templates.view"))
     items.push({ href: "/templates", label: "النماذج القانونية", icon: "pen" });
+  if (hasPermission(user.role, "library.view"))
+    items.push({ href: "/library", label: "المكتبة القانونية", icon: "file" });
   if (hasPermission(user.role, "approvals.view"))
     items.push({ href: "/approvals", label: "الموافقات", icon: "shield" });
   if (hasPermission(user.role, "reminders.view"))

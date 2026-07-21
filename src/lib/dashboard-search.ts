@@ -6,6 +6,9 @@ import {
   APPROVAL_STATUS_LABELS,
   APPROVAL_TYPE_LABELS,
   CASE_STATUS_LABELS,
+  CONSULTATION_PRIORITY_LABELS,
+  CONSULTATION_STATUS_COLORS,
+  CONSULTATION_STATUS_LABELS,
   CONTACT_TYPE_LABELS,
   CONTRACT_STATUS_LABELS,
   EVENT_TYPE_LABELS,
@@ -14,6 +17,7 @@ import {
   INVOICE_STATUS_COLORS,
   INVOICE_STATUS_LABELS,
   LEGAL_TEMPLATE_CATEGORY_LABELS,
+  LIBRARY_ENTRY_TYPE_LABELS,
   LITIGATION_STAGE_LABELS,
   LITIGATION_STEP_STATUS_LABELS,
   MESSAGE_TEMPLATE_CHANNEL_LABELS,
@@ -383,6 +387,83 @@ export async function runDashboardSearch(
               : item.client
                 ? displayClient(item.client)
                 : undefined,
+          })),
+        }))
+    );
+  }
+
+  if (hasPermission(user.role, "consultations.view")) {
+    jobs.push(
+      prisma.legalConsultation
+        .findMany({
+          where: {
+            OR: [
+              { title: textFilter },
+              { question: textFilter },
+              { legalOpinion: textFilter },
+              { recommendation: textFilter },
+              { requesterName: textFilter },
+              { requesterPhone: textFilter },
+              { requesterEmail: textFilter },
+            ],
+          },
+          include: {
+            client: { select: { name: true, companyName: true, type: true } },
+            case: { select: { title: true, caseNumber: true } },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((consultations) => ({
+          title: "الاستشارات",
+          results: consultations.map((item) => ({
+            id: `consultation-${item.id}`,
+            title: item.title,
+            href: "/consultations",
+            subtitle: item.case
+              ? `${item.case.caseNumber} - ${item.case.title}`
+              : item.client
+                ? displayClient(item.client)
+                : item.requesterName ?? undefined,
+            badge: CONSULTATION_STATUS_LABELS[item.status],
+            badgeClass: CONSULTATION_STATUS_COLORS[item.status],
+            meta: CONSULTATION_PRIORITY_LABELS[item.priority],
+          })),
+        }))
+    );
+  }
+
+  if (hasPermission(user.role, "library.view")) {
+    jobs.push(
+      prisma.legalLibraryEntry
+        .findMany({
+          where: {
+            AND: [
+              hasPermission(user.role, "library.manage") ? {} : { isPublished: true },
+              {
+                OR: [
+                  { title: textFilter },
+                  { summary: textFilter },
+                  { content: textFilter },
+                  { tags: textFilter },
+                  { jurisdiction: textFilter },
+                  { court: textFilter },
+                ],
+              },
+            ],
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((entries) => ({
+          title: "المكتبة القانونية",
+          results: entries.map((item) => ({
+            id: `library-${item.id}`,
+            title: item.title,
+            href: "/library",
+            subtitle: item.summary ?? item.tags ?? undefined,
+            badge: LIBRARY_ENTRY_TYPE_LABELS[item.type],
+            meta: item.court ?? item.jurisdiction ?? undefined,
           })),
         }))
     );

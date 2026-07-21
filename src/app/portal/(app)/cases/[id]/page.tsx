@@ -26,7 +26,7 @@ import {
 } from "@/lib/labels";
 import { computeTax, formatMoneyLabel } from "@/lib/money";
 import { IconCalendar, IconCheck, IconFileText, IconFolder } from "@/components/icons";
-import { PortalCaseActions } from "./portal-case-actions";
+import { PortalCaseActions, PortalCaseMessages } from "./portal-case-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +56,13 @@ export default async function PortalCasePage({
       serviceRequests: {
         orderBy: { createdAt: "desc" },
         take: 20,
+      },
+      caseMessages: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          staffAuthor: { select: { name: true } },
+          clientAuthor: { select: { name: true } },
+        },
       },
       contracts: {
         where: { status: { in: ["SENT", "CLIENT_SIGNED", "ACTIVE", "COMPLETED"] } },
@@ -156,6 +163,20 @@ export default async function PortalCasePage({
             title: request.title,
             category: request.category,
           }))}
+      />
+
+      <PortalCaseMessages
+        caseId={c.id}
+        messages={c.caseMessages.map((message) => ({
+          id: message.id,
+          body: message.body,
+          authorType: message.authorType,
+          authorName:
+            message.authorType === "CLIENT"
+              ? message.clientAuthor?.name ?? client.name
+              : message.staffAuthor?.name ?? "المكتب",
+          createdAt: message.createdAt.toISOString(),
+        }))}
       />
 
       {c.documentRequests.length > 0 && (

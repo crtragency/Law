@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CaseForm, type CaseFormValues } from "../case-form";
 import {
+  addCaseMessageAction,
   addCaseNoteAction,
   addDocumentAction,
   deleteDocumentAction,
@@ -42,6 +43,13 @@ interface NoteItem {
   id: string;
   body: string;
   authorName: string | null;
+  createdAt: string;
+}
+interface CaseMessageItem {
+  id: string;
+  body: string;
+  authorType: "STAFF" | "CLIENT";
+  authorName: string;
   createdAt: string;
 }
 interface DocItem {
@@ -149,6 +157,80 @@ export function NotesSection({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+export function CaseConversationSection({
+  caseId,
+  messages,
+}: {
+  caseId: string;
+  messages: CaseMessageItem[];
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, action] = useActionState(addCaseMessageAction, EMPTY);
+
+  useEffect(() => {
+    if (state.ok) formRef.current?.reset();
+  }, [state.ok]);
+
+  return (
+    <div className="form-panel">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 font-display text-xl font-bold">
+            <IconMessage className="h-5 w-5 text-brand-600" /> محادثة العميل
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            الرسائل هنا ظاهرة للعميل داخل بوابته، بخلاف ملاحظات الفريق الداخلية.
+          </p>
+        </div>
+        <span className="badge bg-brand-50 text-brand-800">{messages.length} رسالة</span>
+      </div>
+
+      <div className="mb-5 max-h-[460px] space-y-3 overflow-y-auto rounded-2xl border border-line bg-paper/60 p-4">
+        {messages.length === 0 ? (
+          <p className="text-center text-sm text-gray-500">لا توجد رسائل مع العميل بعد</p>
+        ) : (
+          messages.map((message) => {
+            const fromStaff = message.authorType === "STAFF";
+            return (
+              <div
+                key={message.id}
+                className={`flex ${fromStaff ? "justify-start" : "justify-end"}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl border px-4 py-3 text-sm shadow-sm ${
+                    fromStaff
+                      ? "border-brand-100 bg-brand-50/80 text-brand-950"
+                      : "border-line bg-white text-ink"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap leading-7">{message.body}</p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {message.authorName} - {formatDateTime(message.createdAt)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <form ref={formRef} action={action} className="space-y-3">
+        <input type="hidden" name="caseId" value={caseId} />
+        <textarea
+          name="body"
+          rows={3}
+          required
+          className="field"
+          placeholder="اكتب رسالة للعميل عن التحديث أو المستند أو الموعد..."
+        />
+        {state.error && <p className="text-sm text-seal-600">{state.error}</p>}
+        {state.success && <p className="text-sm text-brand-700">{state.success}</p>}
+        <Submit label="إرسال للعميل" />
+      </form>
     </div>
   );
 }
