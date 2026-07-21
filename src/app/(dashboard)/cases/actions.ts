@@ -12,7 +12,10 @@ import { audit } from "@/lib/audit";
 import { notifyMany } from "@/lib/notifications";
 import { notifyClientCaseUpdate } from "@/lib/client-notify";
 import { createSignedUploadUrl, storageConfigured } from "@/lib/storage";
-import { CASE_STATUS_LABELS } from "@/lib/labels";
+import {
+  CASE_STATUS_LABELS,
+  DOCUMENT_REQUEST_STATUS_LABELS,
+} from "@/lib/labels";
 
 export interface ActionResult {
   ok: boolean;
@@ -227,7 +230,31 @@ const documentSchema = z.object({
   title: z.string().trim().min(1, "عنوان المستند مطلوب").max(200),
   storageKey: z.string().trim().min(1, "أدخل رابط/مرجع المستند").max(1000),
   fileName: z.string().trim().max(200).optional().or(z.literal("")),
+  category: z.string().trim().max(80).optional().or(z.literal("")),
+  visibility: z.enum(["INTERNAL", "PORTAL"]).default("PORTAL"),
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
 });
+
+const documentRequestSchema = z.object({
+  caseId: z.string().min(1),
+  title: z.string().trim().min(1, "اسم المستند المطلوب واجب").max(200),
+  category: z.string().trim().max(80).optional().or(z.literal("")),
+  description: z.string().trim().max(1000).optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+});
+
+const documentRequestStatusSchema = z.object({
+  id: z.string().min(1),
+  caseId: z.string().min(1),
+  status: z.enum(["REQUESTED", "RECEIVED", "WAIVED"]),
+});
+
+function parseOptionalDate(value?: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 export async function addDocumentAction(
   _prev: ActionResult,
@@ -247,10 +274,17 @@ export async function addDocumentAction(
     title: formData.get("title"),
     storageKey: formData.get("storageKey"),
     fileName: formData.get("fileName") ?? "",
+    category: formData.get("category") ?? "",
+    visibility: formData.get("visibility") || "PORTAL",
+    expiresAt: formData.get("expiresAt") ?? "",
+    notes: formData.get("notes") ?? "",
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
   }
+
+  const expiresAt = parseOptionalDate(parsed.data.expiresAt);
+  if (parsed.data.expiresAt && !expiresAt) return { ok: false, error: "تاريخ انتهاء غير صالح" };
 
   const document = await prisma.document.create({
     data: {
@@ -258,6 +292,10 @@ export async function addDocumentAction(
       title: parsed.data.title,
       storageKey: parsed.data.storageKey,
       fileName: parsed.data.fileName || parsed.data.title,
+      category: parsed.data.category || null,
+      visibility: parsed.data.visibility,
+      expiresAt,
+      notes: parsed.data.notes || null,
       uploadedById: actor.id,
     },
   });
@@ -351,6 +389,11 @@ const registerUploadSchema = z.object({
   fileName: z.string().trim().min(1).max(200),
   mimeType: z.string().max(150).optional().or(z.literal("")),
   sizeBytes: z.number().int().positive().max(MAX_UPLOAD_BYTES),
+  category: z.string().trim().max(80).optional().or(z.literal("")),
+  visibility: z.enum(["INTERNAL", "PORTAL"]).default("PORTAL"),
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  requestId: z.string().optional().or(z.literal("")),
 });
 
 /** الخطوة 2: بعد نجاح الرفع، تسجيل المستند في قاعدة البيانات. */
@@ -361,6 +404,11 @@ export async function registerUploadedDocumentAction(input: {
   fileName: string;
   mimeType?: string;
   sizeBytes: number;
+  category?: string;
+  visibility?: "INTERNAL" | "PORTAL";
+  expiresAt?: string;
+  notes?: string;
+  requestId?: string;
 }): Promise<ActionResult> {
   if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
   let actor;
@@ -375,6 +423,8 @@ export async function registerUploadedDocumentAction(input: {
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
   }
+  const expiresAt = parseOptionalDate(parsed.data.expiresAt);
+  if (parsed.data.expiresAt && !expiresAt) return { ok: false, error: "تاريخ انتهاء غير صالح" };
 
   // حماية: المسار يجب أن يتبع نفس القضية المرسلة، لا مسار آخر.
   if (!parsed.data.storageKey.startsWith(`cases/${parsed.data.caseId}/`)) {
@@ -389,9 +439,19 @@ export async function registerUploadedDocumentAction(input: {
       fileName: parsed.data.fileName,
       mimeType: parsed.data.mimeType || null,
       sizeBytes: parsed.data.sizeBytes,
+      category: parsed.data.category || null,
+      visibility: parsed.data.visibility,
+      expiresAt,
+      notes: parsed.data.notes || null,
       uploadedById: actor.id,
     },
   });
+  if (parsed.data.requestId) {
+    await prisma.documentRequest.updateMany({
+      where: { id: parsed.data.requestId, caseId: parsed.data.caseId },
+      data: { status: "RECEIVED" },
+    });
+  }
   await audit({
     action: "document.add",
     userId: actor.id,
@@ -413,6 +473,108 @@ export async function registerUploadedDocumentAction(input: {
 
   revalidatePath(`/cases/${parsed.data.caseId}`);
   return { ok: true, success: "تم رفع المستند" };
+}
+
+export async function requestDocumentFromClientAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("documents.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const parsed = documentRequestSchema.safeParse({
+    caseId: formData.get("caseId"),
+    title: formData.get("title"),
+    category: formData.get("category") ?? "",
+    description: formData.get("description") ?? "",
+    dueDate: formData.get("dueDate") ?? "",
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات طلب المستند غير صحيحة" };
+  }
+  const dueDate = parseOptionalDate(parsed.data.dueDate);
+  if (parsed.data.dueDate && !dueDate) return { ok: false, error: "تاريخ الاستحقاق غير صالح" };
+
+  const request = await prisma.documentRequest.create({
+    data: {
+      caseId: parsed.data.caseId,
+      title: parsed.data.title,
+      category: parsed.data.category || null,
+      description: parsed.data.description || null,
+      dueDate,
+      createdById: actor.id,
+    },
+  });
+  await audit({
+    action: "document.request",
+    userId: actor.id,
+    entity: "DocumentRequest",
+    entityId: request.id,
+    ip: await getClientIp(),
+    details: { caseId: parsed.data.caseId, title: parsed.data.title },
+  });
+  await notifyClientCaseUpdate(parsed.data.caseId, {
+    subject: `مستند مطلوب: ${parsed.data.title}`,
+    heading: "المكتب يحتاج مستنداً منك",
+    lines: [
+      `المستند: ${parsed.data.title}`,
+      ...(parsed.data.category ? [`التصنيف: ${parsed.data.category}`] : []),
+      ...(dueDate ? [`آخر موعد للإرسال: ${dueDate.toLocaleDateString("ar-EG")}`] : []),
+      ...(parsed.data.description ? [parsed.data.description] : []),
+      "يمكنك إرسال المستند من بوابة العميل أو التواصل مع المكتب.",
+    ],
+  });
+
+  revalidatePath(`/cases/${parsed.data.caseId}`);
+  revalidatePath(`/portal/cases/${parsed.data.caseId}`);
+  return { ok: true, success: "تم طلب المستند من العميل" };
+}
+
+export async function updateDocumentRequestStatusAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  if (!(await verifySameOrigin())) return { ok: false, error: "طلب غير صالح" };
+  let actor;
+  try {
+    actor = await ensurePermission("documents.manage");
+  } catch (e) {
+    if (e instanceof AuthError) return { ok: false, error: e.message };
+    throw e;
+  }
+
+  const parsed = documentRequestStatusSchema.safeParse({
+    id: formData.get("id"),
+    caseId: formData.get("caseId"),
+    status: formData.get("status"),
+  });
+  if (!parsed.success) return { ok: false, error: "حالة طلب المستند غير صحيحة" };
+
+  await prisma.documentRequest.update({
+    where: { id: parsed.data.id },
+    data: { status: parsed.data.status },
+  });
+  await audit({
+    action: "document.request.status",
+    userId: actor.id,
+    entity: "DocumentRequest",
+    entityId: parsed.data.id,
+    ip: await getClientIp(),
+    details: { status: parsed.data.status },
+  });
+
+  revalidatePath(`/cases/${parsed.data.caseId}`);
+  revalidatePath(`/portal/cases/${parsed.data.caseId}`);
+  return {
+    ok: true,
+    success: `تم تحديث الطلب إلى ${DOCUMENT_REQUEST_STATUS_LABELS[parsed.data.status]}`,
+  };
 }
 
 export async function deleteDocumentAction(

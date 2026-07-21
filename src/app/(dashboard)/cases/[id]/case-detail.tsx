@@ -10,14 +10,23 @@ import {
   deleteDocumentAction,
   createUploadUrlAction,
   registerUploadedDocumentAction,
+  requestDocumentFromClientAction,
+  updateDocumentRequestStatusAction,
   type ActionResult,
 } from "../actions";
-import { formatDateTime } from "@/lib/labels";
+import {
+  DOCUMENT_REQUEST_STATUS_COLORS,
+  DOCUMENT_REQUEST_STATUS_LABELS,
+  formatDate,
+  formatDateTime,
+} from "@/lib/labels";
+import { Badge } from "@/components/ui";
 import {
   IconPen,
   IconPaperclip,
   IconFileText,
   IconMessage,
+  IconSend,
 } from "@/components/icons";
 
 const EMPTY: ActionResult = { ok: false };
@@ -37,7 +46,21 @@ interface DocItem {
   title: string;
   storageKey: string;
   fileName: string;
+  category: string | null;
+  visibility: string;
+  expiresAt: string | null;
+  notes: string | null;
   uploaderName: string | null;
+  createdAt: string;
+}
+interface DocumentRequestItem {
+  id: string;
+  title: string;
+  category: string | null;
+  description: string | null;
+  dueDate: string | null;
+  status: string;
+  createdByName: string | null;
   createdAt: string;
 }
 
@@ -130,20 +153,29 @@ const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
 export function DocumentsSection({
   caseId,
   documents,
+  documentRequests,
   canManage,
 }: {
   caseId: string;
   documents: DocItem[];
+  documentRequests: DocumentRequestItem[];
   canManage: boolean;
 }) {
   const router = useRouter();
   const [addState, addAction] = useActionState(addDocumentAction, EMPTY);
+  const [requestState, requestAction] = useActionState(requestDocumentFromClientAction, EMPTY);
   const [mode, setMode] = useState<"upload" | "link">("upload");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadOk, setUploadOk] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLInputElement>(null);
+  const visibilityRef = useRef<HTMLSelectElement>(null);
+  const expiresAtRef = useRef<HTMLInputElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const requestRef = useRef<HTMLSelectElement>(null);
+  const openDocumentRequests = documentRequests.filter((request) => request.status === "REQUESTED");
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
@@ -183,7 +215,12 @@ export function DocumentsSection({
       // 3) تسجيل المستند في قاعدة البيانات.
       const reg = await registerUploadedDocumentAction({
         caseId,
+        requestId: requestRef.current?.value || undefined,
         title: titleRef.current?.value.trim() || file.name,
+        category: categoryRef.current?.value.trim() || undefined,
+        visibility: (visibilityRef.current?.value as "INTERNAL" | "PORTAL" | undefined) || "PORTAL",
+        expiresAt: expiresAtRef.current?.value || undefined,
+        notes: notesRef.current?.value.trim() || undefined,
         storageKey: prep.storageKey,
         fileName: file.name,
         mimeType: file.type || undefined,
@@ -195,6 +232,11 @@ export function DocumentsSection({
       }
       if (fileRef.current) fileRef.current.value = "";
       if (titleRef.current) titleRef.current.value = "";
+      if (categoryRef.current) categoryRef.current.value = "";
+      if (visibilityRef.current) visibilityRef.current.value = "PORTAL";
+      if (expiresAtRef.current) expiresAtRef.current.value = "";
+      if (notesRef.current) notesRef.current.value = "";
+      if (requestRef.current) requestRef.current.value = "";
       setUploadOk(true);
       router.refresh();
     } finally {
@@ -210,6 +252,30 @@ export function DocumentsSection({
 
       {canManage && (
         <div className="mb-6 rounded-2xl border border-line bg-paper/70 p-4">
+          <form action={requestAction} className="mb-5 rounded-2xl border border-brand-100 bg-white p-4">
+            <div className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-ink">
+              <IconSend className="h-5 w-5 text-brand-600" />
+              طلب مستند من العميل
+            </div>
+            <input type="hidden" name="caseId" value={caseId} />
+            <div className="form-grid">
+              <input name="title" required className="field" placeholder="اسم المستند المطلوب" />
+              <input name="category" className="field" placeholder="التصنيف: هوية / توكيل / إيصال..." />
+              <input name="dueDate" type="date" className="field" />
+              <textarea
+                name="description"
+                rows={2}
+                className="field sm:col-span-2"
+                placeholder="تعليمات مختصرة للعميل..."
+              />
+            </div>
+            {requestState.error && <p className="mt-2 text-sm text-seal-600">{requestState.error}</p>}
+            {requestState.success && <p className="mt-2 text-sm text-brand-700">{requestState.success}</p>}
+            <div className="mt-3">
+              <Submit label="طلب المستند" />
+            </div>
+          </form>
+
           <div className="mb-4 flex rounded-xl border border-line bg-white p-1 text-sm font-semibold">
             <button
               type="button"
@@ -237,16 +303,42 @@ export function DocumentsSection({
 
           {mode === "upload" ? (
             <div className="form-grid">
+              {openDocumentRequests.length > 0 && (
+                <select ref={requestRef} className="field sm:col-span-2" defaultValue="">
+                  <option value="">ربط الرفع بطلب مستند مفتوح؟</option>
+                  {openDocumentRequests.map((request) => (
+                    <option key={request.id} value={request.id}>
+                      {request.title}
+                    </option>
+                  ))}
+                </select>
+              )}
               <input
                 ref={titleRef}
                 className="field"
                 placeholder="اسم المستند (اختياري — الافتراضي اسم الملف)"
               />
               <input
+                ref={categoryRef}
+                className="field"
+                placeholder="التصنيف: هوية / توكيل / إيصال..."
+              />
+              <select ref={visibilityRef} className="field" defaultValue="PORTAL">
+                <option value="PORTAL">ظاهر للعميل</option>
+                <option value="INTERNAL">داخلي فقط</option>
+              </select>
+              <input ref={expiresAtRef} type="date" className="field" />
+              <input
                 ref={fileRef}
                 type="file"
-                className="field file:ml-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1 file:text-sm file:font-medium file:text-brand-700"
+                className="field sm:col-span-2 file:ml-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1 file:text-sm file:font-medium file:text-brand-700"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt"
+              />
+              <textarea
+                ref={notesRef}
+                rows={2}
+                className="field sm:col-span-2"
+                placeholder="ملاحظات داخلية أو تعليمات عن المستند..."
               />
               <div className="sm:col-span-2">
                 {uploadError && (
@@ -284,6 +376,22 @@ export function DocumentsSection({
                 dir="ltr"
                 placeholder="https://... رابط المستند"
               />
+              <input
+                name="category"
+                className="field"
+                placeholder="التصنيف: هوية / توكيل / إيصال..."
+              />
+              <select name="visibility" className="field" defaultValue="PORTAL">
+                <option value="PORTAL">ظاهر للعميل</option>
+                <option value="INTERNAL">داخلي فقط</option>
+              </select>
+              <input name="expiresAt" type="date" className="field" />
+              <textarea
+                name="notes"
+                rows={2}
+                className="field sm:col-span-2"
+                placeholder="ملاحظات عن المستند..."
+              />
               <div className="sm:col-span-2">
                 {addState.error && (
                   <p className="mb-2 text-sm text-seal-600">{addState.error}</p>
@@ -292,6 +400,48 @@ export function DocumentsSection({
               </div>
             </form>
           )}
+        </div>
+      )}
+
+      {documentRequests.length > 0 && (
+        <div className="mb-6 rounded-2xl border border-line bg-white">
+          <div className="border-b border-line p-4">
+            <h4 className="font-display text-lg font-bold text-ink">المستندات المطلوبة</h4>
+            <p className="mt-1 text-sm text-gray-500">
+              الطلبات المفتوحة تظهر للعميل في البوابة ويمكن ربط الرفع بها.
+            </p>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {documentRequests.map((request) => (
+              <div key={request.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
+                <div>
+                  <p className="font-semibold text-ink">{request.title}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {request.category ?? "مستند عام"}
+                    {request.dueDate ? ` - استحقاق ${formatDate(request.dueDate)}` : ""}
+                    {request.createdByName ? ` - بواسطة ${request.createdByName}` : ""}
+                  </p>
+                  {request.description && (
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-600">
+                      {request.description}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className={DOCUMENT_REQUEST_STATUS_COLORS[request.status]}>
+                    {DOCUMENT_REQUEST_STATUS_LABELS[request.status]}
+                  </Badge>
+                  {canManage && (
+                    <DocumentRequestStatusForm
+                      id={request.id}
+                      caseId={caseId}
+                      currentStatus={request.status}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -317,9 +467,16 @@ export function DocumentsSection({
                       <span className="text-[10px] text-gray-400">(رابط)</span>
                     )}
                   </a>
-                  <p className="text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-gray-400">
+                    {d.category ?? "بدون تصنيف"} — {d.visibility === "PORTAL" ? "ظاهر للعميل" : "داخلي فقط"} —{" "}
                     {d.uploaderName ?? "—"} — {formatDateTime(d.createdAt)}
                   </p>
+                  {d.expiresAt && (
+                    <p className="mt-1 text-xs font-semibold text-brass-700">
+                      ينتهي في {formatDate(d.expiresAt)}
+                    </p>
+                  )}
+                  {d.notes && <p className="mt-1 text-sm text-gray-500">{d.notes}</p>}
                 </div>
                 {canManage && <DeleteDoc id={d.id} caseId={caseId} />}
               </div>
@@ -347,6 +504,34 @@ function DeleteDoc({ id, caseId }: { id: string; caseId: string }) {
         className="text-sm font-medium text-red-600 hover:underline"
       >
         حذف
+      </button>
+    </form>
+  );
+}
+
+function DocumentRequestStatusForm({
+  id,
+  caseId,
+  currentStatus,
+}: {
+  id: string;
+  caseId: string;
+  currentStatus: string;
+}) {
+  const [, action] = useActionState(updateDocumentRequestStatusAction, EMPTY);
+  return (
+    <form action={action} className="flex items-center gap-1">
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="caseId" value={caseId} />
+      <select name="status" className="field h-9 w-36 py-1 text-xs" defaultValue={currentStatus}>
+        {Object.entries(DOCUMENT_REQUEST_STATUS_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <button type="submit" className="btn-secondary px-3 py-1.5 text-xs">
+        حفظ
       </button>
     </form>
   );

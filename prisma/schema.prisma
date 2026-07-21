@@ -58,6 +58,7 @@ model User {
   createdPowers           PowerOfAttorney[]    @relation("PowerCreatedBy")
   createdLitigationSteps  LitigationStep[]     @relation("LitigationStepCreatedBy")
   assignedLitigationSteps LitigationStep[]     @relation("LitigationStepAssignedTo")
+  createdDocumentRequests DocumentRequest[]     @relation("DocumentRequestCreatedBy")
   createdInvoices         Invoice[]            @relation("InvoiceCreatedBy")
   createdPayments         Payment[]            @relation("PaymentCreatedBy")
   createdExpenses         JudicialExpense[]    @relation("ExpenseCreatedBy")
@@ -239,6 +240,7 @@ model Case {
   assignedLawyer   User?   @relation("CaseAssignedLawyer", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
 
   documents Document[]
+  documentRequests DocumentRequest[]
   tasks           Task[]
   notes           CaseNote[]
   events          Event[]
@@ -275,6 +277,12 @@ model CaseNote {
 //  المستندات  —  Documents
 // ===========================================================================
 
+enum DocumentRequestStatus {
+  REQUESTED
+  RECEIVED
+  WAIVED
+}
+
 model Document {
   id           String   @id @default(cuid())
   title        String
@@ -285,6 +293,8 @@ model Document {
   category     String?
   tags         String?
   visibility   DocumentVisibility @default(PORTAL)
+  expiresAt    DateTime?
+  notes        String?
   caseId       String
   case         Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   uploadedById String?
@@ -292,6 +302,30 @@ model Document {
   createdAt    DateTime @default(now())
 
   @@index([caseId])
+  @@index([category])
+  @@index([visibility])
+  @@index([expiresAt])
+}
+
+model DocumentRequest {
+  id          String                @id @default(cuid())
+  title       String
+  category    String?
+  description String?
+  dueDate     DateTime?
+  status      DocumentRequestStatus @default(REQUESTED)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation("DocumentRequestCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([status])
+  @@index([dueDate])
 }
 
 // ===========================================================================

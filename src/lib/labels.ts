@@ -269,6 +269,18 @@ export const EXPENSE_STATUS_COLORS: Record<string, string> = {
   REJECTED: "bg-seal-50 text-seal-700",
 };
 
+export const DOCUMENT_REQUEST_STATUS_LABELS: Record<string, string> = {
+  REQUESTED: "مطلوب من العميل",
+  RECEIVED: "تم الاستلام",
+  WAIVED: "تم الاستغناء عنه",
+};
+
+export const DOCUMENT_REQUEST_STATUS_COLORS: Record<string, string> = {
+  REQUESTED: "bg-brass-50 text-brass-800",
+  RECEIVED: "bg-brand-50 text-brand-800",
+  WAIVED: "bg-gray-100 text-gray-600",
+};
+
 export const LEGAL_TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   CONTRACT: "عقد",
   MEMO: "مذكرة",

@@ -9,6 +9,8 @@ import {
   CASE_TYPE_LABELS,
   CONTRACT_STATUS_COLORS,
   CONTRACT_STATUS_LABELS,
+  DOCUMENT_REQUEST_STATUS_COLORS,
+  DOCUMENT_REQUEST_STATUS_LABELS,
   EVENT_TYPE_COLORS,
   EVENT_TYPE_LABELS,
   INVOICE_STATUS_COLORS,
@@ -24,6 +26,7 @@ import {
 } from "@/lib/labels";
 import { computeTax, formatMoneyLabel } from "@/lib/money";
 import { IconCalendar, IconCheck, IconFileText, IconFolder } from "@/components/icons";
+import { PortalCaseActions } from "./portal-case-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +45,9 @@ export default async function PortalCasePage({
       documents: {
         where: { visibility: "PORTAL" },
         orderBy: { createdAt: "desc" },
+      },
+      documentRequests: {
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
       },
       events: { orderBy: { startAt: "asc" } },
       litigationSteps: {
@@ -141,6 +147,44 @@ export default async function PortalCasePage({
         )}
       </section>
 
+      <PortalCaseActions
+        caseId={c.id}
+        documentRequests={c.documentRequests
+          .filter((request) => request.status === "REQUESTED")
+          .map((request) => ({
+            id: request.id,
+            title: request.title,
+            category: request.category,
+          }))}
+      />
+
+      {c.documentRequests.length > 0 && (
+        <section>
+          <h2 className="section-title mb-3">المستندات المطلوبة من المكتب</h2>
+          <div className="data-panel divide-y divide-gray-100">
+            {c.documentRequests.map((request) => (
+              <div key={request.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
+                <div>
+                  <p className="font-semibold text-ink">{request.title}</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {request.category ?? "مستند عام"}
+                    {request.dueDate ? ` - آخر موعد ${formatDate(request.dueDate)}` : ""}
+                  </p>
+                  {request.description && (
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-600">
+                      {request.description}
+                    </p>
+                  )}
+                </div>
+                <Badge className={DOCUMENT_REQUEST_STATUS_COLORS[request.status]}>
+                  {DOCUMENT_REQUEST_STATUS_LABELS[request.status]}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="grid gap-7 xl:grid-cols-[1.2fr_0.8fr]">
         <section>
           <h2 className="section-title mb-3">الخط الزمني للقضية</h2>
@@ -184,7 +228,12 @@ export default async function PortalCasePage({
                     className="flex items-center gap-3 p-4 text-brand-700 transition hover:bg-gray-50"
                   >
                     <IconFileText className="h-4 w-4 shrink-0 text-gray-400" />
-                    <span className="min-w-0 flex-1 truncate font-medium">{document.title}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{document.title}</span>
+                      <span className="mt-0.5 block text-xs text-gray-400">
+                        {document.category ?? "مستند"}{document.notes ? ` - ${document.notes}` : ""}
+                      </span>
+                    </span>
                     <span className="text-xs text-gray-400">{formatDate(document.createdAt)}</span>
                   </a>
                 );
