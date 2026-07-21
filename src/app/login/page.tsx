@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
-import { IconScale } from "@/components/icons";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول — نظام مكتب المحاماة",
@@ -12,16 +12,15 @@ export default function LoginPage() {
       {/* اللوحة التعريفية — تظهر على الشاشات الكبيرة */}
       <section className="relative hidden overflow-hidden bg-brand-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
         {/* ميزان كبير خطّي كعنصر خلفي هادئ */}
-        <IconScale
+        <div
           aria-hidden
-          className="pointer-events-none absolute -left-12 top-1/2 h-[380px] w-[380px] -translate-y-1/2 text-brass-400 opacity-[0.06]"
-          strokeWidth={1}
-        />
+          className="pointer-events-none absolute -left-12 top-1/2 h-[380px] w-[380px] -translate-y-1/2 opacity-[0.07]"
+        >
+          <BrandLogo className="h-full w-full" />
+        </div>
 
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white/[0.06] text-brass-300">
-            <IconScale className="h-[22px] w-[22px]" />
-          </span>
+          <BrandLogo className="h-10 w-10 rounded-md bg-white p-1" priority />
           <span className="font-display text-[15px] font-bold">
             مكتب المحاماة
           </span>
@@ -57,9 +56,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* علامة مختصرة للموبايل */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-brand-950 text-brass-300">
-              <IconScale className="h-[22px] w-[22px]" />
-            </span>
+            <BrandLogo className="h-10 w-10 rounded-md bg-white p-1 shadow-sm" priority />
             <span className="font-display font-bold text-ink">
               مكتب المحاماة
             </span>

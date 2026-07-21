@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logoutAction } from "@/app/(dashboard)/logout/actions";
+import { BrandLogo } from "@/components/brand-logo";
 import {
   Icon,
   IconChevronLeft,
   IconLogout,
   IconMenu,
-  IconScale,
   type IconName,
 } from "@/components/icons";
 
@@ -71,8 +71,8 @@ export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
             onClick={() => setOpen(false)}
             className="group flex min-w-0 items-center gap-3"
           >
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brass-300/25 bg-white/[0.07] text-brass-200 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.03] group-hover:border-brass-300/45">
-              <IconScale className="h-[23px] w-[23px]" />
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brass-300/25 bg-white p-1.5 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.03] group-hover:border-brass-300/45">
+              <BrandLogo className="h-full w-full" priority />
               <span
                 className="absolute -bottom-1 -left-1 h-3 w-3 rounded-full border-2 border-brand-950 bg-brand-300"
                 aria-hidden
@@ -175,7 +175,7 @@ export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
     <>
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-brand-950/95 p-3 text-white shadow-lg shadow-brand-950/10 backdrop-blur lg:hidden">
         <span className="flex items-center gap-2.5 font-display font-bold text-white">
-          <IconScale className="text-brass-300" /> مكتب المحاماة
+          <BrandLogo className="h-8 w-8 rounded-lg bg-white p-1" priority /> مكتب المحاماة
         </span>
         <button
           onClick={() => setOpen((value) => !value)}

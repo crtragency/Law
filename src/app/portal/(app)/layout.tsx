@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePortalClient } from "@/lib/portal-session";
-import { IconFolder, IconLogout, IconScale } from "@/components/icons";
+import { BrandLogo } from "@/components/brand-logo";
+import { IconFolder, IconLogout } from "@/components/icons";
 import { portalLogoutAction } from "../logout-action";
 
 export default async function PortalLayout({
@@ -17,9 +18,7 @@ export default async function PortalLayout({
       <header className="sticky top-0 z-30 border-b border-white/10 bg-brand-950/96 text-white shadow-lg shadow-brand-950/10 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-5 py-3 sm:px-7 lg:px-10">
           <Link href="/portal" className="group flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brass-300/25 bg-white/[0.07] text-brass-200 transition group-hover:border-brass-300/45">
-              <IconScale className="h-6 w-6" />
-            </span>
+            <BrandLogo className="h-11 w-11 rounded-xl border border-brass-300/25 bg-white p-1.5 transition group-hover:border-brass-300/45" priority />
             <span className="min-w-0 leading-tight">
               <span className="block truncate font-display text-base font-bold">
                 بوابة العميل
