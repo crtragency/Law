@@ -12,12 +12,12 @@ export function DeleteCaseButton({
   id,
   caseLabel,
   redirectTo,
-  variant = "icon",
+  variant = "compact",
 }: {
   id: string;
   caseLabel: string;
   redirectTo?: "/cases";
-  variant?: "icon" | "button";
+  variant?: "compact" | "button";
 }) {
   const router = useRouter();
   const [state, action] = useActionState(deleteCaseAction, EMPTY);
@@ -34,7 +34,7 @@ export function DeleteCaseButton({
           event.preventDefault();
         }
       }}
-      className={variant === "button" ? "inline-flex flex-col items-start gap-1" : "inline-flex items-center gap-2"}
+      className="inline-flex flex-col items-start gap-1"
     >
       <input type="hidden" name="id" value={id} />
       {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
@@ -44,7 +44,7 @@ export function DeleteCaseButton({
   );
 }
 
-function DeleteSubmit({ variant }: { variant: "icon" | "button" }) {
+function DeleteSubmit({ variant }: { variant: "compact" | "button" }) {
   const { pending } = useFormStatus();
 
   if (variant === "button") {
@@ -60,11 +60,12 @@ function DeleteSubmit({ variant }: { variant: "icon" | "button" }) {
     <button
       type="submit"
       disabled={pending}
-      className="grid h-9 w-9 place-items-center rounded-lg text-seal-600 transition hover:bg-seal-50 disabled:opacity-50"
+      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-seal-600 transition hover:bg-seal-50 disabled:opacity-50"
       aria-label="حذف القضية"
       title="حذف القضية"
     >
       <IconTrash className="h-4 w-4" />
+      {pending ? "جار الحذف..." : "حذف"}
     </button>
   );
 }

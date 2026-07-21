@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CaseForm } from "./case-form";
 import { DeleteCaseButton } from "./delete-case-button";
 import { Badge } from "@/components/ui";
-import { IconPlus, IconSearch } from "@/components/icons";
+import { IconFileText, IconPen, IconPlus, IconSearch } from "@/components/icons";
 import {
   CASE_STATUS_LABELS,
   CASE_STATUS_COLORS,
@@ -18,6 +18,10 @@ interface CaseRow {
   title: string;
   status: string;
   caseType: string;
+  clientId: string;
+  court: string | null;
+  assignedLawyerId: string | null;
+  description: string | null;
   clientName: string;
   lawyerName: string | null;
 }
@@ -39,6 +43,7 @@ export function CasesList({
   canManage: boolean;
 }) {
   const [showNew, setShowNew] = useState(false);
+  const [editing, setEditing] = useState<CaseRow | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -55,7 +60,13 @@ export function CasesList({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         {canManage && (
-          <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
+          <button
+            onClick={() => {
+              setEditing(null);
+              setShowNew((v) => !v);
+            }}
+            className="btn-primary"
+          >
             {showNew ? (
               "إغلاق النموذج"
             ) : (
@@ -97,8 +108,29 @@ export function CasesList({
         />
       )}
 
+      {editing && canManage && (
+        <CaseForm
+          key={editing.id}
+          clients={clients}
+          lawyers={lawyers}
+          values={{
+            id: editing.id,
+            caseNumber: editing.caseNumber,
+            title: editing.title,
+            clientId: editing.clientId,
+            court: editing.court,
+            caseType: editing.caseType,
+            status: editing.status,
+            assignedLawyerId: editing.assignedLawyerId,
+            description: editing.description,
+          }}
+          onDone={() => setEditing(null)}
+          onCancel={() => setEditing(null)}
+        />
+      )}
+
       <div className="data-panel overflow-x-auto">
-        <table className="w-full min-w-[820px]">
+        <table className="w-full min-w-[980px]">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr>
               <th className="table-th">رقم القضية</th>
@@ -142,10 +174,30 @@ export function CasesList({
                   </td>
                   {canManage && (
                     <td className="table-td">
-                      <DeleteCaseButton
-                        id={c.id}
-                        caseLabel={`${c.caseNumber} - ${c.title}`}
-                      />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Link
+                          href={`/cases/${c.id}`}
+                          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+                        >
+                          <IconFileText className="h-4 w-4" />
+                          تفاصيل
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNew(false);
+                            setEditing(c);
+                          }}
+                          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-brass-700 transition hover:bg-brass-50"
+                        >
+                          <IconPen className="h-4 w-4" />
+                          تعديل
+                        </button>
+                        <DeleteCaseButton
+                          id={c.id}
+                          caseLabel={`${c.caseNumber} - ${c.title}`}
+                        />
+                      </div>
                     </td>
                   )}
                 </tr>

@@ -42,6 +42,10 @@ export default async function CasesPage() {
           title: c.title,
           status: c.status,
           caseType: c.caseType,
+          clientId: c.clientId,
+          court: c.court,
+          assignedLawyerId: c.assignedLawyerId,
+          description: c.description,
           clientName: c.client.name,
           lawyerName: c.assignedLawyer?.name ?? null,
         }))}
