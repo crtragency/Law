@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  outputFileTracingRoot: process.cwd(),
   experimental: {
     // إبقاء الصفحات المزارة حديثاً في ذاكرة المتصفح: الرجوع والتنقل المتكرر
     // خلال 30 ثانية يفتح فوراً بدون طلب جديد للخادم.

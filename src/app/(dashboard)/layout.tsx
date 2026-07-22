@@ -94,7 +94,7 @@ export default async function DashboardLayout({
         roleLabel={ROLE_LABELS[user.role]}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-paper/90 px-4 py-3 shadow-sm shadow-black/[0.02] backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-white/78 px-4 py-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl sm:px-6 lg:px-8">
           {canSearch && <SearchCommand />}
           <HeaderButton
             href="/messages"
@@ -111,7 +111,7 @@ export default async function DashboardLayout({
             <IconBell />
           </HeaderButton>
         </header>
-        <main className="dashboard-main mx-auto w-full max-w-[1680px] flex-1 p-5 sm:p-7 lg:p-10">{children}</main>
+        <main className="dashboard-main mx-auto w-full max-w-[1720px] flex-1 p-4 sm:p-6 lg:p-9 xl:p-10">{children}</main>
       </div>
     </div>
   );
@@ -132,7 +132,7 @@ function HeaderButton({
     <Link
       href={href}
       aria-label={label}
-      className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white/95 text-gray-500 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:text-brand-700"
+      className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-white/95 text-gray-500 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white hover:text-brand-700"
     >
       {children}
       {count > 0 && (
