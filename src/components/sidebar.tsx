@@ -117,10 +117,10 @@ export function Sidebar({
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
-            className="group flex min-w-0 items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.045]"
+            className="sidebar-brand-link group flex min-w-0 items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.045]"
           >
-            <span className="sidebar-brand-mark relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-brass-300/25 bg-white p-1 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.02] group-hover:border-brass-300/45">
-              <BrandLogo className="h-full w-full" imageClassName="scale-[1.16]" priority />
+            <span className="sidebar-brand-mark relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-brass-300/25 bg-white p-0.5 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.02] group-hover:border-brass-300/45">
+              <BrandLogo className="h-full w-full" imageClassName="scale-[1.02]" priority />
             </span>
             <span className="sidebar-reveal min-w-0 leading-tight">
               <span className="block truncate font-display text-[15px] font-bold text-white">
@@ -205,10 +205,10 @@ export function Sidebar({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="sidebar-logout-button flex w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
+              className="sidebar-logout-button flex h-10 w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
             >
               <span className="sidebar-logout-icon grid h-8 w-8 shrink-0 place-items-center rounded-md text-brass-200">
-                <IconLogout className="h-[18px] w-[18px]" />
+                <IconLogout className="h-[19px] w-[19px]" />
               </span>
               <span className="sidebar-reveal">تسجيل الخروج</span>
             </button>
