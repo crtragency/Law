@@ -20,7 +20,7 @@ const DEFAULT_MAX_BYTES = Number(process.env.OCR_MAX_BYTES ?? 8 * 1024 * 1024);
 const DEFAULT_MAX_CHARS = 30000;
 
 function isStoredDocument(storageKey: string) {
-  return storageKey.startsWith("cases/");
+  return storageKey.startsWith("cases/") || storageKey.startsWith("files/");
 }
 
 function extension(fileName: string) {

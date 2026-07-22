@@ -57,10 +57,7 @@ export default async function NotificationsPage() {
     }),
     canFinance
       ? prisma.invoice.findMany({
-          where: {
-            status: { notIn: ["PAID", "CANCELLED"] },
-            dueDate: { lte: soon },
-          },
+          where: { status: { notIn: ["PAID", "CANCELLED"] }, dueDate: { lte: soon } },
           include: { client: { select: { name: true, companyName: true, type: true } } },
           orderBy: { dueDate: "asc" },
           take: 8,
@@ -76,7 +73,9 @@ export default async function NotificationsPage() {
       : Promise.resolve([]),
     canApprovals
       ? prisma.approvalRequest.findMany({
-          where: canManageApprovals ? { status: "PENDING" } : { status: "PENDING", requestedById: me.id },
+          where: canManageApprovals
+            ? { status: "PENDING" }
+            : { status: "PENDING", requestedById: me.id },
           include: { requestedBy: { select: { name: true } } },
           orderBy: { createdAt: "asc" },
           take: 8,
@@ -85,34 +84,33 @@ export default async function NotificationsPage() {
   ]);
 
   const hasUnread = notifications.some((n) => !n.read);
-
   const taskAlerts = dueTasks.map((task) => ({
     title: task.title,
-    subtitle: `${task.case?.caseNumber ?? "بدون قضية"} — ${task.dueDate ? formatDate(task.dueDate) : "بدون موعد"}`,
+    subtitle: `${task.case?.caseNumber ?? "بدون قضية"} - ${task.dueDate ? formatDate(task.dueDate) : "بدون موعد"}`,
     href: task.caseId ? `/cases/${task.caseId}` : "/tasks",
     tone: task.dueDate && task.dueDate < now ? "danger" as const : "warning" as const,
   }));
   const eventAlerts = upcomingEvents.map((event) => ({
     title: event.title,
-    subtitle: `${event.case?.caseNumber ?? "بدون قضية"} — ${formatDateTime(event.startAt)}`,
+    subtitle: `${event.case?.caseNumber ?? "بدون قضية"} - ${formatDateTime(event.startAt)}`,
     href: event.caseId ? `/cases/${event.caseId}` : "/calendar",
     tone: "brand" as const,
   }));
   const invoiceAlerts = dueInvoices.map((invoice) => ({
     title: `فاتورة ${invoice.number}`,
-    subtitle: `${invoice.client.type === "COMPANY" && invoice.client.companyName ? invoice.client.companyName : invoice.client.name} — ${invoice.dueDate ? formatDate(invoice.dueDate) : "بدون استحقاق"}`,
+    subtitle: `${invoice.client.type === "COMPANY" && invoice.client.companyName ? invoice.client.companyName : invoice.client.name} - ${invoice.dueDate ? formatDate(invoice.dueDate) : "بدون استحقاق"}`,
     href: "/finance",
     tone: invoice.dueDate && invoice.dueDate < now ? "danger" as const : "warning" as const,
   }));
   const documentAlerts = expiringDocuments.map((document) => ({
     title: document.title,
-    subtitle: `${document.case.caseNumber} — ${document.expiresAt ? formatDate(document.expiresAt) : "بدون تاريخ"}`,
-    href: `/cases/${document.caseId}`,
+    subtitle: `${document.case?.caseNumber ?? "ملف عام"} - ${document.expiresAt ? formatDate(document.expiresAt) : "بدون تاريخ"}`,
+    href: document.caseId ? `/cases/${document.caseId}` : "/documents",
     tone: document.expiresAt && document.expiresAt < now ? "danger" as const : "warning" as const,
   }));
   const approvalAlerts = pendingApprovals.map((approval) => ({
     title: approval.title,
-    subtitle: `${approval.requestedBy?.name ?? "—"} — ${formatDateTime(approval.createdAt)}`,
+    subtitle: `${approval.requestedBy?.name ?? "—"} - ${formatDateTime(approval.createdAt)}`,
     href: "/approvals",
     tone: "warning" as const,
   }));
@@ -121,7 +119,7 @@ export default async function NotificationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="الإشعارات"
-        subtitle="المواعيد والمهام والموافقات والتنبيهات المهمة في مكان واحد"
+        subtitle="المواعيد والمهام والموافقات والتنبيهات المهمة في مكان واحد."
         action={
           hasUnread ? (
             <form action={markAllReadAction}>
@@ -195,17 +193,19 @@ function AlertPanel({
       <div className="divide-y divide-gray-100">
         {items.length === 0 ? (
           <p className="p-4 text-sm text-gray-500">{empty}</p>
-        ) : items.map((item, index) => (
-          <Link key={`${item.href}-${index}`} href={item.href} className="block p-4 transition hover:bg-gray-50">
-            <div className="flex items-start gap-3">
-              <span className={`mt-1 h-2.5 w-2.5 rounded-full ${toneClass(item.tone)}`} />
-              <div>
-                <p className="font-medium text-ink">{item.title}</p>
-                <p className="mt-1 text-sm text-gray-500">{item.subtitle}</p>
+        ) : (
+          items.map((item, index) => (
+            <Link key={`${item.href}-${index}`} href={item.href} className="block p-4 transition hover:bg-gray-50">
+              <div className="flex items-start gap-3">
+                <span className={`mt-1 h-2.5 w-2.5 rounded-full ${toneClass(item.tone)}`} />
+                <div>
+                  <p className="font-medium text-ink">{item.title}</p>
+                  <p className="mt-1 text-sm text-gray-500">{item.subtitle}</p>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))
+        )}
       </div>
     </section>
   );

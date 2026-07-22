@@ -364,4 +364,96 @@ body {
   .surface-hover {
     @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md hover:shadow-brand-950/[0.055];
   }
+
+  .law-command-board {
+    @apply rounded-lg border border-line bg-[linear-gradient(135deg,#ffffff_0%,#eef4f0_52%,#f8f3e7_100%)] p-4 shadow-xl shadow-brand-950/[0.075] sm:p-6 xl:p-7;
+  }
+
+  .law-pill {
+    @apply inline-flex min-h-9 items-center rounded-lg border border-line bg-white/70 px-4 text-gray-500 shadow-sm shadow-black/[0.02] transition hover:border-brand-300 hover:text-brand-800;
+  }
+
+  .law-pill-active {
+    @apply inline-flex min-h-9 items-center rounded-lg bg-brand-800 px-4 text-white shadow-md shadow-brand-950/15;
+  }
+
+  .law-icon-pill {
+    @apply grid h-10 w-10 overflow-hidden rounded-lg border border-line bg-white text-center text-sm font-bold leading-10 text-brand-800 shadow-sm shadow-black/[0.03] transition hover:-translate-y-0.5 hover:border-brand-300;
+  }
+
+  .law-dashboard-grid {
+    @apply grid gap-4 xl:grid-cols-[1.05fr_0.95fr_1fr_1.15fr] xl:auto-rows-[minmax(190px,auto)];
+  }
+
+  .profile-card-panel {
+    @apply relative min-h-[260px] overflow-hidden rounded-lg border border-white/50 bg-brand-800 shadow-lg shadow-brand-950/10 xl:row-span-2;
+  }
+
+  .profile-card-image {
+    @apply absolute inset-0;
+  }
+
+  .profile-card-image img {
+    filter: saturate(0.96) contrast(1.03);
+  }
+
+  .law-mini-card {
+    @apply min-h-[210px] rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
+  }
+
+  .law-card-arrow {
+    @apply grid h-9 w-9 place-items-center rounded-lg border border-line bg-white text-sm font-bold text-brand-800 shadow-sm shadow-black/[0.02] transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50;
+  }
+
+  .law-bar {
+    @apply block w-3 rounded-full bg-brand-800 shadow-sm shadow-brand-950/10;
+  }
+
+  .law-bar:nth-child(even) {
+    @apply bg-brand-500;
+  }
+
+  .law-ring {
+    --progress: 0%;
+    @apply grid h-36 w-36 place-items-center rounded-full text-center text-ink;
+    background:
+      radial-gradient(circle at center, #fff 0 58%, transparent 59%),
+      conic-gradient(theme("colors.brand.600") var(--progress), theme("colors.line") 0);
+  }
+
+  .law-task-panel {
+    @apply min-h-[300px] rounded-lg border border-brand-800 bg-brand-900 p-5 shadow-xl shadow-brand-950/15 xl:row-span-2;
+  }
+
+  .law-task-row {
+    @apply flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.065] p-3 transition hover:bg-white/[0.11];
+  }
+
+  .law-stack-panel {
+    @apply overflow-hidden rounded-lg border border-white/70 bg-white/[0.78] shadow-sm shadow-brand-950/[0.045] backdrop-blur;
+  }
+
+  .calendar-card-panel {
+    @apply rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur xl:col-span-2;
+  }
+
+  .law-event-row {
+    @apply flex items-center gap-3 rounded-lg border border-line bg-white p-3 transition hover:border-brand-300 hover:bg-brand-50/40;
+  }
+
+  .recent-cases-panel {
+    @apply rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
+  }
+
+  .profile-layout {
+    @apply grid items-start gap-7 xl:grid-cols-[minmax(360px,0.8fr)_minmax(420px,1fr)];
+  }
+
+  .profile-hero-panel {
+    @apply relative min-h-[360px] overflow-hidden rounded-lg border border-brand-800 bg-[linear-gradient(145deg,#0d271f_0%,#1f4e3e_55%,#8a6a28_100%)] shadow-xl shadow-brand-950/15;
+  }
+
+  .documents-layout {
+    @apply grid items-start gap-7 2xl:grid-cols-[minmax(420px,0.55fr)_minmax(0,1fr)];
+  }
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { hasPermission } from "@/lib/rbac";
-import { ROLE_LABELS } from "@/lib/rbac";
+import { hasPermission, ROLE_LABELS } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { Sidebar, type NavItem } from "@/components/sidebar";
 import { SearchCommand } from "@/components/search-command";
@@ -14,10 +13,8 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
-  // نبني عناصر القائمة حسب صلاحيات المستخدم.
-  const items: NavItem[] = [
-    { href: "/dashboard", label: "الرئيسية", icon: "home" },
-  ];
+  const items: NavItem[] = [{ href: "/dashboard", label: "الرئيسية", icon: "home" }];
+
   if (hasPermission(user.role, "tasks.view") || hasPermission(user.role, "events.view"))
     items.push({ href: "/daily-agenda", label: "أجندة اليوم", icon: "calendar" });
   if (hasPermission(user.role, "services.view"))
@@ -26,24 +23,24 @@ export default async function DashboardLayout({
     items.push({ href: "/consultations", label: "الاستشارات", icon: "message" });
   if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
-  if (hasPermission(user.role, "documents.view"))
+  if (hasPermission(user.role, "documents.view")) {
     items.push({ href: "/document-requests", label: "طلبات المستندات", icon: "inbox" });
-  if (hasPermission(user.role, "cases.view"))
+    items.push({ href: "/documents", label: "مركز الملفات", icon: "paperclip" });
+  }
+  if (hasPermission(user.role, "cases.view")) {
     items.push({ href: "/communications", label: "سجل الاتصالات", icon: "phone" });
-  if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/correspondence", label: "الوارد والصادر", icon: "send" });
-  if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/meetings", label: "محاضر الاجتماعات", icon: "message" });
-  if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/settlements", label: "التسويات والعروض", icon: "scale" });
-  if (hasPermission(user.role, "litigation.view"))
+  }
+  if (hasPermission(user.role, "litigation.view")) {
     items.push({ href: "/litigation", label: "التقاضي", icon: "gavel" });
-  if (hasPermission(user.role, "litigation.view"))
     items.push({ href: "/hearings", label: "محاضر الجلسات", icon: "gavel" });
-  if (hasPermission(user.role, "clients.view"))
-    items.push({ href: "/clients", label: "الموكّلون", icon: "users" });
-  if (hasPermission(user.role, "clients.view"))
+  }
+  if (hasPermission(user.role, "clients.view")) {
+    items.push({ href: "/clients", label: "الموكلون", icon: "users" });
     items.push({ href: "/conflict-check", label: "فحص التعارض", icon: "shield" });
+  }
   if (hasPermission(user.role, "contacts.view"))
     items.push({ href: "/contacts", label: "جهات الاتصال", icon: "users" });
   if (hasPermission(user.role, "powers.view"))
@@ -72,14 +69,13 @@ export default async function DashboardLayout({
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });
   if (hasPermission(user.role, "firm.manage"))
     items.push({ href: "/admin/firm", label: "بيانات الشركة", icon: "building" });
-  if (hasPermission(user.role, "audit.view"))
+  if (hasPermission(user.role, "audit.view")) {
     items.push({ href: "/admin/audit", label: "سجل التدقيق", icon: "file" });
-  if (hasPermission(user.role, "audit.view"))
     items.push({ href: "/admin/email-queue", label: "طابور البريد", icon: "message" });
-  if (hasPermission(user.role, "audit.view"))
     items.push({ href: "/admin/production", label: "جاهزية التشغيل", icon: "shield" });
+  }
+  items.push({ href: "/profile", label: "البروفايل", icon: "user" });
 
-  // عدّادات غير المقروء للإشعارات والرسائل.
   const [unreadNotifications, unreadMessages] = await Promise.all([
     prisma.notification.count({ where: { userId: user.id, read: false } }),
     prisma.message.count({ where: { recipientId: user.id, read: false } }),
@@ -90,30 +86,59 @@ export default async function DashboardLayout({
     <div className="dashboard-shell flex min-h-screen flex-col bg-paper lg:flex-row">
       <Sidebar
         items={items}
+        userId={user.id}
         userName={user.name}
+        avatarStorageKey={user.avatarStorageKey}
         roleLabel={ROLE_LABELS[user.role]}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-white/78 px-4 py-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl sm:px-6 lg:px-8">
           {canSearch && <SearchCommand />}
-          <HeaderButton
-            href="/messages"
-            count={unreadMessages}
-            label="الرسائل"
-          >
+          <ProfileButton
+            href="/profile"
+            userId={user.id}
+            name={user.name}
+            avatarStorageKey={user.avatarStorageKey}
+          />
+          <HeaderButton href="/messages" count={unreadMessages} label="الرسائل">
             <IconMessage />
           </HeaderButton>
-          <HeaderButton
-            href="/notifications"
-            count={unreadNotifications}
-            label="الإشعارات"
-          >
+          <HeaderButton href="/notifications" count={unreadNotifications} label="الإشعارات">
             <IconBell />
           </HeaderButton>
         </header>
-        <main className="dashboard-main mx-auto w-full max-w-[1720px] flex-1 p-4 sm:p-6 lg:p-9 xl:p-10">{children}</main>
+        <main className="dashboard-main mx-auto w-full max-w-[1720px] flex-1 p-4 sm:p-6 lg:p-9 xl:p-10">
+          {children}
+        </main>
       </div>
     </div>
+  );
+}
+
+function ProfileButton({
+  href,
+  userId,
+  name,
+  avatarStorageKey,
+}: {
+  href: string;
+  userId: string;
+  name: string;
+  avatarStorageKey: string | null;
+}) {
+  const initials = name.trim().slice(0, 1) || "؟";
+  return (
+    <Link
+      href={href}
+      aria-label="البروفايل"
+      className="relative flex h-9 w-9 overflow-hidden rounded-lg border border-line bg-white/95 text-sm font-bold text-brand-800 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white"
+    >
+      {avatarStorageKey ? (
+        <img src={`/api/users/${userId}/avatar`} alt={name} className="h-full w-full object-cover" />
+      ) : (
+        <span className="grid h-full w-full place-items-center">{initials}</span>
+      )}
+    </Link>
   );
 }
 

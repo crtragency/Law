@@ -23,16 +23,20 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         Role      @default(SECRETARY)
-  phone        String?
-  isActive     Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  passwordHash     String
+  role             Role      @default(SECRETARY)
+  phone            String?
+  profileTitle     String?
+  avatarStorageKey String?
+  avatarFileName   String?
+  avatarMimeType   String?
+  isActive         Boolean   @default(true)
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // من أنشأ هذا الحساب (الأدمن)
   createdById  String?
@@ -334,8 +338,8 @@ model Document {
   extractedText String?
   ocrStatus     DocumentOcrStatus  @default(NOT_INDEXED)
   indexedAt     DateTime?
-  caseId        String
-  case          Case               @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  caseId        String?
+  case          Case?              @relation(fields: [caseId], references: [id], onDelete: SetNull)
   uploadedById  String?
   uploadedBy    User?              @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   createdAt     DateTime           @default(now())

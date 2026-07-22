@@ -318,8 +318,8 @@ export async function runDashboardSearch(
           results: documents.map((item) => ({
             id: `document-${item.id}`,
             title: item.title,
-            href: `/cases/${item.caseId}`,
-            subtitle: `${item.case.caseNumber} - ${item.case.title}`,
+            href: item.caseId ? `/cases/${item.caseId}` : "/documents",
+            subtitle: item.case ? `${item.case.caseNumber} - ${item.case.title}` : item.fileName,
             badge: item.visibility === "PORTAL" ? "ظاهر للعميل" : "داخلي",
             meta: item.category ?? item.fileName,
           })),

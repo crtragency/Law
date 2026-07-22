@@ -21,7 +21,9 @@ export interface NavItem {
 
 interface SidebarProps {
   items: NavItem[];
+  userId: string;
   userName: string;
+  avatarStorageKey?: string | null;
   roleLabel: string;
 }
 
@@ -34,6 +36,7 @@ const NAV_GROUPS = [
       "/services",
       "/cases",
       "/document-requests",
+      "/documents",
       "/communications",
       "/correspondence",
       "/meetings",
@@ -47,7 +50,16 @@ const NAV_GROUPS = [
   },
   {
     label: "العلاقات والملفات",
-    match: ["/clients", "/contacts", "/powers", "/contracts", "/templates", "/library", "/consultations", "/conflict-check"],
+    match: [
+      "/clients",
+      "/contacts",
+      "/powers",
+      "/contracts",
+      "/templates",
+      "/library",
+      "/consultations",
+      "/conflict-check",
+    ],
   },
   {
     label: "المال والمتابعة",
@@ -55,7 +67,16 @@ const NAV_GROUPS = [
   },
   {
     label: "الإدارة",
-    match: ["/messages", "/notifications", "/admin/users", "/admin/firm", "/admin/audit", "/admin/email-queue", "/admin/production"],
+    match: [
+      "/messages",
+      "/notifications",
+      "/profile",
+      "/admin/users",
+      "/admin/firm",
+      "/admin/audit",
+      "/admin/email-queue",
+      "/admin/production",
+    ],
   },
 ];
 
@@ -71,11 +92,23 @@ function groupItems(items: NavItem[]) {
   return remaining.length > 0 ? [...groups, { label: "أخرى", items: remaining }] : groups;
 }
 
-export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
+export function Sidebar({
+  items,
+  userId,
+  userName,
+  avatarStorageKey,
+  roleLabel,
+}: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const initials = userName.trim().charAt(0) || "؟";
   const groupedItems = groupItems(items);
+
+  const avatar = avatarStorageKey ? (
+    <img src={`/api/users/${userId}/avatar`} alt={userName} className="h-full w-full object-cover" />
+  ) : (
+    initials
+  );
 
   const sidebarContent = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0d271f_0%,#0b211a_52%,#071812_100%)] text-white shadow-2xl shadow-brand-950/25 lg:shadow-none">
@@ -134,7 +167,7 @@ export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
                       className={`group relative flex min-h-[40px] items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-[13px] transition duration-200 ease-out motion-safe:hover:-translate-x-0.5 ${
                         active
                           ? "bg-white/[0.12] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.16)]"
-                            : "font-medium text-brand-100/80 hover:bg-white/[0.075] hover:text-white"
+                          : "font-medium text-brand-100/80 hover:bg-white/[0.075] hover:text-white"
                       }`}
                     >
                       {active && (
@@ -164,15 +197,15 @@ export function Sidebar({ items, userName, roleLabel }: SidebarProps) {
 
       <div className="shrink-0 border-t border-white/10 bg-brand-950/25 p-4 lg:p-5">
         <div className="rounded-lg border border-white/10 bg-white/[0.055] p-3 shadow-inner shadow-white/5">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brass-300 text-sm font-bold text-brand-950 shadow-lg shadow-black/10">
-              {initials}
+          <Link href="/profile" className="mb-3 flex items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.06]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brass-300 text-sm font-bold text-brand-950 shadow-lg shadow-black/10">
+              {avatar}
             </span>
             <div className="min-w-0 leading-tight">
               <div className="truncate text-sm font-semibold text-white">{userName}</div>
               <div className="mt-0.5 truncate text-[11px] text-brand-200">{roleLabel}</div>
             </div>
-          </div>
+          </Link>
           <form action={logoutAction}>
             <button
               type="submit"
