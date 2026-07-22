@@ -26,6 +26,16 @@ export default async function DashboardLayout({
     items.push({ href: "/consultations", label: "الاستشارات", icon: "message" });
   if (hasPermission(user.role, "cases.view"))
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
+  if (hasPermission(user.role, "documents.view"))
+    items.push({ href: "/document-requests", label: "طلبات المستندات", icon: "inbox" });
+  if (hasPermission(user.role, "cases.view"))
+    items.push({ href: "/communications", label: "سجل الاتصالات", icon: "phone" });
+  if (hasPermission(user.role, "cases.view"))
+    items.push({ href: "/correspondence", label: "الوارد والصادر", icon: "send" });
+  if (hasPermission(user.role, "cases.view"))
+    items.push({ href: "/meetings", label: "محاضر الاجتماعات", icon: "message" });
+  if (hasPermission(user.role, "cases.view"))
+    items.push({ href: "/settlements", label: "التسويات والعروض", icon: "scale" });
   if (hasPermission(user.role, "litigation.view"))
     items.push({ href: "/litigation", label: "التقاضي", icon: "gavel" });
   if (hasPermission(user.role, "litigation.view"))

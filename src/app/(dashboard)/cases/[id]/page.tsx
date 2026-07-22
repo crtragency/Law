@@ -8,8 +8,13 @@ import {
   CASE_STATUS_LABELS,
   CASE_STATUS_COLORS,
   CASE_TYPE_LABELS,
+  COMMUNICATION_CHANNEL_LABELS,
+  COMMUNICATION_OUTCOME_COLORS,
+  COMMUNICATION_OUTCOME_LABELS,
   CONTRACT_STATUS_COLORS,
   CONTRACT_STATUS_LABELS,
+  CORRESPONDENCE_STATUS_COLORS,
+  CORRESPONDENCE_STATUS_LABELS,
   DOCUMENT_REQUEST_STATUS_COLORS,
   DOCUMENT_REQUEST_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
@@ -17,9 +22,13 @@ import {
   LITIGATION_STAGE_LABELS,
   LITIGATION_STEP_STATUS_COLORS,
   LITIGATION_STEP_STATUS_LABELS,
+  MEETING_MINUTE_STATUS_COLORS,
+  MEETING_MINUTE_STATUS_LABELS,
   SERVICE_AREA_LABELS,
   SERVICE_STATUS_COLORS,
   SERVICE_STATUS_LABELS,
+  SETTLEMENT_STATUS_COLORS,
+  SETTLEMENT_STATUS_LABELS,
   TASK_STATUS_LABELS,
   TASK_STATUS_COLORS,
   EVENT_TYPE_LABELS,
@@ -44,6 +53,8 @@ import {
   IconClock,
   IconFileText,
   IconInbox,
+  IconPhone,
+  IconScale,
   IconShield,
 } from "@/components/icons";
 
@@ -89,6 +100,22 @@ export default async function CaseDetailPage({
       hearingMinutes: {
         orderBy: { sessionDate: "desc" },
         include: { createdBy: { select: { name: true } } },
+      },
+      communicationLogs: {
+        orderBy: { occurredAt: "desc" },
+        include: { assignedTo: { select: { name: true } } },
+      },
+      correspondences: {
+        orderBy: { updatedAt: "desc" },
+        include: { assignedTo: { select: { name: true } } },
+      },
+      meetingMinutes: {
+        orderBy: { meetingAt: "desc" },
+        include: { assignedTo: { select: { name: true } } },
+      },
+      settlementOffers: {
+        orderBy: { updatedAt: "desc" },
+        include: { assignedTo: { select: { name: true } } },
       },
       litigationSteps: {
         orderBy: [{ sessionDate: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
@@ -233,6 +260,42 @@ export default async function CaseDetailPage({
       badgeClass: minute.nextSessionAt ? "bg-brass-50 text-brass-800" : "bg-brand-50 text-brand-800",
       body: minute.decision,
     })),
+    ...c.communicationLogs.map((log) => ({
+      id: `communication-${log.id}`,
+      date: log.occurredAt,
+      title: `تواصل: ${log.subject}`,
+      meta: `${COMMUNICATION_CHANNEL_LABELS[log.channel]}${log.assignedTo ? ` - ${log.assignedTo.name}` : ""}`,
+      badge: COMMUNICATION_OUTCOME_LABELS[log.outcome],
+      badgeClass: COMMUNICATION_OUTCOME_COLORS[log.outcome],
+      body: log.summary,
+    })),
+    ...c.correspondences.map((item) => ({
+      id: `correspondence-${item.id}`,
+      date: item.dueAt ?? item.receivedAt ?? item.sentAt ?? item.createdAt,
+      title: `مراسلة: ${item.number}`,
+      meta: item.title,
+      badge: CORRESPONDENCE_STATUS_LABELS[item.status],
+      badgeClass: CORRESPONDENCE_STATUS_COLORS[item.status],
+      body: item.summary ?? item.notes,
+    })),
+    ...c.meetingMinutes.map((meeting) => ({
+      id: `meeting-${meeting.id}`,
+      date: meeting.meetingAt,
+      title: `اجتماع: ${meeting.title}`,
+      meta: meeting.location ?? meeting.assignedTo?.name ?? "محضر اجتماع",
+      badge: MEETING_MINUTE_STATUS_LABELS[meeting.status],
+      badgeClass: MEETING_MINUTE_STATUS_COLORS[meeting.status],
+      body: meeting.decisions,
+    })),
+    ...c.settlementOffers.map((offer) => ({
+      id: `settlement-${offer.id}`,
+      date: offer.responseDueAt ?? offer.signedAt ?? offer.offerDate,
+      title: `تسوية: ${offer.title}`,
+      meta: offer.amountBeforeTax === null ? offer.offeredBy ?? "عرض تسوية" : formatMoneyLabel(computeTax(offer.amountBeforeTax, offer.taxRate).total),
+      badge: SETTLEMENT_STATUS_LABELS[offer.status],
+      badgeClass: SETTLEMENT_STATUS_COLORS[offer.status],
+      body: offer.terms,
+    })),
     ...c.serviceRequests.map((request) => ({
       id: `service-${request.id}`,
       date: request.dueDate ?? request.createdAt,
@@ -295,7 +358,7 @@ export default async function CaseDetailPage({
         <div className="rule-double mt-4" aria-hidden />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
         <StatCard label="اكتمال الملف" value={`${completion}%`} icon={<IconCheck />} />
         <StatCard
           label="الموعد القادم"
@@ -304,6 +367,8 @@ export default async function CaseDetailPage({
         />
         <StatCard label="مهام مفتوحة" value={openTasks.length} icon={<IconClock />} />
         <StatCard label="مستندات مطلوبة" value={pendingDocumentRequests.length} icon={<IconFileText />} />
+        <StatCard label="تواصلات" value={c.communicationLogs.length} icon={<IconPhone />} />
+        <StatCard label="تسويات" value={c.settlementOffers.length} icon={<IconScale />} />
         <StatCard label="طلبات العميل" value={openServiceRequests.length} icon={<IconInbox />} />
         <StatCard label="مستحقات" value={formatMoneyLabel(invoiceOutstanding)} icon={<IconBell />} />
       </div>

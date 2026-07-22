@@ -425,6 +425,95 @@ export const REMINDER_STATUS_COLORS: Record<string, string> = {
 };
 
 /** تنسيق التاريخ بالعربية. */
+export const COMMUNICATION_DIRECTION_LABELS: Record<string, string> = {
+  INBOUND: "وارد",
+  OUTBOUND: "صادر",
+  INTERNAL: "داخلي",
+};
+
+export const COMMUNICATION_CHANNEL_LABELS: Record<string, string> = {
+  PHONE: "اتصال",
+  EMAIL: "بريد إلكتروني",
+  WHATSAPP: "واتساب",
+  SMS: "رسالة نصية",
+  MEETING: "مقابلة",
+  PORTAL: "بوابة العميل",
+  OTHER: "أخرى",
+};
+
+export const COMMUNICATION_OUTCOME_LABELS: Record<string, string> = {
+  LOGGED: "موثق",
+  NEEDS_FOLLOWUP: "يحتاج متابعة",
+  FOLLOWED_UP: "تمت المتابعة",
+  CLOSED: "مغلق",
+};
+
+export const COMMUNICATION_OUTCOME_COLORS: Record<string, string> = {
+  LOGGED: "bg-gray-100 text-gray-700",
+  NEEDS_FOLLOWUP: "bg-brass-50 text-brass-800",
+  FOLLOWED_UP: "bg-brand-50 text-brand-800",
+  CLOSED: "bg-brand-100 text-brand-900",
+};
+
+export const CORRESPONDENCE_DIRECTION_LABELS: Record<string, string> = {
+  INCOMING: "وارد",
+  OUTGOING: "صادر",
+};
+
+export const CORRESPONDENCE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "مسودة",
+  REGISTERED: "مسجل",
+  SENT: "مرسل",
+  RECEIVED: "مستلم",
+  ARCHIVED: "مؤرشف",
+};
+
+export const CORRESPONDENCE_STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-gray-100 text-gray-600",
+  REGISTERED: "bg-brand-50 text-brand-800",
+  SENT: "bg-brass-50 text-brass-800",
+  RECEIVED: "bg-brand-100 text-brand-900",
+  ARCHIVED: "bg-gray-100 text-gray-700",
+};
+
+export const CORRESPONDENCE_IMPORTANCE_LABELS: Record<string, string> = {
+  NORMAL: "عادي",
+  IMPORTANT: "مهم",
+  URGENT: "عاجل",
+};
+
+export const MEETING_MINUTE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "مسودة",
+  ACTIONS_OPEN: "إجراءات مفتوحة",
+  CLOSED: "مغلق",
+  CANCELLED: "ملغي",
+};
+
+export const MEETING_MINUTE_STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-gray-100 text-gray-600",
+  ACTIONS_OPEN: "bg-brass-50 text-brass-800",
+  CLOSED: "bg-brand-50 text-brand-800",
+  CANCELLED: "bg-seal-50 text-seal-700",
+};
+
+export const SETTLEMENT_STATUS_LABELS: Record<string, string> = {
+  PROPOSED: "مقترح",
+  NEGOTIATING: "تفاوض",
+  ACCEPTED: "مقبول",
+  REJECTED: "مرفوض",
+  SIGNED: "موقع",
+  CANCELLED: "ملغي",
+};
+
+export const SETTLEMENT_STATUS_COLORS: Record<string, string> = {
+  PROPOSED: "bg-gray-100 text-gray-700",
+  NEGOTIATING: "bg-brass-50 text-brass-800",
+  ACCEPTED: "bg-brand-50 text-brand-800",
+  REJECTED: "bg-seal-50 text-seal-700",
+  SIGNED: "bg-brand-100 text-brand-900",
+  CANCELLED: "bg-gray-100 text-gray-600",
+};
+
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "—";
   const d = typeof date === "string" ? new Date(date) : date;

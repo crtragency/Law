@@ -6,11 +6,18 @@ import {
   APPROVAL_STATUS_LABELS,
   APPROVAL_TYPE_LABELS,
   CASE_STATUS_LABELS,
+  COMMUNICATION_CHANNEL_LABELS,
+  COMMUNICATION_OUTCOME_COLORS,
+  COMMUNICATION_OUTCOME_LABELS,
   CONSULTATION_PRIORITY_LABELS,
   CONSULTATION_STATUS_COLORS,
   CONSULTATION_STATUS_LABELS,
   CONTACT_TYPE_LABELS,
   CONTRACT_STATUS_LABELS,
+  CORRESPONDENCE_STATUS_COLORS,
+  CORRESPONDENCE_STATUS_LABELS,
+  DOCUMENT_REQUEST_STATUS_COLORS,
+  DOCUMENT_REQUEST_STATUS_LABELS,
   EVENT_TYPE_LABELS,
   EXPENSE_STATUS_COLORS,
   EXPENSE_STATUS_LABELS,
@@ -21,6 +28,8 @@ import {
   LITIGATION_STAGE_LABELS,
   LITIGATION_STEP_STATUS_LABELS,
   MESSAGE_TEMPLATE_CHANNEL_LABELS,
+  MEETING_MINUTE_STATUS_COLORS,
+  MEETING_MINUTE_STATUS_LABELS,
   PAYMENT_METHOD_LABELS,
   POWER_STATUS_COLORS,
   POWER_STATUS_LABELS,
@@ -28,6 +37,8 @@ import {
   SERVICE_AREA_LABELS,
   SERVICE_STATUS_COLORS,
   SERVICE_STATUS_LABELS,
+  SETTLEMENT_STATUS_COLORS,
+  SETTLEMENT_STATUS_LABELS,
   TASK_PRIORITY_LABELS,
   TASK_STATUS_COLORS,
   TASK_STATUS_LABELS,
@@ -156,6 +167,132 @@ export async function runDashboardSearch(
           })),
         }))
     );
+    jobs.push(
+      prisma.communicationLog
+        .findMany({
+          where: {
+            OR: [
+              { subject: textFilter },
+              { summary: textFilter },
+              { contactName: textFilter },
+              { contactInfo: textFilter },
+              { notes: textFilter },
+              { case: { is: { title: textFilter } } },
+              { case: { is: { caseNumber: textFilter } } },
+            ],
+          },
+          include: { case: { select: { id: true, title: true, caseNumber: true } }, assignedTo: { select: { name: true } } },
+          orderBy: { occurredAt: "desc" },
+          take: 6,
+        })
+        .then((logs) => ({
+          title: "سجل الاتصالات",
+          results: logs.map((item) => ({
+            id: `communication-${item.id}`,
+            title: item.subject,
+            href: "/communications",
+            subtitle: item.case ? `${item.case.caseNumber} - ${item.case.title}` : item.contactName ?? undefined,
+            badge: COMMUNICATION_OUTCOME_LABELS[item.outcome],
+            badgeClass: COMMUNICATION_OUTCOME_COLORS[item.outcome],
+            meta: `${COMMUNICATION_CHANNEL_LABELS[item.channel]} - ${formatDateTime(item.occurredAt)}${item.assignedTo ? ` - ${item.assignedTo.name}` : ""}`,
+          })),
+        }))
+    );
+
+    jobs.push(
+      prisma.correspondenceRegister
+        .findMany({
+          where: {
+            OR: [
+              { number: textFilter },
+              { title: textFilter },
+              { sender: textFilter },
+              { recipient: textFilter },
+              { referenceNumber: textFilter },
+              { summary: textFilter },
+              { notes: textFilter },
+            ],
+          },
+          include: { case: { select: { id: true, title: true, caseNumber: true } } },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((items) => ({
+          title: "الوارد والصادر",
+          results: items.map((item) => ({
+            id: `correspondence-${item.id}`,
+            title: `${item.number} - ${item.title}`,
+            href: "/correspondence",
+            subtitle: item.case ? `${item.case.caseNumber} - ${item.case.title}` : item.sender ?? item.recipient ?? undefined,
+            badge: CORRESPONDENCE_STATUS_LABELS[item.status],
+            badgeClass: CORRESPONDENCE_STATUS_COLORS[item.status],
+            meta: item.dueAt ? `موعد رد ${formatDateTime(item.dueAt)}` : item.referenceNumber ?? undefined,
+          })),
+        }))
+    );
+
+    jobs.push(
+      prisma.meetingMinute
+        .findMany({
+          where: {
+            OR: [
+              { title: textFilter },
+              { location: textFilter },
+              { attendees: textFilter },
+              { agenda: textFilter },
+              { decisions: textFilter },
+              { actionItems: textFilter },
+              { notes: textFilter },
+            ],
+          },
+          include: { case: { select: { id: true, title: true, caseNumber: true } } },
+          orderBy: { meetingAt: "desc" },
+          take: 6,
+        })
+        .then((items) => ({
+          title: "محاضر الاجتماعات",
+          results: items.map((item) => ({
+            id: `meeting-${item.id}`,
+            title: item.title,
+            href: "/meetings",
+            subtitle: item.case ? `${item.case.caseNumber} - ${item.case.title}` : item.location ?? undefined,
+            badge: MEETING_MINUTE_STATUS_LABELS[item.status],
+            badgeClass: MEETING_MINUTE_STATUS_COLORS[item.status],
+            meta: formatDateTime(item.meetingAt),
+          })),
+        }))
+    );
+
+    jobs.push(
+      prisma.settlementOffer
+        .findMany({
+          where: {
+            OR: [
+              { title: textFilter },
+              { offeredBy: textFilter },
+              { terms: textFilter },
+              { notes: textFilter },
+              { case: { is: { title: textFilter } } },
+              { case: { is: { caseNumber: textFilter } } },
+            ],
+          },
+          include: { case: { select: { id: true, title: true, caseNumber: true } } },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((items) => ({
+          title: "التسويات والعروض",
+          results: items.map((item) => ({
+            id: `settlement-${item.id}`,
+            title: item.title,
+            href: "/settlements",
+            subtitle: `${item.case.caseNumber} - ${item.case.title}`,
+            badge: SETTLEMENT_STATUS_LABELS[item.status],
+            badgeClass: SETTLEMENT_STATUS_COLORS[item.status],
+            meta: item.amountBeforeTax === null ? item.offeredBy ?? undefined : formatMoneyLabel(computeTax(item.amountBeforeTax, item.taxRate).total),
+          })),
+        }))
+    );
   }
 
   if (hasPermission(user.role, "documents.view")) {
@@ -185,6 +322,35 @@ export async function runDashboardSearch(
             subtitle: `${item.case.caseNumber} - ${item.case.title}`,
             badge: item.visibility === "PORTAL" ? "ظاهر للعميل" : "داخلي",
             meta: item.category ?? item.fileName,
+          })),
+        }))
+    );
+    jobs.push(
+      prisma.documentRequest
+        .findMany({
+          where: {
+            OR: [
+              { title: textFilter },
+              { category: textFilter },
+              { description: textFilter },
+              { case: { is: { title: textFilter } } },
+              { case: { is: { caseNumber: textFilter } } },
+            ],
+          },
+          include: { case: { select: { id: true, title: true, caseNumber: true, client: { select: { name: true, companyName: true, type: true } } } } },
+          orderBy: { updatedAt: "desc" },
+          take: 6,
+        })
+        .then((requests) => ({
+          title: "طلبات المستندات",
+          results: requests.map((item) => ({
+            id: `document-request-${item.id}`,
+            title: item.title,
+            href: "/document-requests",
+            subtitle: `${item.case.caseNumber} - ${item.case.title} - ${displayClient(item.case.client)}`,
+            badge: DOCUMENT_REQUEST_STATUS_LABELS[item.status],
+            badgeClass: DOCUMENT_REQUEST_STATUS_COLORS[item.status],
+            meta: item.dueDate ? `استحقاق ${formatDate(item.dueDate)}` : item.category ?? undefined,
           })),
         }))
     );

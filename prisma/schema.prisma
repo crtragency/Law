@@ -70,14 +70,22 @@ model User {
   approvalRequests        ApprovalRequest[]    @relation("ApprovalRequestedBy")
   approvalDecisions       ApprovalRequest[]    @relation("ApprovalDecidedBy")
 
-  notifications         Notification[]      @relation("UserNotifications")
-  messagesSent          Message[]           @relation("MessagesSent")
-  messagesReceived      Message[]           @relation("MessagesReceived")
-  caseMessages          CaseMessage[]       @relation("CaseMessageStaffAuthor")
-  createdConsultations  LegalConsultation[] @relation("ConsultationCreatedBy")
-  assignedConsultations LegalConsultation[] @relation("ConsultationAssignedTo")
-  createdLibraryEntries LegalLibraryEntry[] @relation("LibraryEntryCreatedBy")
-  createdHearingMinutes HearingMinute[]     @relation("HearingMinuteCreatedBy")
+  notifications             Notification[]           @relation("UserNotifications")
+  messagesSent              Message[]                @relation("MessagesSent")
+  messagesReceived          Message[]                @relation("MessagesReceived")
+  caseMessages              CaseMessage[]            @relation("CaseMessageStaffAuthor")
+  createdConsultations      LegalConsultation[]      @relation("ConsultationCreatedBy")
+  assignedConsultations     LegalConsultation[]      @relation("ConsultationAssignedTo")
+  createdLibraryEntries     LegalLibraryEntry[]      @relation("LibraryEntryCreatedBy")
+  createdHearingMinutes     HearingMinute[]          @relation("HearingMinuteCreatedBy")
+  createdCommunicationLogs  CommunicationLog[]       @relation("CommunicationLogCreatedBy")
+  assignedCommunicationLogs CommunicationLog[]       @relation("CommunicationLogAssignedTo")
+  createdCorrespondences    CorrespondenceRegister[] @relation("CorrespondenceCreatedBy")
+  assignedCorrespondences   CorrespondenceRegister[] @relation("CorrespondenceAssignedTo")
+  createdMeetingMinutes     MeetingMinute[]          @relation("MeetingMinuteCreatedBy")
+  assignedMeetingMinutes    MeetingMinute[]          @relation("MeetingMinuteAssignedTo")
+  createdSettlementOffers   SettlementOffer[]        @relation("SettlementOfferCreatedBy")
+  assignedSettlementOffers  SettlementOffer[]        @relation("SettlementOfferAssignedTo")
 
   @@index([role])
   @@index([isActive])
@@ -172,19 +180,23 @@ model Client {
   createdById String?
   createdBy   User?   @relation("ClientCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  cases            Case[]
-  contracts        Contract[]
-  serviceRequests  ServiceRequest[]
-  legalContacts    LegalContact[]
-  powersOfAttorney PowerOfAttorney[]
-  invoices         Invoice[]
-  payments         Payment[]
-  expenses         JudicialExpense[]
-  templateOutputs  TemplateOutput[]
-  reminders        Reminder[]
-  portalSessions   ClientSession[]
-  consultations    LegalConsultation[]
-  caseMessages     CaseMessage[]       @relation("CaseMessageClientAuthor")
+  cases             Case[]
+  contracts         Contract[]
+  serviceRequests   ServiceRequest[]
+  legalContacts     LegalContact[]
+  powersOfAttorney  PowerOfAttorney[]
+  invoices          Invoice[]
+  payments          Payment[]
+  expenses          JudicialExpense[]
+  templateOutputs   TemplateOutput[]
+  reminders         Reminder[]
+  portalSessions    ClientSession[]
+  consultations     LegalConsultation[]
+  caseMessages      CaseMessage[]            @relation("CaseMessageClientAuthor")
+  communicationLogs CommunicationLog[]
+  correspondences   CorrespondenceRegister[]
+  meetingMinutes    MeetingMinute[]
+  settlementOffers  SettlementOffer[]
 
   @@index([name])
 }
@@ -249,23 +261,27 @@ model Case {
   assignedLawyerId String?
   assignedLawyer   User?   @relation("CaseAssignedLawyer", fields: [assignedLawyerId], references: [id], onDelete: SetNull)
 
-  documents        Document[]
-  documentRequests DocumentRequest[]
-  tasks            Task[]
-  notes            CaseNote[]
-  events           Event[]
-  contracts        Contract[]
-  serviceRequests  ServiceRequest[]
-  legalContacts    LegalContact[]
-  powersOfAttorney PowerOfAttorney[]
-  litigationSteps  LitigationStep[]
-  invoices         Invoice[]
-  expenses         JudicialExpense[]
-  templateOutputs  TemplateOutput[]
-  reminders        Reminder[]
-  consultations    LegalConsultation[]
-  caseMessages     CaseMessage[]
-  hearingMinutes   HearingMinute[]
+  documents         Document[]
+  documentRequests  DocumentRequest[]
+  tasks             Task[]
+  notes             CaseNote[]
+  events            Event[]
+  contracts         Contract[]
+  serviceRequests   ServiceRequest[]
+  legalContacts     LegalContact[]
+  powersOfAttorney  PowerOfAttorney[]
+  litigationSteps   LitigationStep[]
+  invoices          Invoice[]
+  expenses          JudicialExpense[]
+  templateOutputs   TemplateOutput[]
+  reminders         Reminder[]
+  consultations     LegalConsultation[]
+  caseMessages      CaseMessage[]
+  hearingMinutes    HearingMinute[]
+  communicationLogs CommunicationLog[]
+  correspondences   CorrespondenceRegister[]
+  meetingMinutes    MeetingMinute[]
+  settlementOffers  SettlementOffer[]
 
   @@index([status])
   @@index([caseType])
@@ -824,6 +840,218 @@ model HearingMinute {
   @@index([sessionDate])
   @@index([nextSessionAt])
   @@index([createdById])
+}
+
+enum CommunicationDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+enum CommunicationChannel {
+  PHONE
+  EMAIL
+  WHATSAPP
+  SMS
+  MEETING
+  PORTAL
+  OTHER
+}
+
+enum CommunicationOutcome {
+  LOGGED
+  NEEDS_FOLLOWUP
+  FOLLOWED_UP
+  CLOSED
+}
+
+model CommunicationLog {
+  id              String                 @id @default(cuid())
+  subject         String
+  direction       CommunicationDirection @default(INBOUND)
+  channel         CommunicationChannel   @default(PHONE)
+  outcome         CommunicationOutcome   @default(LOGGED)
+  summary         String
+  contactName     String?
+  contactInfo     String?
+  occurredAt      DateTime               @default(now())
+  nextFollowUpAt  DateTime?
+  generatedTaskId String?
+  notes           String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("CommunicationLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("CommunicationLogAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([direction])
+  @@index([channel])
+  @@index([outcome])
+  @@index([occurredAt])
+  @@index([nextFollowUpAt])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
+}
+
+enum CorrespondenceDirection {
+  INCOMING
+  OUTGOING
+}
+
+enum CorrespondenceStatus {
+  DRAFT
+  REGISTERED
+  SENT
+  RECEIVED
+  ARCHIVED
+}
+
+enum CorrespondenceImportance {
+  NORMAL
+  IMPORTANT
+  URGENT
+}
+
+model CorrespondenceRegister {
+  id              String                   @id @default(cuid())
+  number          String                   @unique
+  title           String
+  direction       CorrespondenceDirection  @default(INCOMING)
+  status          CorrespondenceStatus     @default(REGISTERED)
+  importance      CorrespondenceImportance @default(NORMAL)
+  sender          String?
+  recipient       String?
+  deliveryMethod  String?
+  referenceNumber String?
+  summary         String?
+  attachmentUrl   String?
+  receivedAt      DateTime?
+  sentAt          DateTime?
+  dueAt           DateTime?
+  notes           String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("CorrespondenceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("CorrespondenceAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([direction])
+  @@index([status])
+  @@index([importance])
+  @@index([receivedAt])
+  @@index([sentAt])
+  @@index([dueAt])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
+}
+
+enum MeetingMinuteStatus {
+  DRAFT
+  ACTIONS_OPEN
+  CLOSED
+  CANCELLED
+}
+
+model MeetingMinute {
+  id               String              @id @default(cuid())
+  title            String
+  meetingAt        DateTime            @default(now())
+  location         String?
+  attendees        String?
+  agenda           String?
+  decisions        String
+  actionItems      String?
+  status           MeetingMinuteStatus @default(ACTIONS_OPEN)
+  nextMeetingAt    DateTime?
+  generatedTaskId  String?
+  generatedEventId String?
+  notes            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("MeetingMinuteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("MeetingMinuteAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([meetingAt])
+  @@index([nextMeetingAt])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
+}
+
+enum SettlementStatus {
+  PROPOSED
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+  SIGNED
+  CANCELLED
+}
+
+model SettlementOffer {
+  id              String           @id @default(cuid())
+  title           String
+  status          SettlementStatus @default(PROPOSED)
+  offeredBy       String?
+  amountBeforeTax Int?
+  taxRate         Int              @default(15)
+  terms           String
+  offerDate       DateTime         @default(now())
+  responseDueAt   DateTime?
+  signedAt        DateTime?
+  generatedTaskId String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation("SettlementOfferCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  assignedToId String?
+  assignedTo   User?   @relation("SettlementOfferAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([offerDate])
+  @@index([responseDueAt])
+  @@index([clientId])
+  @@index([caseId])
+  @@index([assignedToId])
 }
 
 enum InvoiceStatus {
