@@ -177,7 +177,20 @@ body {
 
   @media (min-width: 1024px) {
     .sidebar-collapsible {
-      overflow: hidden;
+      contain: layout style;
+      overflow: visible;
+    }
+
+    .sidebar-collapsible .sidebar-surface {
+      clip-path: inset(0 0 0 212px);
+      transform: translateZ(0);
+      transition: clip-path 130ms cubic-bezier(0.2, 0, 0.2, 1);
+      will-change: clip-path;
+    }
+
+    .sidebar-collapsible:hover .sidebar-surface,
+    .sidebar-collapsible:focus-within .sidebar-surface {
+      clip-path: inset(0);
     }
 
     .sidebar-collapsible .sidebar-reveal {
@@ -185,15 +198,15 @@ body {
       pointer-events: none;
       transform: translateX(10px);
       transition:
-        opacity 180ms ease,
-        transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 90ms ease,
+        transform 120ms cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .sidebar-brand-link {
       width: 100%;
       transition:
-        width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-        padding 260ms cubic-bezier(0.22, 1, 0.36, 1);
+        background-color 120ms ease,
+        color 120ms ease;
     }
 
     .sidebar-collapsible:not(:hover):not(:focus-within) .sidebar-brand-link {
@@ -219,10 +232,8 @@ body {
       overflow: hidden;
       transform: translateX(10px);
       transition:
-        max-height 220ms ease,
-        margin-bottom 220ms ease,
-        opacity 180ms ease,
-        transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 90ms ease,
+        transform 120ms cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .sidebar-collapsible:hover .sidebar-reveal,
@@ -244,12 +255,9 @@ body {
       width: 100%;
       transform-origin: right center;
       transition:
-        width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-        min-height 260ms cubic-bezier(0.22, 1, 0.36, 1),
-        padding 260ms cubic-bezier(0.22, 1, 0.36, 1),
-        background-color 180ms ease,
-        box-shadow 180ms ease,
-        transform 180ms ease;
+        background-color 110ms ease,
+        box-shadow 110ms ease,
+        transform 110ms ease;
     }
 
     .sidebar-collapsible:not(:hover):not(:focus-within) .sidebar-nav-link {
@@ -286,19 +294,17 @@ body {
     .sidebar-footer {
       width: 288px;
       transition:
-        width 300ms cubic-bezier(0.22, 1, 0.36, 1),
-        padding 300ms cubic-bezier(0.22, 1, 0.36, 1);
+        background-color 120ms ease,
+        border-color 120ms ease;
     }
 
     .sidebar-footer-card,
     .sidebar-footer-link,
     .sidebar-logout-button {
       transition:
-        width 300ms cubic-bezier(0.22, 1, 0.36, 1),
-        padding 300ms cubic-bezier(0.22, 1, 0.36, 1),
-        border-color 220ms ease,
-        background-color 220ms ease,
-        box-shadow 220ms ease;
+        border-color 120ms ease,
+        background-color 120ms ease,
+        box-shadow 120ms ease;
     }
 
     .sidebar-collapsible:not(:hover):not(:focus-within) .sidebar-footer {
