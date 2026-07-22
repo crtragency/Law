@@ -175,6 +175,49 @@ body {
     background-clip: content-box;
   }
 
+  @media (min-width: 1024px) {
+    .sidebar-collapsible {
+      overflow: hidden;
+    }
+
+    .sidebar-collapsible .sidebar-reveal {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(10px);
+      transition:
+        opacity 180ms ease,
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sidebar-collapsible .sidebar-group-label {
+      max-height: 0;
+      margin-bottom: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateX(10px);
+      transition:
+        max-height 220ms ease,
+        margin-bottom 220ms ease,
+        opacity 180ms ease,
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sidebar-collapsible:hover .sidebar-reveal,
+    .sidebar-collapsible:focus-within .sidebar-reveal,
+    .sidebar-collapsible:hover .sidebar-group-label,
+    .sidebar-collapsible:focus-within .sidebar-group-label {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .sidebar-collapsible:hover .sidebar-group-label,
+    .sidebar-collapsible:focus-within .sidebar-group-label {
+      max-height: 24px;
+      margin-bottom: 0.375rem;
+    }
+  }
+
   .page-title {
     @apply font-display text-[28px] font-bold leading-tight tracking-normal text-ink sm:text-3xl;
   }
@@ -366,7 +409,7 @@ body {
   }
 
   .law-command-board {
-    @apply rounded-lg border border-line bg-[linear-gradient(135deg,#ffffff_0%,#eef4f0_52%,#f8f3e7_100%)] p-4 shadow-xl shadow-brand-950/[0.075] sm:p-6 xl:p-7;
+    @apply min-h-[calc(100vh-8rem)] w-full rounded-lg border border-line bg-[linear-gradient(135deg,#ffffff_0%,#eef4f0_52%,#f8f3e7_100%)] p-5 shadow-xl shadow-brand-950/[0.075] sm:p-7 xl:p-8 2xl:p-9;
   }
 
   .law-pill {
@@ -382,11 +425,11 @@ body {
   }
 
   .law-dashboard-grid {
-    @apply grid gap-4 xl:grid-cols-[1.05fr_0.95fr_1fr_1.15fr] xl:auto-rows-[minmax(190px,auto)];
+    @apply grid gap-5 2xl:gap-6 xl:grid-cols-[1.08fr_0.98fr_1.02fr_1.18fr] xl:auto-rows-[minmax(215px,auto)];
   }
 
   .profile-card-panel {
-    @apply relative min-h-[260px] overflow-hidden rounded-lg border border-white/50 bg-brand-800 shadow-lg shadow-brand-950/10 xl:row-span-2;
+    @apply relative min-h-[320px] overflow-hidden rounded-lg border border-white/50 bg-brand-800 shadow-lg shadow-brand-950/10 xl:row-span-2;
   }
 
   .profile-card-image {
@@ -398,7 +441,7 @@ body {
   }
 
   .law-mini-card {
-    @apply min-h-[210px] rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
+    @apply min-h-[235px] rounded-lg border border-white/70 bg-white/[0.78] p-6 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
   }
 
   .law-card-arrow {
@@ -422,7 +465,7 @@ body {
   }
 
   .law-task-panel {
-    @apply min-h-[300px] rounded-lg border border-brand-800 bg-brand-900 p-5 shadow-xl shadow-brand-950/15 xl:row-span-2;
+    @apply min-h-[360px] rounded-lg border border-brand-800 bg-brand-900 p-6 shadow-xl shadow-brand-950/15 xl:row-span-2;
   }
 
   .law-task-row {
@@ -434,7 +477,7 @@ body {
   }
 
   .calendar-card-panel {
-    @apply rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur xl:col-span-2;
+    @apply rounded-lg border border-white/70 bg-white/[0.78] p-6 shadow-sm shadow-brand-950/[0.045] backdrop-blur xl:col-span-2;
   }
 
   .law-event-row {
@@ -442,7 +485,7 @@ body {
   }
 
   .recent-cases-panel {
-    @apply rounded-lg border border-white/70 bg-white/[0.78] p-5 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
+    @apply rounded-lg border border-white/70 bg-white/[0.78] p-6 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
   }
 
   .profile-layout {

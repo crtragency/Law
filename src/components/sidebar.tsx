@@ -111,7 +111,7 @@ export function Sidebar({
   );
 
   const sidebarContent = (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0d271f_0%,#0b211a_52%,#071812_100%)] text-white shadow-2xl shadow-brand-950/25 lg:shadow-none">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0d271f_0%,#0b211a_52%,#071812_100%)] text-white shadow-2xl shadow-brand-950/25 lg:w-[288px] lg:shadow-none">
       <div className="shrink-0 px-4 pb-3 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center justify-between gap-3">
           <Link
@@ -126,7 +126,7 @@ export function Sidebar({
                 aria-hidden
               />
             </span>
-            <span className="min-w-0 leading-tight">
+            <span className="sidebar-reveal min-w-0 leading-tight">
               <span className="block truncate font-display text-[15px] font-bold text-white">
                 مكتب المحاماة
               </span>
@@ -150,7 +150,7 @@ export function Sidebar({
         <div className="space-y-4 pb-2">
           {groupedItems.map((group) => (
             <div key={group.label}>
-              <div className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-normal text-brand-300/80">
+              <div className="sidebar-group-label mb-1.5 px-3 text-[10px] font-bold uppercase tracking-normal text-brand-300/80">
                 {group.label}
               </div>
               <div className="space-y-0.5">
@@ -185,7 +185,7 @@ export function Sidebar({
                       >
                         <Icon name={item.icon} className="h-[17px] w-[17px]" />
                       </span>
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      <span className="sidebar-reveal min-w-0 flex-1 truncate">{item.label}</span>
                     </Link>
                   );
                 })}
@@ -201,7 +201,7 @@ export function Sidebar({
             <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brass-300 text-sm font-bold text-brand-950 shadow-lg shadow-black/10">
               {avatar}
             </span>
-            <div className="min-w-0 leading-tight">
+            <div className="sidebar-reveal min-w-0 leading-tight">
               <div className="truncate text-sm font-semibold text-white">{userName}</div>
               <div className="mt-0.5 truncate text-[11px] text-brand-200">{roleLabel}</div>
             </div>
@@ -209,9 +209,9 @@ export function Sidebar({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
+              className="flex w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
             >
-              <IconLogout className="h-4 w-4" /> تسجيل الخروج
+              <IconLogout className="h-4 w-4" /> <span className="sidebar-reveal">تسجيل الخروج</span>
             </button>
           </form>
         </div>
@@ -245,7 +245,7 @@ export function Sidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-transform duration-300 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[288px] lg:translate-x-0 ${
+        className={`sidebar-collapsible fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-[width,transform] duration-300 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[76px] lg:translate-x-0 lg:hover:w-[288px] lg:focus-within:w-[288px] ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >

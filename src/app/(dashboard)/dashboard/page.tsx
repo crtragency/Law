@@ -105,12 +105,12 @@ export default async function DashboardPage({
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <FlashMessage error={error} />
 
       <section className="law-command-board">
-        <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
             <Link href="/dashboard" className="law-pill-active">الرئيسية</Link>
             <Link href="/cases" className="law-pill">القضايا</Link>
             <Link href="/tasks" className="law-pill">المهام</Link>
@@ -128,7 +128,7 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        <div className="mb-6 grid gap-5 xl:grid-cols-[1fr_auto]">
+        <div className="mb-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_auto]">
           <div>
             <h1 className="font-display text-[34px] font-bold leading-tight text-ink sm:text-[42px]">
               أهلا، {user.name}
@@ -137,14 +137,14 @@ export default async function DashboardPage({
               لوحة تشغيل يومية تجمع القضايا والمهام والمواعيد والملفات في مساحة واحدة.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid min-w-[280px] grid-cols-3 gap-5 text-center">
             <TopMetric label="مستخدم" value={userCount} icon={<IconUsers />} />
             <TopMetric label="قضية" value={caseCount} icon={<IconScale />} />
             <TopMetric label="ملف" value={documentCount} icon={<IconPaperclip />} />
           </div>
         </div>
 
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1.2fr_1fr]">
+        <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1.2fr_1fr]">
           <ProgressChip label="قضايا نشطة" value={openCaseCount} hint={`${caseCount} إجمالي`} />
           <ProgressChip label="مهامي المفتوحة" value={myTaskCount} hint={`${doneThisWeekCount} انتهت هذا الأسبوع`} tone="dark" />
           <ProgressChip label="خدمات مفتوحة" value={openServiceRequestCount} hint="تشغيل وخدمات" tone="bright" />
