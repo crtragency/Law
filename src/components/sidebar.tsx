@@ -211,7 +211,10 @@ export function Sidebar({
               type="submit"
               className="sidebar-logout-button flex w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
             >
-              <IconLogout className="h-4 w-4" /> <span className="sidebar-reveal">تسجيل الخروج</span>
+              <span className="sidebar-logout-icon grid h-8 w-8 shrink-0 place-items-center rounded-md text-brass-200">
+                <IconLogout className="h-[18px] w-[18px]" />
+              </span>
+              <span className="sidebar-reveal">تسجيل الخروج</span>
             </button>
           </form>
         </div>
