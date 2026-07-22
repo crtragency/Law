@@ -164,7 +164,7 @@ export function Sidebar({
                       href={item.href}
                       onClick={() => setOpen(false)}
                       aria-current={active ? "page" : undefined}
-                      className={`group relative flex min-h-[40px] items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-[13px] transition duration-200 ease-out motion-safe:hover:-translate-x-0.5 ${
+                      className={`sidebar-nav-link group relative flex min-h-[40px] items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-[13px] transition duration-200 ease-out motion-safe:hover:-translate-x-0.5 ${
                         active
                           ? "bg-white/[0.12] font-bold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_10px_24px_rgba(0,0,0,0.16)]"
                           : "font-medium text-brand-100/80 hover:bg-white/[0.075] hover:text-white"
@@ -172,12 +172,12 @@ export function Sidebar({
                     >
                       {active && (
                         <span
-                          className="absolute inset-y-2 right-0 w-[3px] rounded-full bg-brass-300 shadow-[0_0_16px_rgba(205,175,99,0.65)]"
+                          className="sidebar-active-marker absolute inset-y-2 right-0 w-[3px] rounded-full bg-brass-300 shadow-[0_0_16px_rgba(205,175,99,0.65)]"
                           aria-hidden
                         />
                       )}
                       <span
-                        className={`grid h-8 w-8 shrink-0 place-items-center rounded-md transition duration-200 ${
+                        className={`sidebar-nav-icon grid h-8 w-8 shrink-0 place-items-center rounded-md transition duration-200 ${
                           active
                             ? "bg-brass-300/15 text-brass-200"
                             : "bg-white/[0.045] text-brand-300 group-hover:bg-white/[0.08] group-hover:text-brass-200"
