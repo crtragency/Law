@@ -195,9 +195,9 @@ export function Sidebar({
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-white/10 bg-brand-950/25 p-4 lg:p-5">
-        <div className="rounded-lg border border-white/10 bg-white/[0.055] p-3 shadow-inner shadow-white/5">
-          <Link href="/profile" className="mb-3 flex items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.06]">
+      <div className="sidebar-footer shrink-0 border-t border-white/10 bg-brand-950/25 p-4 lg:p-5">
+        <div className="sidebar-footer-card rounded-lg border border-white/10 bg-white/[0.055] p-3 shadow-inner shadow-white/5">
+          <Link href="/profile" className="sidebar-footer-link mb-3 flex items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.06]">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brass-300 text-sm font-bold text-brand-950 shadow-lg shadow-black/10">
               {avatar}
             </span>
@@ -209,7 +209,7 @@ export function Sidebar({
           <form action={logoutAction}>
             <button
               type="submit"
-              className="flex w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
+              className="sidebar-logout-button flex w-full items-center justify-start gap-2 rounded-lg border border-white/10 bg-black/10 px-3 py-2 text-xs font-semibold text-brand-100 transition duration-200 hover:border-seal-100/25 hover:bg-seal-600/20 hover:text-white active:scale-[0.99]"
             >
               <IconLogout className="h-4 w-4" /> <span className="sidebar-reveal">تسجيل الخروج</span>
             </button>

@@ -218,9 +218,9 @@ export default async function DashboardPage({
               </div>
               <div className="font-display text-3xl font-bold">{myTasks.length}/5</div>
             </div>
-            <div className="space-y-3">
+            <div className="flex flex-1 flex-col gap-3">
               {myTasks.length === 0 ? (
-                <p className="rounded-lg bg-white/10 p-4 text-sm text-brand-100">لا توجد مهام مفتوحة لك حاليا.</p>
+                <p className="grid flex-1 place-items-center rounded-lg border border-white/10 bg-white/[0.08] p-6 text-center text-sm font-semibold leading-7 text-brand-100">لا توجد مهام مفتوحة لك حاليا.</p>
               ) : (
                 myTasks.map((task) => (
                   <Link key={task.id} href="/tasks" className="law-task-row">
