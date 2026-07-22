@@ -28,6 +28,7 @@ import {
   formatDateTime,
 } from "@/lib/labels";
 import { buildCaseChecklist } from "@/lib/case-checklists";
+import { buildCaseHealth } from "@/lib/case-health";
 import { computeTax, formatMoneyLabel } from "@/lib/money";
 import {
   CaseEditSection,
@@ -43,6 +44,7 @@ import {
   IconClock,
   IconFileText,
   IconInbox,
+  IconShield,
 } from "@/components/icons";
 
 export default async function CaseDetailPage({
@@ -84,6 +86,10 @@ export default async function CaseDetailPage({
         include: { assignedTo: { select: { name: true } } },
       },
       events: { orderBy: { startAt: "asc" } },
+      hearingMinutes: {
+        orderBy: { sessionDate: "desc" },
+        include: { createdBy: { select: { name: true } } },
+      },
       litigationSteps: {
         orderBy: [{ sessionDate: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
         include: { assignedTo: { select: { name: true } } },
@@ -93,6 +99,7 @@ export default async function CaseDetailPage({
         include: { assignedTo: { select: { name: true } } },
       },
       contracts: { orderBy: { createdAt: "desc" } },
+      powersOfAttorney: { select: { id: true, status: true } },
       invoices: {
         orderBy: { createdAt: "desc" },
         include: { payments: true },
@@ -139,6 +146,20 @@ export default async function CaseDetailPage({
   });
   const checklistDone = checklist.filter((item) => item.done).length;
   const completion = checklist.length > 0 ? Math.round((checklistDone / checklist.length) * 100) : 0;
+  const health = buildCaseHealth({
+    assignedLawyerId: c.assignedLawyerId,
+    court: c.court,
+    description: c.description,
+    documentsCount: c.documents.length,
+    pendingDocumentRequestsCount: pendingDocumentRequests.length,
+    openTasksCount: openTasks.length,
+    overdueTasksCount: overdueTasks.length,
+    upcomingEventsCount: c.events.filter((event) => event.startAt >= now).length,
+    litigationStepsCount: c.litigationSteps.filter((step) => !["DONE", "CANCELLED"].includes(step.status)).length,
+    contractsCount: c.contracts.length,
+    powersCount: c.powersOfAttorney.length,
+    clientPortalEnabled: c.client.portalEnabled,
+  });
   const timeline = [
     {
       id: `case-${c.id}`,
@@ -202,6 +223,15 @@ export default async function CaseDetailPage({
       badge: LITIGATION_STEP_STATUS_LABELS[step.status],
       badgeClass: LITIGATION_STEP_STATUS_COLORS[step.status],
       body: step.outcome ?? step.nextAction ?? step.notes,
+    })),
+    ...c.hearingMinutes.map((minute) => ({
+      id: `hearing-minute-${minute.id}`,
+      date: minute.sessionDate,
+      title: "محضر جلسة",
+      meta: minute.createdBy?.name ?? "المكتب",
+      badge: minute.nextSessionAt ? "جلسة قادمة" : "تم التوثيق",
+      badgeClass: minute.nextSessionAt ? "bg-brass-50 text-brass-800" : "bg-brand-50 text-brand-800",
+      body: minute.decision,
     })),
     ...c.serviceRequests.map((request) => ({
       id: `service-${request.id}`,
@@ -321,6 +351,51 @@ export default async function CaseDetailPage({
           description: c.description,
         }}
       />
+
+      <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
+        <div className="data-panel p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <IconShield />
+            </div>
+            <div>
+              <h2 className="section-title">Case Health Score</h2>
+              <p className="mt-1 text-sm text-gray-500">مؤشر جاهزية ومخاطر القضية.</p>
+            </div>
+          </div>
+          <div className="mt-6 rounded-2xl border border-line bg-paper/70 p-5 text-center">
+            <p className="font-display text-5xl font-bold text-ink">{health.score}%</p>
+            <Badge className={`mt-3 ${health.badgeClass}`}>{health.level}</Badge>
+          </div>
+        </div>
+        <div className="data-panel p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-display text-lg font-bold text-ink">النواقص المؤثرة</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                البنود دي هي أسرع طريق لرفع جاهزية الملف وتقليل ضغط المتابعة.
+              </p>
+            </div>
+            <Badge className={health.missing.length ? "bg-brass-50 text-brass-800" : "bg-brand-50 text-brand-800"}>
+              {health.missing.length ? `${health.missing.length} بند` : "مكتمل"}
+            </Badge>
+          </div>
+          {health.missing.length === 0 ? (
+            <p className="rounded-2xl border border-brand-100 bg-brand-50 p-4 text-sm font-semibold text-brand-800">
+              الملف في حالة جيدة ولا توجد نواقص حرجة حالياً.
+            </p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {health.missing.slice(0, 6).map((item) => (
+                <div key={item.label} className="rounded-2xl border border-line bg-paper/70 p-4">
+                  <p className="font-bold text-ink">{item.label}</p>
+                  <p className="mt-1 text-xs leading-6 text-gray-500">{item.hint}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="data-panel p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

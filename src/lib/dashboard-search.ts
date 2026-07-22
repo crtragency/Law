@@ -359,6 +359,40 @@ export async function runDashboardSearch(
           })),
         }))
     );
+
+    jobs.push(
+      prisma.hearingMinute
+        .findMany({
+          where: {
+            OR: [
+              { decision: textFilter },
+              { requirements: textFilter },
+              { notes: textFilter },
+              { court: textFilter },
+              { circuit: textFilter },
+              { case: { is: { title: textFilter } } },
+              { case: { is: { caseNumber: textFilter } } },
+            ],
+          },
+          include: {
+            case: { select: { id: true, title: true, caseNumber: true } },
+            createdBy: { select: { name: true } },
+          },
+          orderBy: { sessionDate: "desc" },
+          take: 6,
+        })
+        .then((minutes) => ({
+          title: "محاضر الجلسات",
+          results: minutes.map((item) => ({
+            id: `hearing-minute-${item.id}`,
+            title: item.case.title,
+            href: `/cases/${item.caseId}`,
+            subtitle: `${item.case.caseNumber} - ${formatDateTime(item.sessionDate)}`,
+            badge: item.nextSessionAt ? "جلسة قادمة" : "محضر",
+            meta: item.createdBy?.name ?? item.court ?? undefined,
+          })),
+        }))
+    );
   }
 
   if (hasPermission(user.role, "services.view")) {

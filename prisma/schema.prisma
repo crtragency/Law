@@ -77,6 +77,7 @@ model User {
   createdConsultations  LegalConsultation[] @relation("ConsultationCreatedBy")
   assignedConsultations LegalConsultation[] @relation("ConsultationAssignedTo")
   createdLibraryEntries LegalLibraryEntry[] @relation("LibraryEntryCreatedBy")
+  createdHearingMinutes HearingMinute[]     @relation("HearingMinuteCreatedBy")
 
   @@index([role])
   @@index([isActive])
@@ -264,6 +265,7 @@ model Case {
   reminders        Reminder[]
   consultations    LegalConsultation[]
   caseMessages     CaseMessage[]
+  hearingMinutes   HearingMinute[]
 
   @@index([status])
   @@index([caseType])
@@ -782,6 +784,8 @@ model LitigationStep {
   assignedToId String?
   assignedTo   User?   @relation("LitigationStepAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
 
+  hearingMinutes HearingMinute[]
+
   @@index([caseId])
   @@index([stage])
   @@index([status])
@@ -793,6 +797,34 @@ model LitigationStep {
 // ===========================================================================
 //  المالية والمصروفات  —  Finance & Judicial Expenses
 // ===========================================================================
+
+model HearingMinute {
+  id               String    @id @default(cuid())
+  sessionDate      DateTime
+  court            String?
+  circuit          String?
+  decision         String
+  requirements     String?
+  nextSessionAt    DateTime?
+  notes            String?
+  generatedTaskId  String?
+  generatedEventId String?
+  createdAt        DateTime  @default(now())
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  litigationStepId String?
+  litigationStep   LitigationStep? @relation(fields: [litigationStepId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?   @relation("HearingMinuteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([sessionDate])
+  @@index([nextSessionAt])
+  @@index([createdById])
+}
 
 enum InvoiceStatus {
   DRAFT

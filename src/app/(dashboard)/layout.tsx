@@ -18,6 +18,8 @@ export default async function DashboardLayout({
   const items: NavItem[] = [
     { href: "/dashboard", label: "الرئيسية", icon: "home" },
   ];
+  if (hasPermission(user.role, "tasks.view") || hasPermission(user.role, "events.view"))
+    items.push({ href: "/daily-agenda", label: "أجندة اليوم", icon: "calendar" });
   if (hasPermission(user.role, "services.view"))
     items.push({ href: "/services", label: "الخدمات والوحدات", icon: "scale" });
   if (hasPermission(user.role, "consultations.view"))
@@ -26,8 +28,12 @@ export default async function DashboardLayout({
     items.push({ href: "/cases", label: "القضايا", icon: "folder" });
   if (hasPermission(user.role, "litigation.view"))
     items.push({ href: "/litigation", label: "التقاضي", icon: "gavel" });
+  if (hasPermission(user.role, "litigation.view"))
+    items.push({ href: "/hearings", label: "محاضر الجلسات", icon: "gavel" });
   if (hasPermission(user.role, "clients.view"))
     items.push({ href: "/clients", label: "الموكّلون", icon: "users" });
+  if (hasPermission(user.role, "clients.view"))
+    items.push({ href: "/conflict-check", label: "فحص التعارض", icon: "shield" });
   if (hasPermission(user.role, "contacts.view"))
     items.push({ href: "/contacts", label: "جهات الاتصال", icon: "users" });
   if (hasPermission(user.role, "powers.view"))
@@ -36,6 +42,7 @@ export default async function DashboardLayout({
     items.push({ href: "/tasks", label: "المهام", icon: "check" });
   if (hasPermission(user.role, "events.view"))
     items.push({ href: "/calendar", label: "التقويم", icon: "calendar" });
+  items.push({ href: "/deadlines", label: "حاسبة المدد", icon: "clock" });
   if (hasPermission(user.role, "contracts.view"))
     items.push({ href: "/contracts", label: "اتفاقيات الأتعاب", icon: "file" });
   if (hasPermission(user.role, "finance.view"))
