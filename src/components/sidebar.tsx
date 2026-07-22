@@ -111,7 +111,7 @@ export function Sidebar({
   );
 
   const sidebarContent = (
-    <div className="sidebar-surface flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0d271f_0%,#0b211a_52%,#071812_100%)] text-white shadow-2xl shadow-brand-950/25 lg:w-[288px] lg:shadow-none">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#0d271f_0%,#0b211a_52%,#071812_100%)] text-white shadow-2xl shadow-brand-950/25 lg:w-[288px] lg:shadow-none">
       <div className="shrink-0 px-4 pb-3 pt-4 lg:px-5 lg:pt-5">
         <div className="flex items-center justify-between gap-3">
           <Link
@@ -244,7 +244,7 @@ export function Sidebar({
       />
 
       <aside
-        className={`sidebar-collapsible fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-transform duration-150 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[76px] lg:translate-x-0 ${
+        className={`sidebar-collapsible fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-[width,transform] duration-150 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[76px] lg:translate-x-0 lg:hover:w-[288px] lg:focus-within:w-[288px] ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
