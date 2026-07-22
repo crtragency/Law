@@ -119,12 +119,8 @@ export function Sidebar({
             onClick={() => setOpen(false)}
             className="group flex min-w-0 items-center gap-3 rounded-lg p-1 transition hover:bg-white/[0.045]"
           >
-            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-brass-300/25 bg-white p-1.5 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.02] group-hover:border-brass-300/45">
-              <BrandLogo className="h-full w-full" priority />
-              <span
-                className="absolute -bottom-1 -left-1 h-3 w-3 rounded-full border-2 border-brand-950 bg-brand-300"
-                aria-hidden
-              />
+            <span className="sidebar-brand-mark relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-brass-300/25 bg-white p-1 shadow-inner shadow-white/5 transition duration-300 group-hover:scale-[1.02] group-hover:border-brass-300/45">
+              <BrandLogo className="h-full w-full" imageClassName="scale-[1.16]" priority />
             </span>
             <span className="sidebar-reveal min-w-0 leading-tight">
               <span className="block truncate font-display text-[15px] font-bold text-white">

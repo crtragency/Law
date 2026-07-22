@@ -93,8 +93,8 @@ export function IconFileText(props: IconProps) {
 export function IconLogout(props: IconProps) {
   return (
     <svg {...base(props)}>
-      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
-      <path d="M10 12H3m0 0 3-3m-3 3 3 3" />
+      <path d="M12 3.5v7" />
+      <path d="M7.75 6.85a7 7 0 1 0 8.5 0" />
     </svg>
   );
 }
