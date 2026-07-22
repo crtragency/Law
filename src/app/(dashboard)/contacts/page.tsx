@@ -8,7 +8,7 @@ export const metadata = { title: "جهات الاتصال — نظام مكتب 
 
 export default async function ContactsPage() {
   const user = await requirePermission("contacts.view");
-  const canManage = hasPermission(user.role, "contacts.manage");
+  const canManage = hasPermission(user, "contacts.manage");
 
   const [contacts, clients, cases] = await Promise.all([
     prisma.legalContact.findMany({

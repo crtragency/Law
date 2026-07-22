@@ -54,6 +54,7 @@ import type {
 interface SearchUser {
   id: string;
   role: Role;
+  permissionOverridesJson?: string | null;
 }
 
 function displayClient(client: { name: string; companyName?: string | null; type?: string }) {
@@ -83,7 +84,7 @@ export async function runDashboardSearch(
   const textFilter = { contains: query, mode: "insensitive" as const };
   const jobs: Promise<DashboardSearchGroup>[] = [];
 
-  if (hasPermission(user.role, "clients.view")) {
+  if (hasPermission(user, "clients.view")) {
     jobs.push(
       prisma.client
         .findMany({
@@ -139,7 +140,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "cases.view")) {
+  if (hasPermission(user, "cases.view")) {
     jobs.push(
       prisma.case
         .findMany({
@@ -295,7 +296,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "documents.view")) {
+  if (hasPermission(user, "documents.view")) {
     jobs.push(
       prisma.document
         .findMany({
@@ -356,7 +357,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "tasks.view")) {
+  if (hasPermission(user, "tasks.view")) {
     jobs.push(
       prisma.task
         .findMany({
@@ -387,7 +388,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "events.view")) {
+  if (hasPermission(user, "events.view")) {
     jobs.push(
       prisma.event
         .findMany({
@@ -418,7 +419,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "contacts.view")) {
+  if (hasPermission(user, "contacts.view")) {
     jobs.push(
       prisma.legalContact
         .findMany({
@@ -457,7 +458,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "powers.view")) {
+  if (hasPermission(user, "powers.view")) {
     jobs.push(
       prisma.powerOfAttorney
         .findMany({
@@ -490,7 +491,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "litigation.view")) {
+  if (hasPermission(user, "litigation.view")) {
     jobs.push(
       prisma.litigationStep
         .findMany({
@@ -561,7 +562,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "services.view")) {
+  if (hasPermission(user, "services.view")) {
     jobs.push(
       prisma.serviceRequest
         .findMany({
@@ -592,7 +593,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "consultations.view")) {
+  if (hasPermission(user, "consultations.view")) {
     jobs.push(
       prisma.legalConsultation
         .findMany({
@@ -633,13 +634,13 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "library.view")) {
+  if (hasPermission(user, "library.view")) {
     jobs.push(
       prisma.legalLibraryEntry
         .findMany({
           where: {
             AND: [
-              hasPermission(user.role, "library.manage") ? {} : { isPublished: true },
+              hasPermission(user, "library.manage") ? {} : { isPublished: true },
               {
                 OR: [
                   { title: textFilter },
@@ -669,7 +670,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "contracts.view")) {
+  if (hasPermission(user, "contracts.view")) {
     jobs.push(
       prisma.contract
         .findMany({
@@ -692,7 +693,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "finance.view")) {
+  if (hasPermission(user, "finance.view")) {
     jobs.push(
       prisma.invoice
         .findMany({
@@ -769,7 +770,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "templates.view")) {
+  if (hasPermission(user, "templates.view")) {
     jobs.push(
       prisma.legalTemplate
         .findMany({
@@ -797,8 +798,8 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "approvals.view")) {
-    const canManageApprovals = hasPermission(user.role, "approvals.manage");
+  if (hasPermission(user, "approvals.view")) {
+    const canManageApprovals = hasPermission(user, "approvals.manage");
     jobs.push(
       prisma.approvalRequest
         .findMany({
@@ -834,7 +835,7 @@ export async function runDashboardSearch(
     );
   }
 
-  if (hasPermission(user.role, "reminders.view")) {
+  if (hasPermission(user, "reminders.view")) {
     jobs.push(
       prisma.reminder
         .findMany({

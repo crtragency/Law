@@ -21,7 +21,7 @@ const CHANNELS = Object.keys(MESSAGE_TEMPLATE_CHANNEL_LABELS);
 
 export default async function TemplatesPage() {
   const user = await requirePermission("templates.view");
-  const canManage = hasPermission(user.role, "templates.manage");
+  const canManage = hasPermission(user, "templates.manage");
 
   const [templates, outputs, messageTemplates, clients, cases] = await Promise.all([
     prisma.legalTemplate.findMany({ orderBy: { createdAt: "desc" }, include: { createdBy: { select: { name: true } } } }),

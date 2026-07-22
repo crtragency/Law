@@ -17,7 +17,7 @@ export default async function ContractDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requirePermission("contracts.view");
-  const canManage = hasPermission(user.role, "contracts.manage");
+  const canManage = hasPermission(user, "contracts.manage");
   const { id } = await params;
 
   const [contract, firm] = await Promise.all([

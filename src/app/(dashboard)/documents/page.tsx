@@ -9,7 +9,7 @@ export const metadata = { title: "مركز الملفات — نظام مكتب 
 
 export default async function DocumentsPage() {
   const user = await requirePermission("documents.view");
-  const canManage = hasPermission(user.role, "documents.manage");
+  const canManage = hasPermission(user, "documents.manage");
 
   const [documents, cases, total, publicCount, linkedCount, indexedCount] = await Promise.all([
     prisma.document.findMany({

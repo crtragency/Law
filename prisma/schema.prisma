@@ -33,6 +33,7 @@ model User {
   avatarStorageKey String?
   avatarFileName   String?
   avatarMimeType   String?
+  permissionOverridesJson String?
   isActive         Boolean   @default(true)
   lastLoginAt      DateTime?
   createdAt        DateTime  @default(now())

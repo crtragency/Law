@@ -11,7 +11,7 @@ export const metadata = { title: "اتفاقيات الأتعاب — نظام �
 
 export default async function ContractsPage() {
   const user = await requirePermission("contracts.view");
-  const canManage = hasPermission(user.role, "contracts.manage");
+  const canManage = hasPermission(user, "contracts.manage");
 
   const contracts = await prisma.contract.findMany({
     orderBy: { createdAt: "desc" },

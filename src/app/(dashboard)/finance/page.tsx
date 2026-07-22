@@ -24,7 +24,7 @@ const PAYMENT_METHODS = Object.keys(PAYMENT_METHOD_LABELS);
 
 export default async function FinancePage() {
   const user = await requirePermission("finance.view");
-  const canManage = hasPermission(user.role, "finance.manage");
+  const canManage = hasPermission(user, "finance.manage");
 
   const [invoices, payments, expenses, clients, cases, contracts] = await Promise.all([
     prisma.invoice.findMany({

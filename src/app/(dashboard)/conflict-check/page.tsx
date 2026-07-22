@@ -20,9 +20,9 @@ export default async function ConflictCheckPage({
   const user = await requirePermission("clients.view");
   const params = (await searchParams) ?? {};
   const query = (params.q ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
-  const canViewCases = hasPermission(user.role, "cases.view");
-  const canViewContacts = hasPermission(user.role, "contacts.view");
-  const canViewPowers = hasPermission(user.role, "powers.view");
+  const canViewCases = hasPermission(user, "cases.view");
+  const canViewContacts = hasPermission(user, "contacts.view");
+  const canViewPowers = hasPermission(user, "powers.view");
   const textFilter = query ? { contains: query, mode: "insensitive" as const } : undefined;
 
   const [clients, cases, contacts, powers] = query

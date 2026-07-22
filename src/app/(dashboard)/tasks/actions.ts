@@ -47,7 +47,7 @@ export async function saveTaskAction(
   if (
     assignedToId &&
     assignedToId !== actor.id &&
-    !hasPermission(actor.role, "tasks.assignOthers")
+    !hasPermission(actor, "tasks.assignOthers")
   ) {
     return { ok: false, error: "لا تملك صلاحية إسناد المهام لموظفين آخرين" };
   }
@@ -128,7 +128,7 @@ export async function updateTaskStatusAction(
   const allowed =
     task.assignedToId === actor.id ||
     task.createdById === actor.id ||
-    hasPermission(actor.role, "tasks.manage");
+    hasPermission(actor, "tasks.manage");
   if (!allowed) {
     return { ok: false, error: "لا تملك صلاحية تعديل هذه المهمة" };
   }

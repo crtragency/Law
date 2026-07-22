@@ -281,7 +281,7 @@ export default async function DashboardPage({
             </div>
           </section>
 
-          {hasPermission(user.role, "cases.view") && (
+          {hasPermission(user, "cases.view") && (
             <section className="recent-cases-panel">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-display text-xl font-bold text-ink">أحدث القضايا</h2>

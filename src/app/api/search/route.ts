@@ -9,7 +9,11 @@ export async function GET(request: Request) {
     const user = await ensurePermission("search.view");
     const url = new URL(request.url);
     const query = url.searchParams.get("q") ?? "";
-    const results = await runDashboardSearch(query, { id: user.id, role: user.role });
+    const results = await runDashboardSearch(query, {
+      id: user.id,
+      role: user.role,
+      permissionOverridesJson: user.permissionOverridesJson,
+    });
     return NextResponse.json(results);
   } catch (error) {
     if (error instanceof AuthError) {

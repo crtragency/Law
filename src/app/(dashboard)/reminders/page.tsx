@@ -20,7 +20,7 @@ const TYPES = Object.keys(REMINDER_TYPE_LABELS);
 
 export default async function RemindersPage() {
   const user = await requirePermission("reminders.view");
-  const canManage = hasPermission(user.role, "reminders.manage");
+  const canManage = hasPermission(user, "reminders.manage");
   const now = new Date();
   const soon = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 

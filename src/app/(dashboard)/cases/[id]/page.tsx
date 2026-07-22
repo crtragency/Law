@@ -64,8 +64,8 @@ export default async function CaseDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requirePermission("cases.view");
-  const canManage = hasPermission(user.role, "cases.manage");
-  const canManageDocs = hasPermission(user.role, "documents.manage");
+  const canManage = hasPermission(user, "cases.manage");
+  const canManageDocs = hasPermission(user, "documents.manage");
   const { id } = await params;
 
   const c = await prisma.case.findUnique({

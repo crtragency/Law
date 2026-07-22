@@ -16,6 +16,7 @@ export default async function UsersPage() {
       email: true,
       role: true,
       phone: true,
+      permissionOverridesJson: true,
       isActive: true,
       lastLoginAt: true,
       createdAt: true,

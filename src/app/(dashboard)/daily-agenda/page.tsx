@@ -47,7 +47,7 @@ export default async function DailyAgendaPage() {
   const start = startOfToday();
   const tomorrow = addDays(start, 1);
   const weekEnd = addDays(start, 7);
-  const taskScope = hasPermission(user.role, "tasks.assignOthers")
+  const taskScope = hasPermission(user, "tasks.assignOthers")
     ? {}
     : { OR: [{ assignedToId: user.id }, { createdById: user.id }] };
 
@@ -60,14 +60,14 @@ export default async function DailyAgendaPage() {
     serviceRequests,
     invoices,
   ] = await Promise.all([
-    hasPermission(user.role, "events.view")
+    hasPermission(user, "events.view")
       ? prisma.event.findMany({
           where: { startAt: { gte: start, lt: tomorrow } },
           orderBy: { startAt: "asc" },
           include: { case: { select: { id: true, title: true, caseNumber: true } } },
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "tasks.view")
+    hasPermission(user, "tasks.view")
       ? prisma.task.findMany({
           where: {
             ...taskScope,
@@ -82,7 +82,7 @@ export default async function DailyAgendaPage() {
           take: 20,
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "tasks.view")
+    hasPermission(user, "tasks.view")
       ? prisma.task.findMany({
           where: {
             ...taskScope,
@@ -97,7 +97,7 @@ export default async function DailyAgendaPage() {
           take: 20,
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "litigation.view")
+    hasPermission(user, "litigation.view")
       ? prisma.litigationStep.findMany({
           where: {
             status: { notIn: ["DONE", "CANCELLED"] },
@@ -111,7 +111,7 @@ export default async function DailyAgendaPage() {
           take: 20,
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "documents.view")
+    hasPermission(user, "documents.view")
       ? prisma.documentRequest.findMany({
           where: {
             status: "REQUESTED",
@@ -122,7 +122,7 @@ export default async function DailyAgendaPage() {
           take: 20,
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "services.view")
+    hasPermission(user, "services.view")
       ? prisma.serviceRequest.findMany({
           where: { status: { in: ["NEW", "IN_REVIEW", "IN_PROGRESS", "WAITING_CLIENT"] } },
           orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
@@ -133,7 +133,7 @@ export default async function DailyAgendaPage() {
           take: 12,
         })
       : Promise.resolve([]),
-    hasPermission(user.role, "finance.view")
+    hasPermission(user, "finance.view")
       ? prisma.invoice.findMany({
           where: {
             status: { notIn: ["PAID", "CANCELLED"] },

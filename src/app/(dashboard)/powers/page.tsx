@@ -12,7 +12,7 @@ const STATUSES = ["ACTIVE", "EXPIRING", "EXPIRED", "REVOKED", "ARCHIVED"];
 
 export default async function PowersPage() {
   const user = await requirePermission("powers.view");
-  const canManage = hasPermission(user.role, "powers.manage");
+  const canManage = hasPermission(user, "powers.manage");
 
   const [powers, clients, cases] = await Promise.all([
     prisma.powerOfAttorney.findMany({

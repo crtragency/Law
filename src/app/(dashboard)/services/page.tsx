@@ -31,7 +31,7 @@ const CATEGORY_ORDER: ServiceModuleCategory[] = [
 
 export default async function ServicesPage() {
   const user = await requirePermission("services.view");
-  const canManage = hasPermission(user.role, "services.manage");
+  const canManage = hasPermission(user, "services.manage");
 
   const [requests, clients, cases, users] = await Promise.all([
     prisma.serviceRequest.findMany({

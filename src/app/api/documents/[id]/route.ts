@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getSessionUser();
-  if (!user || !hasPermission(user.role, "documents.view")) {
+  if (!user || !hasPermission(user, "documents.view")) {
     return new NextResponse("غير مصرح بالوصول", { status: 403 });
   }
 

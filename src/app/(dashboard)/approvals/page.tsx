@@ -20,7 +20,7 @@ const TYPES = Object.keys(APPROVAL_TYPE_LABELS);
 
 export default async function ApprovalsPage() {
   const user = await requirePermission("approvals.view");
-  const canManage = hasPermission(user.role, "approvals.manage");
+  const canManage = hasPermission(user, "approvals.manage");
 
   const [pending, recent] = await Promise.all([
     prisma.approvalRequest.findMany({

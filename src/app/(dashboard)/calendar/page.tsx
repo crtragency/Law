@@ -32,7 +32,7 @@ function map(ev: {
 
 export default async function CalendarPage() {
   const user = await requirePermission("events.view");
-  const canManage = hasPermission(user.role, "events.manage");
+  const canManage = hasPermission(user, "events.manage");
   const now = new Date();
 
   const [upcoming, past, cases] = await Promise.all([

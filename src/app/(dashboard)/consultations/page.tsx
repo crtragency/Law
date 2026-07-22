@@ -28,7 +28,7 @@ function displayClient(client: { name: string; companyName?: string | null; type
 
 export default async function ConsultationsPage() {
   const user = await requirePermission("consultations.view");
-  const canManage = hasPermission(user.role, "consultations.manage");
+  const canManage = hasPermission(user, "consultations.manage");
 
   const [consultations, clients, cases, users] = await Promise.all([
     prisma.legalConsultation.findMany({

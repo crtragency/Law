@@ -74,9 +74,9 @@ export async function saveCaseAction(
       // نقرأ الحالة السابقة لاكتشاف تغيّرها وإشعار العميل.
       const before = await prisma.case.findUnique({
         where: { id: parsed.data.id },
-        select: { status: true },
+        select: { status: true, assignedLawyerId: true },
       });
-      await prisma.case.update({ where: { id: parsed.data.id }, data });
+      const updated = await prisma.case.update({ where: { id: parsed.data.id }, data });
       await audit({
         action: "case.update",
         userId: g.id,
@@ -93,6 +93,22 @@ export async function saveCaseAction(
             `قضية: ${parsed.data.title} (${parsed.data.caseNumber})`,
             `الحالة الجديدة: ${CASE_STATUS_LABELS[parsed.data.status] ?? parsed.data.status}`,
           ],
+        });
+      }
+      if (updated.assignedLawyerId && before?.assignedLawyerId !== updated.assignedLawyerId) {
+        await notifyMany([updated.assignedLawyerId], {
+          type: "case.assigned",
+          title: "تم إسناد قضية لك",
+          body: `${updated.caseNumber} - ${updated.title}`,
+          link: `/cases/${updated.id}`,
+        });
+      }
+      if (before && before.status !== updated.status && updated.assignedLawyerId) {
+        await notifyMany([updated.assignedLawyerId], {
+          type: "case.status",
+          title: "تحديث حالة قضية مسندة لك",
+          body: `${updated.caseNumber} - ${updated.title}: ${CASE_STATUS_LABELS[updated.status] ?? updated.status}`,
+          link: `/cases/${updated.id}`,
         });
       }
       revalidatePath(`/cases/${parsed.data.id}`);
@@ -116,6 +132,14 @@ export async function saveCaseAction(
           ...(created.court ? [`المحكمة: ${created.court}`] : []),
         ],
       });
+      if (created.assignedLawyerId) {
+        await notifyMany([created.assignedLawyerId], {
+          type: "case.assigned",
+          title: "تم إسناد قضية جديدة لك",
+          body: `${created.caseNumber} - ${created.title}`,
+          link: `/cases/${created.id}`,
+        });
+      }
     }
   } catch (e: unknown) {
     // خطأ تفرّد رقم القضية.

@@ -13,7 +13,7 @@ function displayClient(client: { name: string; companyName: string | null; type:
 
 export default async function CommunicationsPage() {
   const user = await requirePermission("cases.view");
-  const canManage = hasPermission(user.role, "cases.manage");
+  const canManage = hasPermission(user, "cases.manage");
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date(todayStart);

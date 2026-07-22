@@ -8,7 +8,13 @@ import {
   resetPasswordAction,
   type ActionResult,
 } from "./actions";
-import { ROLE_LABELS } from "@/lib/rbac";
+import {
+  PERMISSION_GROUPS,
+  PERMISSION_LABELS,
+  ROLE_LABELS,
+  effectivePermissionsFor,
+  type Permission,
+} from "@/lib/rbac";
 import { Badge } from "@/components/ui";
 import { IconPlus } from "@/components/icons";
 import { formatDateTime } from "@/lib/labels";
@@ -19,6 +25,7 @@ interface UserRow {
   email: string;
   role: string;
   phone: string | null;
+  permissionOverridesJson: string | null;
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string;
@@ -199,9 +206,17 @@ export function UsersManager({
 function EditPanel({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
   const [editState, editAction] = useActionState(updateUserAction, EMPTY);
   const [pwState, pwAction] = useActionState(resetPasswordAction, EMPTY);
+  const role = user.role as keyof typeof ROLE_LABELS;
+  const hasCustomPermissions = Boolean(user.permissionOverridesJson);
+  const selectedPermissions = new Set(
+    effectivePermissionsFor({
+      role,
+      permissionOverridesJson: user.permissionOverridesJson,
+    })
+  );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 xl:grid-cols-[minmax(360px,0.75fr)_minmax(360px,0.55fr)]">
       {/* تعديل البيانات */}
       <form action={editAction} className="form-panel-compact space-y-4">
         <h4 className="font-semibold">تعديل بيانات الموظف</h4>
@@ -251,6 +266,41 @@ function EditPanel({ user, isSelf }: { user: UserRow; isSelf: boolean }) {
             <span className="text-xs text-gray-400">(لا يمكنك تعطيل نفسك)</span>
           )}
         </label>
+
+        <div className="rounded-lg border border-line bg-paper/70 p-4">
+          <label className="mb-3 flex items-start gap-2 text-sm font-bold text-ink">
+            <input
+              type="checkbox"
+              name="useCustomPermissions"
+              defaultChecked={hasCustomPermissions}
+              className="mt-1"
+            />
+            صلاحيات مخصصة لهذا الموظف
+          </label>
+          <p className="mb-4 text-xs leading-6 text-gray-500">
+            لو غير مفعلة، الموظف سيستخدم صلاحيات الدور المختار. عند تفعيلها سيستخدم الصلاحيات المحددة هنا فقط.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {PERMISSION_GROUPS.map((group) => (
+              <fieldset key={group.title} className="rounded-lg border border-line bg-white p-3">
+                <legend className="px-1 text-xs font-bold text-brand-700">{group.title}</legend>
+                <div className="mt-2 space-y-2">
+                  {group.permissions.map((permission) => (
+                    <label key={permission} className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                      <input
+                        type="checkbox"
+                        name="permissions"
+                        value={permission}
+                        defaultChecked={selectedPermissions.has(permission)}
+                      />
+                      {PERMISSION_LABELS[permission as Permission]}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+        </div>
         <Submit label="حفظ التعديلات" />
       </form>
 

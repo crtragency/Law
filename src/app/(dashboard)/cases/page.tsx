@@ -8,7 +8,7 @@ export const metadata = { title: "القضايا — نظام مكتب المح�
 
 export default async function CasesPage() {
   const user = await requirePermission("cases.view");
-  const canManage = hasPermission(user.role, "cases.manage");
+  const canManage = hasPermission(user, "cases.manage");
 
   const [cases, clients, lawyers] = await Promise.all([
     prisma.case.findMany({

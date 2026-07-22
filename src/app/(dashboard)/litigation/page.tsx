@@ -21,7 +21,7 @@ const PRIORITIES = Object.keys(TASK_PRIORITY_LABELS);
 
 export default async function LitigationPage() {
   const user = await requirePermission("litigation.view");
-  const canManage = hasPermission(user.role, "litigation.manage");
+  const canManage = hasPermission(user, "litigation.manage");
 
   const [steps, cases, users] = await Promise.all([
     prisma.litigationStep.findMany({

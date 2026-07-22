@@ -8,8 +8,8 @@ export const metadata = { title: "المهام — نظام مكتب المحا�
 
 export default async function TasksPage() {
   const user = await requirePermission("tasks.view");
-  const canManage = hasPermission(user.role, "tasks.manage");
-  const canAssignOthers = hasPermission(user.role, "tasks.assignOthers");
+  const canManage = hasPermission(user, "tasks.manage");
+  const canAssignOthers = hasPermission(user, "tasks.assignOthers");
 
   const [tasks, users, cases] = await Promise.all([
     prisma.task.findMany({

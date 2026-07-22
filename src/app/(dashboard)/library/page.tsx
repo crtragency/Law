@@ -19,7 +19,7 @@ export default async function LibraryPage({
   searchParams?: Promise<{ q?: string; type?: string }>;
 }) {
   const user = await requirePermission("library.view");
-  const canManage = hasPermission(user.role, "library.manage");
+  const canManage = hasPermission(user, "library.manage");
   const params = (await searchParams) ?? {};
   const q = (params.q ?? "").trim();
   const selectedType = types.includes(params.type ?? "") ? params.type ?? "" : "";

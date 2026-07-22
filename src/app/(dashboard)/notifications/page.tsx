@@ -18,10 +18,10 @@ export default async function NotificationsPage() {
   const soon = new Date(now);
   soon.setDate(soon.getDate() + 7);
 
-  const canFinance = hasPermission(me.role, "finance.view");
-  const canDocuments = hasPermission(me.role, "documents.view");
-  const canApprovals = hasPermission(me.role, "approvals.view");
-  const canManageApprovals = hasPermission(me.role, "approvals.manage");
+  const canFinance = hasPermission(me, "finance.view");
+  const canDocuments = hasPermission(me, "documents.view");
+  const canApprovals = hasPermission(me, "approvals.view");
+  const canManageApprovals = hasPermission(me, "approvals.manage");
 
   const [
     notifications,

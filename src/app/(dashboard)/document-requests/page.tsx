@@ -9,7 +9,7 @@ export const metadata = { title: "طلبات المستندات — نظام م�
 
 export default async function DocumentRequestsPage() {
   const user = await requirePermission("documents.view");
-  const canManage = hasPermission(user.role, "documents.manage");
+  const canManage = hasPermission(user, "documents.manage");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

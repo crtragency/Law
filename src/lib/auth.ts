@@ -21,7 +21,7 @@ export async function requirePermission(
   permission: Permission
 ): Promise<User> {
   const user = await requireUser();
-  if (!hasPermission(user.role, permission)) {
+  if (!hasPermission(user, permission)) {
     redirect("/dashboard?error=forbidden");
   }
   return user;
@@ -47,7 +47,7 @@ export async function ensurePermission(
   if (!user) {
     throw new AuthError("يجب تسجيل الدخول");
   }
-  if (!hasPermission(user.role, permission)) {
+  if (!hasPermission(user, permission)) {
     throw new AuthError("ليس لديك صلاحية لهذا الإجراء");
   }
   return user;

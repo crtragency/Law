@@ -13,6 +13,7 @@ import {
 import { verifySameOrigin, getClientIp } from "@/lib/request";
 import { audit } from "@/lib/audit";
 import { sendEmail, appUrl } from "@/lib/email";
+import { ALL_PERMISSIONS, serializePermissionOverrides, type Permission } from "@/lib/rbac";
 
 export interface ActionResult {
   ok: boolean;
@@ -114,6 +115,18 @@ export async function updateUserAction(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات خاطئة" };
   }
+  const useCustomPermissions = formData.get("useCustomPermissions") === "on";
+  const selectedPermissions = formData
+    .getAll("permissions")
+    .filter((permission): permission is Permission =>
+      typeof permission === "string" && ALL_PERMISSIONS.includes(permission as Permission)
+    );
+  const permissionOverridesJson = useCustomPermissions
+    ? serializePermissionOverrides(selectedPermissions)
+    : null;
+  if (useCustomPermissions && selectedPermissions.length === 0) {
+    return { ok: false, error: "اختر صلاحية واحدة على الأقل أو ألغِ الصلاحيات المخصصة" };
+  }
 
   // منع المدير من تعطيل حسابه أو تنزيل دوره (تجنّب قفل نفسه خارج النظام).
   if (parsed.data.id === g.id) {
@@ -123,6 +136,9 @@ export async function updateUserAction(
     if (parsed.data.role !== "ADMIN") {
       return { ok: false, error: "لا يمكنك تغيير دورك من مدير" };
     }
+    if (useCustomPermissions && !selectedPermissions.includes("users.manage")) {
+      return { ok: false, error: "لا يمكنك إزالة صلاحية إدارة الموظفين من حسابك" };
+    }
   }
 
   const updated = await prisma.user.update({
@@ -131,6 +147,7 @@ export async function updateUserAction(
       name: parsed.data.name,
       role: parsed.data.role,
       phone: parsed.data.phone || null,
+      permissionOverridesJson,
       isActive: parsed.data.isActive,
     },
   });
@@ -146,7 +163,11 @@ export async function updateUserAction(
     entity: "User",
     entityId: updated.id,
     ip: await getClientIp(),
-    details: { role: updated.role, isActive: updated.isActive },
+    details: {
+      role: updated.role,
+      isActive: updated.isActive,
+      customPermissions: useCustomPermissions ? selectedPermissions.length : null,
+    },
   });
 
   revalidatePath("/admin/users");
