@@ -41,6 +41,7 @@ export type Permission =
   | "contracts.manage" // إنشاء/تعديل الاتفاقيات
   | "approvals.view"
   | "approvals.manage"
+  | "attendance.manage"
   | "firm.manage" // تعديل بيانات الشركة (أدمن فقط)
   | "audit.view"; // عرض سجل التدقيق (أدمن فقط)
 
@@ -81,6 +82,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "contracts.manage": "إدارة اتفاقيات الأتعاب",
   "approvals.view": "عرض الموافقات",
   "approvals.manage": "إدارة الموافقات",
+  "attendance.manage": "إدارة الحضور والانصراف",
   "firm.manage": "إدارة بيانات الشركة",
   "audit.view": "سجل التدقيق والبريد",
 };
@@ -88,7 +90,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
 export const PERMISSION_GROUPS: { title: string; permissions: Permission[] }[] = [
   {
     title: "الإدارة",
-    permissions: ["users.manage", "firm.manage", "audit.view", "reports.view", "search.view"],
+    permissions: ["users.manage", "attendance.manage", "firm.manage", "audit.view", "reports.view", "search.view"],
   },
   {
     title: "العملاء والقضايا",
@@ -185,6 +187,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "contracts.manage",
     "approvals.view",
     "approvals.manage",
+    "attendance.manage",
     "firm.manage",
     "audit.view",
   ],

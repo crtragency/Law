@@ -91,6 +91,7 @@ model User {
   assignedMeetingMinutes    MeetingMinute[]          @relation("MeetingMinuteAssignedTo")
   createdSettlementOffers   SettlementOffer[]        @relation("SettlementOfferCreatedBy")
   assignedSettlementOffers  SettlementOffer[]        @relation("SettlementOfferAssignedTo")
+  attendanceRecords         AttendanceRecord[]        @relation("AttendanceUser")
 
   @@index([role])
   @@index([isActive])
@@ -147,6 +148,31 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ===========================================================================
+//  الحضور والانصراف  —  Attendance
+// ===========================================================================
+
+model AttendanceRecord {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation("AttendanceUser", fields: [userId], references: [id], onDelete: Cascade)
+  workDate          DateTime
+  clockInAt         DateTime?
+  clockOutAt        DateTime?
+  clockInIp         String?
+  clockOutIp        String?
+  clockInUserAgent  String?
+  clockOutUserAgent String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, workDate])
+  @@index([workDate])
+  @@index([clockInAt])
+  @@index([clockOutAt])
 }
 
 // ===========================================================================

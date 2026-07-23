@@ -70,6 +70,7 @@ const NAV_GROUPS = [
     match: [
       "/messages",
       "/notifications",
+      "/attendance",
       "/profile",
       "/admin/users",
       "/admin/firm",

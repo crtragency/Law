@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { Sidebar, type NavItem } from "@/components/sidebar";
 import { SearchCommand } from "@/components/search-command";
 import { HeaderMessagesPopover, HeaderNotificationsPopover } from "@/components/header-popovers";
+import { AttendancePrompt } from "@/components/attendance-prompt";
+import { getCurrentWorkDate } from "@/lib/attendance";
 import { formatDateTime } from "@/lib/labels";
 
 export default async function DashboardLayout({
@@ -65,6 +67,8 @@ export default async function DashboardLayout({
     items.push({ href: "/reminders", label: "التنبيهات", icon: "bell" });
   if (hasPermission(user, "reports.view"))
     items.push({ href: "/reports", label: "التقارير", icon: "file" });
+  if (hasPermission(user, "attendance.manage"))
+    items.push({ href: "/attendance", label: "الحضور والانصراف", icon: "clock" });
   items.push({ href: "/messages", label: "الرسائل", icon: "message" });
   if (hasPermission(user, "users.manage"))
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });
@@ -77,7 +81,8 @@ export default async function DashboardLayout({
   }
   items.push({ href: "/profile", label: "البروفايل", icon: "user" });
 
-  const [unreadNotifications, unreadMessages, recentNotifications, recentMessages] = await Promise.all([
+  const todayWorkDate = getCurrentWorkDate();
+  const [unreadNotifications, unreadMessages, recentNotifications, recentMessages, todayAttendance] = await Promise.all([
     prisma.notification.count({ where: { userId: user.id, read: false } }),
     prisma.message.count({ where: { recipientId: user.id, read: false } }),
     prisma.notification.findMany({
@@ -103,6 +108,15 @@ export default async function DashboardLayout({
         read: true,
         createdAt: true,
         sender: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.attendanceRecord.findUnique({
+      where: { userId_workDate: { userId: user.id, workDate: todayWorkDate } },
+      select: {
+        userId: true,
+        workDate: true,
+        clockInAt: true,
+        clockOutAt: true,
       },
     }),
   ]);
@@ -146,6 +160,7 @@ export default async function DashboardLayout({
           />
         </header>
         <main className="dashboard-main mx-auto w-full max-w-[1720px] flex-1 p-4 sm:p-6 lg:p-9 xl:p-10">
+          <AttendancePrompt record={todayAttendance} />
           {children}
         </main>
       </div>
