@@ -44,7 +44,7 @@ export function AttendancePrompt({ record }: { record: AttendancePromptRecord })
           </div>
           <div className="p-5">
             <div className="mb-4 rounded-lg border border-line bg-paper/70 px-4 py-3 text-sm leading-7 text-gray-600">
-              بداية الدوام الافتراضية 9:00 صباحًا، والسماح بالتأخير 15 دقيقة.
+              بداية الدوام 8:00 صباحًا، ونهاية الدوام 4:00 مساءً، والسماح بالتأخير 15 دقيقة.
             </div>
             <form action={clockInAction}>
               <button type="submit" className="btn-primary w-full">

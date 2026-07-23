@@ -42,28 +42,48 @@ export async function GET(request: Request) {
     select: { id: true, name: true, email: true, role: true },
   });
 
-  const records = users.length
-    ? await prisma.attendanceRecord.findMany({
-        where: {
-          userId: { in: users.map((item) => item.id) },
-          workDate: {
-            gte: workDateFromKey(range.startKey),
-            lte: workDateFromKey(range.endKey),
+  const rangeStart = workDateFromKey(range.startKey);
+  const rangeEnd = workDateFromKey(range.endKey);
+  const [records, approvedRequests] = users.length
+    ? await Promise.all([
+        prisma.attendanceRecord.findMany({
+          where: {
+            userId: { in: users.map((item) => item.id) },
+            workDate: {
+              gte: rangeStart,
+              lte: rangeEnd,
+            },
           },
-        },
-        select: {
-          userId: true,
-          workDate: true,
-          clockInAt: true,
-          clockOutAt: true,
-          notes: true,
-        },
-      })
-    : [];
+          select: {
+            userId: true,
+            workDate: true,
+            clockInAt: true,
+            clockOutAt: true,
+            notes: true,
+          },
+        }),
+        prisma.employeeRequest.findMany({
+          where: {
+            requestedById: { in: users.map((item) => item.id) },
+            status: "APPROVED",
+            startDate: { lte: rangeEnd },
+            OR: [{ endDate: null }, { endDate: { gte: rangeStart } }],
+          },
+          select: {
+            requestedById: true,
+            type: true,
+            subject: true,
+            startDate: true,
+            endDate: true,
+          },
+        }),
+      ])
+    : [[], []];
 
   const rows = buildAttendanceRows({
     users,
     records,
+    requests: approvedRequests,
     dateKeys: dateKeysBetween(range.startKey, range.endKey).reverse(),
   });
 
@@ -77,6 +97,7 @@ export async function GET(request: Request) {
     "ساعات العمل",
     "دقائق التأخير",
     "دقائق الانصراف المبكر",
+    "طلب معتمد",
     "الحالة",
   ];
   const csv = [
@@ -91,6 +112,7 @@ export async function GET(request: Request) {
       formatDuration(row.summary.workedMinutes),
       row.summary.lateMinutes,
       row.summary.earlyLeaveMinutes,
+      row.approvedRequest?.subject ?? "",
       row.summary.statusLabel,
     ]),
   ]

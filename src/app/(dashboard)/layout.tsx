@@ -69,6 +69,7 @@ export default async function DashboardLayout({
     items.push({ href: "/reports", label: "التقارير", icon: "file" });
   if (hasPermission(user, "attendance.manage"))
     items.push({ href: "/attendance", label: "الحضور والانصراف", icon: "clock" });
+  items.push({ href: "/requests", label: "طلبات الموظفين", icon: "file" });
   items.push({ href: "/messages", label: "الرسائل", icon: "message" });
   if (hasPermission(user, "users.manage"))
     items.push({ href: "/admin/users", label: "الموظفون", icon: "shield" });

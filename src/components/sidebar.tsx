@@ -71,6 +71,7 @@ const NAV_GROUPS = [
       "/messages",
       "/notifications",
       "/attendance",
+      "/requests",
       "/profile",
       "/admin/users",
       "/admin/firm",

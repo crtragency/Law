@@ -43,25 +43,44 @@ export default async function AttendancePage({
     select: { id: true, name: true, email: true, role: true },
   });
 
-  const records = users.length
-    ? await prisma.attendanceRecord.findMany({
-        where: {
-          userId: { in: users.map((user) => user.id) },
-          workDate: {
-            gte: workDateFromKey(range.startKey),
-            lte: workDateFromKey(range.endKey),
+  const rangeStart = workDateFromKey(range.startKey);
+  const rangeEnd = workDateFromKey(range.endKey);
+  const [records, approvedRequests] = users.length
+    ? await Promise.all([
+        prisma.attendanceRecord.findMany({
+          where: {
+            userId: { in: users.map((user) => user.id) },
+            workDate: {
+              gte: rangeStart,
+              lte: rangeEnd,
+            },
           },
-        },
-        orderBy: [{ workDate: "desc" }],
-        select: {
-          userId: true,
-          workDate: true,
-          clockInAt: true,
-          clockOutAt: true,
-          notes: true,
-        },
-      })
-    : [];
+          orderBy: [{ workDate: "desc" }],
+          select: {
+            userId: true,
+            workDate: true,
+            clockInAt: true,
+            clockOutAt: true,
+            notes: true,
+          },
+        }),
+        prisma.employeeRequest.findMany({
+          where: {
+            requestedById: { in: users.map((user) => user.id) },
+            status: "APPROVED",
+            startDate: { lte: rangeEnd },
+            OR: [{ endDate: null }, { endDate: { gte: rangeStart } }],
+          },
+          select: {
+            requestedById: true,
+            type: true,
+            subject: true,
+            startDate: true,
+            endDate: true,
+          },
+        }),
+      ])
+    : [[], []];
 
   const allUsers = await prisma.user.findMany({
     where: { isActive: true },
@@ -72,13 +91,17 @@ export default async function AttendancePage({
   const rows = buildAttendanceRows({
     users,
     records,
+    requests: approvedRequests,
     dateKeys: dateKeysBetween(range.startKey, range.endKey).reverse(),
   });
 
   const presentRows = rows.filter((row) => row.record?.clockInAt).length;
-  const missingRows = rows.filter((row) => !row.record?.clockInAt && row.summary.statusLabel !== "لم يحن اليوم").length;
+  const approvedLeaveRows = rows.filter((row) => row.summary.statusLabel === "إجازة معتمدة").length;
+  const missingRows = rows.filter((row) =>
+    !row.record?.clockInAt &&
+    !["لم يحن اليوم", "إجازة معتمدة", "إجازة أسبوعية", "عمل عن بعد معتمد"].includes(row.summary.statusLabel)
+  ).length;
   const lateRows = rows.filter((row) => row.summary.lateMinutes > 0).length;
-  const totalWorked = rows.reduce((sum, row) => sum + (row.summary.workedMinutes ?? 0), 0);
   const query = new URLSearchParams({
     start: range.startKey,
     end: range.endKey,
@@ -89,7 +112,7 @@ export default async function AttendancePage({
     <div className="space-y-6">
       <PageHeader
         title="الحضور والانصراف"
-        subtitle="تابع بداية ونهاية يوم كل موظف، واحسب التأخيرات والانصراف المبكر، وصدّر شيت لأي فترة تحتاجها."
+        subtitle="مواعيد العمل من 8 صباحًا إلى 4 مساءً من السبت إلى الخميس، مع احتساب التأخيرات والإجازات المعتمدة داخل الشيت."
         action={
           <Link href={`/attendance/export?${query}`} className="btn-primary">
             <IconFileText className="h-4 w-4" />
@@ -129,7 +152,7 @@ export default async function AttendancePage({
         <StatCard label="سجلات حضور" value={presentRows} icon={<IconUsers />} />
         <StatCard label="لم يسجلوا حضور" value={missingRows} icon={<IconClock />} />
         <StatCard label="حالات تأخير" value={lateRows} icon={<IconClock />} />
-        <StatCard label="إجمالي ساعات العمل" value={formatDuration(totalWorked)} icon={<IconFileText />} />
+        <StatCard label="إجازات معتمدة" value={approvedLeaveRows} icon={<IconFileText />} />
       </div>
 
       <div className="data-panel overflow-x-auto">
@@ -144,13 +167,14 @@ export default async function AttendancePage({
               <th className="table-th">ساعات العمل</th>
               <th className="table-th">التأخير</th>
               <th className="table-th">انصراف مبكر</th>
+              <th className="table-th">طلب معتمد</th>
               <th className="table-th">الحالة</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="table-td text-center text-gray-500">
+                <td colSpan={10} className="table-td text-center text-gray-500">
                   لا توجد بيانات لهذه الفترة
                 </td>
               </tr>
@@ -168,6 +192,7 @@ export default async function AttendancePage({
                   <td className="table-td font-semibold">{formatDuration(row.summary.workedMinutes)}</td>
                   <td className="table-td">{formatDuration(row.summary.lateMinutes)}</td>
                   <td className="table-td">{formatDuration(row.summary.earlyLeaveMinutes)}</td>
+                  <td className="table-td text-xs text-gray-500">{row.approvedRequest?.subject ?? "—"}</td>
                   <td className="table-td">
                     <Badge className={attendanceToneClass(row.summary.tone)}>
                       {row.summary.statusLabel}

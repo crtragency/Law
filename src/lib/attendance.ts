@@ -2,9 +2,9 @@ import type { Role } from "@prisma/client";
 
 export const ATTENDANCE_TIMEZONE = "Africa/Cairo";
 export const ATTENDANCE_SETTINGS = {
-  startHour: 9,
+  startHour: 8,
   startMinute: 0,
-  endHour: 17,
+  endHour: 16,
   endMinute: 0,
   graceMinutes: 15,
   maxReportDays: 62,
@@ -25,6 +25,14 @@ export type AttendanceRecordSnapshot = {
   notes?: string | null;
 };
 
+export type AttendanceRequestSnapshot = {
+  requestedById: string;
+  type: "LEAVE" | "LATE_PERMISSION" | "EARLY_LEAVE_PERMISSION" | "REMOTE_WORK" | "GENERAL";
+  subject: string;
+  startDate: Date | null;
+  endDate: Date | null;
+};
+
 export type AttendanceSummary = {
   statusLabel: string;
   tone: "good" | "warning" | "danger" | "muted";
@@ -39,6 +47,7 @@ export type AttendanceReportRow = {
   dateKey: string;
   user: AttendanceUser;
   record: AttendanceRecordSnapshot | null;
+  approvedRequest: AttendanceRequestSnapshot | null;
   summary: AttendanceSummary;
 };
 
@@ -84,6 +93,10 @@ export function addDaysToDateKey(dateKey: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+export function isWorkingDay(dateKey: string): boolean {
+  return workDateFromKey(dateKey).getUTCDay() !== 5;
+}
+
 export function defaultAttendanceRange(today = new Date()) {
   const endKey = getDateKey(today);
   return {
@@ -106,10 +119,14 @@ export function normalizeDateRange(startKey: string, endKey: string) {
   return { startKey: start, endKey: end };
 }
 
-export function dateKeysBetween(startKey: string, endKey: string): string[] {
+export function dateKeysBetween(
+  startKey: string,
+  endKey: string,
+  options: { includeNonWorking?: boolean } = {}
+): string[] {
   const keys: string[] = [];
   for (let key = startKey; key <= endKey; key = addDaysToDateKey(key, 1)) {
-    keys.push(key);
+    if (options.includeNonWorking || isWorkingDay(key)) keys.push(key);
   }
   return keys;
 }
@@ -151,6 +168,7 @@ function minutesBetween(later: Date, earlier: Date): number {
 export function summarizeAttendance(
   record: AttendanceRecordSnapshot | null,
   dateKey: string,
+  approvedRequest: AttendanceRequestSnapshot | null = null,
   now = new Date()
 ): AttendanceSummary {
   const expectedStartAt = zonedDateTimeToUtc(
@@ -165,10 +183,46 @@ export function summarizeAttendance(
   );
   const todayKey = getDateKey(now);
 
+  if (!isWorkingDay(dateKey)) {
+    return {
+      statusLabel: "إجازة أسبوعية",
+      tone: "muted",
+      lateMinutes: 0,
+      earlyLeaveMinutes: 0,
+      workedMinutes: null,
+      expectedStartAt,
+      expectedEndAt,
+    };
+  }
+
   if (dateKey > todayKey) {
     return {
       statusLabel: "لم يحن اليوم",
       tone: "muted",
+      lateMinutes: 0,
+      earlyLeaveMinutes: 0,
+      workedMinutes: null,
+      expectedStartAt,
+      expectedEndAt,
+    };
+  }
+
+  if (approvedRequest?.type === "LEAVE") {
+    return {
+      statusLabel: "إجازة معتمدة",
+      tone: "muted",
+      lateMinutes: 0,
+      earlyLeaveMinutes: 0,
+      workedMinutes: null,
+      expectedStartAt,
+      expectedEndAt,
+    };
+  }
+
+  if (approvedRequest?.type === "REMOTE_WORK") {
+    return {
+      statusLabel: "عمل عن بعد معتمد",
+      tone: "good",
       lateMinutes: 0,
       earlyLeaveMinutes: 0,
       workedMinutes: null,
@@ -190,8 +244,11 @@ export function summarizeAttendance(
   }
 
   const rawLateMinutes = minutesBetween(record.clockInAt, expectedStartAt);
-  const lateMinutes = rawLateMinutes > ATTENDANCE_SETTINGS.graceMinutes ? rawLateMinutes : 0;
-  const earlyLeaveMinutes = record.clockOutAt && record.clockOutAt < expectedEndAt
+  const lateGrace = approvedRequest?.type === "LATE_PERMISSION"
+    ? Number.POSITIVE_INFINITY
+    : ATTENDANCE_SETTINGS.graceMinutes;
+  const lateMinutes = rawLateMinutes > lateGrace ? rawLateMinutes : 0;
+  const earlyLeaveMinutes = record.clockOutAt && record.clockOutAt < expectedEndAt && approvedRequest?.type !== "EARLY_LEAVE_PERMISSION"
     ? minutesBetween(expectedEndAt, record.clockOutAt)
     : 0;
   const workedMinutes = record.clockOutAt
@@ -260,24 +317,36 @@ export function summarizeAttendance(
 export function buildAttendanceRows({
   users,
   records,
+  requests = [],
   dateKeys,
 }: {
   users: AttendanceUser[];
   records: AttendanceRecordSnapshot[];
+  requests?: AttendanceRequestSnapshot[];
   dateKeys: string[];
 }): AttendanceReportRow[] {
   const byUserDate = new Map(
     records.map((record) => [`${record.userId}:${dateKeyFromWorkDate(record.workDate)}`, record])
   );
+  const approvedRequestFor = (userId: string, dateKey: string) =>
+    requests.find((request) => {
+      if (request.requestedById !== userId) return false;
+      if (!request.startDate) return false;
+      const startKey = getDateKey(request.startDate);
+      const endKey = request.endDate ? getDateKey(request.endDate) : startKey;
+      return dateKey >= startKey && dateKey <= endKey;
+    }) ?? null;
 
   return dateKeys.flatMap((dateKey) =>
     users.map((user) => {
       const record = byUserDate.get(`${user.id}:${dateKey}`) ?? null;
+      const approvedRequest = approvedRequestFor(user.id, dateKey);
       return {
         dateKey,
         user,
         record,
-        summary: summarizeAttendance(record, dateKey),
+        approvedRequest,
+        summary: summarizeAttendance(record, dateKey, approvedRequest),
       };
     })
   );

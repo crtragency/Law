@@ -92,6 +92,8 @@ model User {
   createdSettlementOffers   SettlementOffer[]        @relation("SettlementOfferCreatedBy")
   assignedSettlementOffers  SettlementOffer[]        @relation("SettlementOfferAssignedTo")
   attendanceRecords         AttendanceRecord[]        @relation("AttendanceUser")
+  employeeRequests          EmployeeRequest[]         @relation("EmployeeRequestRequestedBy")
+  decidedEmployeeRequests   EmployeeRequest[]         @relation("EmployeeRequestDecidedBy")
 
   @@index([role])
   @@index([isActive])
@@ -173,6 +175,48 @@ model AttendanceRecord {
   @@index([workDate])
   @@index([clockInAt])
   @@index([clockOutAt])
+}
+
+enum EmployeeRequestType {
+  LEAVE
+  LATE_PERMISSION
+  EARLY_LEAVE_PERMISSION
+  REMOTE_WORK
+  GENERAL
+}
+
+enum EmployeeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model EmployeeRequest {
+  id           String                @id @default(cuid())
+  type         EmployeeRequestType
+  status       EmployeeRequestStatus @default(PENDING)
+  subject      String
+  reason       String
+  startDate    DateTime?
+  endDate      DateTime?
+  decisionNote String?
+  decidedAt    DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  requestedById String
+  requestedBy   User   @relation("EmployeeRequestRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  decidedById String?
+  decidedBy   User?   @relation("EmployeeRequestDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([requestedById])
+  @@index([decidedById])
+  @@index([status])
+  @@index([type])
+  @@index([startDate])
+  @@index([endDate])
 }
 
 // ===========================================================================
