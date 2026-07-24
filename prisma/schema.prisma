@@ -220,6 +220,26 @@ model EmployeeRequest {
 }
 
 // ===========================================================================
+//  طلبات الاشتراك في المنصة  —  SaaS leads
+// ===========================================================================
+
+model SaasLead {
+  id          String   @id @default(cuid())
+  contactName String
+  firmName    String
+  phone       String
+  email       String?
+  teamSize    String?
+  source      String   @default("LANDING_PAGE")
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([phone])
+}
+
+// ===========================================================================
 //  الموكّلون  —  Clients
 // ===========================================================================
 

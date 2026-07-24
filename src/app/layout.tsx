@@ -19,9 +19,21 @@ const plex = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "نظام مكتب المحاماة",
-  description: "نظام إدارة القضايا والموظفين والمواعيد لمكتب المحاماة",
-  robots: { index: false, follow: false },
+  title: {
+    default: "مِيزان | منصة إدارة مكاتب المحاماة",
+    template: "%s | مِيزان",
+  },
+  description:
+    "منصة عربية متكاملة لإدارة القضايا والموكلين والعقود والمالية والموظفين داخل مكتب المحاماة.",
+  applicationName: "مِيزان",
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "مِيزان | منصة إدارة مكاتب المحاماة",
+    description:
+      "القضايا والموكلون والعقود والمالية والفريق في مساحة تشغيل واحدة.",
+    locale: "ar_SA",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

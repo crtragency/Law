@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
   }
 
   // منطقة الموظفين
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/demo" || pathname.startsWith("/demo/")) {
     return NextResponse.next();
   }
 
