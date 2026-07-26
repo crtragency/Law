@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { SAAS_MARKETING_ENABLED } from "@/lib/features";
 import { DemoExperience, type DemoView } from "./demo-experience";
 
 export const metadata: Metadata = {
@@ -24,6 +26,10 @@ export default async function DemoPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
+  if (!SAAS_MARKETING_ENABLED) {
+    redirect("/login");
+  }
+
   const { view } = await searchParams;
   const initialView = allowedViews.includes(view as DemoView)
     ? (view as DemoView)
