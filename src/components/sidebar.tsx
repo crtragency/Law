@@ -246,7 +246,7 @@ export function Sidebar({
       />
 
       <aside
-        className={`sidebar-collapsible fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-[width,transform] duration-150 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[76px] lg:translate-x-0 lg:hover:w-[288px] lg:focus-within:w-[288px] ${
+        className={`fixed inset-y-0 right-0 z-50 w-[min(86vw,310px)] shrink-0 transform transition-transform duration-150 ease-out lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[288px] lg:translate-x-0 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
