@@ -136,6 +136,7 @@ model Message {
   @@index([recipientId, read])
   @@index([recipientId, createdAt])
   @@index([senderId])
+  @@index([senderId, createdAt])
   @@index([createdAt])
 }
 

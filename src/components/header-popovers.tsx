@@ -18,6 +18,36 @@ type CountsResponse = {
   messages: number;
 };
 
+type RealtimeMessage = {
+  id: string;
+  body: string;
+  senderId: string;
+  recipientId: string;
+  senderName: string;
+  mine: boolean;
+  peerId: string;
+  createdAt: string;
+};
+
+type StreamStatus = "connecting" | "live" | "reconnecting";
+
+function dispatchStreamStatus(status: StreamStatus) {
+  const target = window as Window & {
+    __lawMessageStreamStatus?: StreamStatus;
+  };
+  target.__lawMessageStreamStatus = status;
+  window.dispatchEvent(
+    new CustomEvent("law:message-stream-status", { detail: status })
+  );
+}
+
+function messageTimeLabel(value: string) {
+  return new Intl.DateTimeFormat("ar-SA", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
 export function HeaderActivityPopovers() {
   const [counts, setCounts] = useState<CountsResponse>({
     notifications: 0,
@@ -25,20 +55,162 @@ export function HeaderActivityPopovers() {
   });
   const [notifications, setNotifications] = useState<ActivityItem[] | null>(null);
   const [messages, setMessages] = useState<ActivityItem[] | null>(null);
+  const countRefreshTimer = useRef<number | null>(null);
+
+  const loadCounts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/header-feed?type=counts", {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const data = (await response.json()) as CountsResponse;
+      setCounts(data);
+    } catch {
+      // The live stream or the next navigation will retry the counters.
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/header-feed?type=counts", {
-      signal: controller.signal,
-      headers: { Accept: "application/json" },
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: CountsResponse | null) => {
-        if (data) setCounts(data);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, []);
+    const initialSince = new Date(Date.now() - 1_000).toISOString();
+    const cursor = { current: initialSince };
+    const seenIds = new Set<string>();
+    let fallbackTimer: number | null = null;
+    let eventSource: EventSource | null = null;
+
+    const scheduleCountRefresh = () => {
+      if (countRefreshTimer.current) {
+        window.clearTimeout(countRefreshTimer.current);
+      }
+      countRefreshTimer.current = window.setTimeout(() => {
+        void loadCounts();
+      }, 450);
+    };
+
+    const receive = (incoming: RealtimeMessage[]) => {
+      const fresh = incoming.filter((message) => {
+        if (seenIds.has(message.id)) return false;
+        seenIds.add(message.id);
+        return true;
+      });
+      if (fresh.length === 0) return;
+
+      cursor.current = fresh[fresh.length - 1]!.createdAt;
+      fresh.forEach((message) => {
+        window.dispatchEvent(
+          new CustomEvent("law:message-received", { detail: message })
+        );
+      });
+
+      const received = fresh.filter((message) => !message.mine);
+      if (received.length === 0) return;
+
+      setMessages((current) => {
+        if (!current) return current;
+        const additions = received
+          .slice()
+          .reverse()
+          .map<ActivityItem>((message) => ({
+            id: message.id,
+            title: message.senderName,
+            body: message.body,
+            read: false,
+            href: `/messages?to=${message.senderId}`,
+            createdAtLabel: messageTimeLabel(message.createdAt),
+          }));
+        const receivedIds = new Set(additions.map((item) => item.id));
+        return [
+          ...additions,
+          ...current.filter((item) => !receivedIds.has(item.id)),
+        ].slice(0, 8);
+      });
+      setNotifications((current) => {
+        if (!current) return current;
+        const additions = received
+          .slice()
+          .reverse()
+          .map<ActivityItem>((message) => ({
+            id: `message-notification-${message.id}`,
+            title: "رسالة جديدة",
+            body: `${message.senderName} أرسل لك رسالة`,
+            read: false,
+            href: `/messages?to=${message.senderId}`,
+            createdAtLabel: messageTimeLabel(message.createdAt),
+          }));
+        return [...additions, ...current].slice(0, 8);
+      });
+      scheduleCountRefresh();
+    };
+
+    const pollForUpdates = async () => {
+      try {
+        const response = await fetch(
+          `/api/messages?since=${encodeURIComponent(cursor.current)}`,
+          {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+          }
+        );
+        if (!response.ok) return;
+        const data = (await response.json()) as {
+          messages: RealtimeMessage[];
+        };
+        receive(data.messages);
+      } catch {
+        // The next fallback tick or the EventSource reconnect will retry.
+      }
+    };
+
+    const startFallback = () => {
+      if (fallbackTimer !== null) return;
+      void pollForUpdates();
+      fallbackTimer = window.setInterval(pollForUpdates, 3_000);
+    };
+
+    void loadCounts();
+    dispatchStreamStatus("connecting");
+
+    eventSource = new EventSource(
+      `/api/messages/stream?since=${encodeURIComponent(initialSince)}`
+    );
+    eventSource.onopen = () => {
+      if (fallbackTimer !== null) {
+        window.clearInterval(fallbackTimer);
+        fallbackTimer = null;
+      }
+      dispatchStreamStatus("live");
+    };
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as { messages: RealtimeMessage[] };
+        receive(data.messages);
+      } catch {
+        // Ignore malformed events and keep the live connection running.
+      }
+    };
+    eventSource.onerror = () => {
+      dispatchStreamStatus("reconnecting");
+      startFallback();
+    };
+
+    const refreshAfterRead = () => {
+      setMessages(null);
+      void loadCounts();
+    };
+    window.addEventListener("law:messages-read", refreshAfterRead);
+
+    return () => {
+      controller.abort();
+      eventSource?.close();
+      if (fallbackTimer !== null) window.clearInterval(fallbackTimer);
+      if (countRefreshTimer.current) {
+        window.clearTimeout(countRefreshTimer.current);
+      }
+      window.removeEventListener("law:messages-read", refreshAfterRead);
+    };
+  }, [loadCounts]);
 
   const loadNotifications = useCallback(async () => {
     if (notifications) return;
