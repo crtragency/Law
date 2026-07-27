@@ -387,22 +387,6 @@ body {
     @apply rounded-lg border border-line bg-white/80 p-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl;
   }
 
-  [data-density="compact"] .table-th {
-    @apply px-3.5 py-2.5;
-  }
-
-  [data-density="compact"] .table-td {
-    @apply px-3.5 py-2.5 text-[13px] leading-6;
-  }
-
-  [data-density="compact"] .card {
-    @apply p-4;
-  }
-
-  [data-density="compact"] .form-panel {
-    @apply p-5;
-  }
-
   .interactive-row {
     @apply transition duration-200 ease-out hover:bg-brand-50/35;
   }

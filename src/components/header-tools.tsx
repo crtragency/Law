@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   IconFileText,
   IconFolder,
-  IconMenu,
   IconPaperclip,
   IconPlus,
   IconUsers,
@@ -29,62 +28,30 @@ export function HeaderTools({
   canCreateDocuments: boolean;
 }) {
   return (
-    <>
-      <DensityToggle />
-      <QuickCreate
-        actions={[
-          canCreateCases && {
-            href: "/cases?create=1",
-            label: "قضية جديدة",
-            icon: <IconFolder />,
-          },
-          canCreateClients && {
-            href: "/clients?create=1",
-            label: "موكل جديد",
-            icon: <IconUsers />,
-          },
-          canCreateTasks && {
-            href: "/tasks?create=1",
-            label: "مهمة جديدة",
-            icon: <IconFileText />,
-          },
-          canCreateDocuments && {
-            href: "/documents?create=1",
-            label: "رفع مستند",
-            icon: <IconPaperclip />,
-          },
-        ].filter(Boolean) as QuickAction[]}
-      />
-    </>
-  );
-}
-
-function DensityToggle() {
-  const [compact, setCompact] = useState(false);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("law-density") === "compact";
-    setCompact(saved);
-    document.documentElement.dataset.density = saved ? "compact" : "comfortable";
-  }, []);
-
-  function toggle() {
-    const next = !compact;
-    setCompact(next);
-    document.documentElement.dataset.density = next ? "compact" : "comfortable";
-    window.localStorage.setItem("law-density", next ? "compact" : "comfortable");
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      className="header-icon-button"
-      aria-label={compact ? "استخدام العرض المريح" : "استخدام العرض المدمج"}
-      title={compact ? "عرض مريح" : "عرض مدمج"}
-    >
-      <IconMenu className="h-[18px] w-[18px]" />
-    </button>
+    <QuickCreate
+      actions={[
+        canCreateCases && {
+          href: "/cases?create=1",
+          label: "قضية جديدة",
+          icon: <IconFolder />,
+        },
+        canCreateClients && {
+          href: "/clients?create=1",
+          label: "موكل جديد",
+          icon: <IconUsers />,
+        },
+        canCreateTasks && {
+          href: "/tasks?create=1",
+          label: "مهمة جديدة",
+          icon: <IconFileText />,
+        },
+        canCreateDocuments && {
+          href: "/documents?create=1",
+          label: "رفع مستند",
+          icon: <IconPaperclip />,
+        },
+      ].filter(Boolean) as QuickAction[]}
+    />
   );
 }
 
