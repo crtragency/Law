@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { requireUser } from "@/lib/auth";
 import { hasPermission, ROLE_LABELS } from "@/lib/rbac";
@@ -35,6 +36,21 @@ function dayLabel(date: Date) {
   return new Intl.DateTimeFormat("ar-EG", { weekday: "short", day: "numeric" }).format(date);
 }
 
+type DashboardMetrics = {
+  caseCount: number;
+  openCaseCount: number;
+  clientCount: number;
+  myTaskCount: number;
+  taskCount: number;
+  doneTaskCount: number;
+  doneThisWeekCount: number;
+  openServiceRequestCount: number;
+  documentCount: number;
+  indexedDocumentCount: number;
+  upcomingReminderCount: number;
+  userCount: number;
+};
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -47,35 +63,22 @@ export default async function DashboardPage({
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - 7);
 
-  const [
-    caseCount,
-    openCaseCount,
-    clientCount,
-    myTaskCount,
-    taskCount,
-    doneTaskCount,
-    doneThisWeekCount,
-    openServiceRequestCount,
-    documentCount,
-    indexedDocumentCount,
-    upcomingReminderCount,
-    userCount,
-    upcomingEvents,
-    recentCases,
-    myTasks,
-  ] = await Promise.all([
-    prisma.case.count(),
-    prisma.case.count({ where: { status: { in: ["OPEN", "IN_PROGRESS", "POSTPONED"] } } }),
-    prisma.client.count(),
-    prisma.task.count({ where: { assignedToId: user.id, status: { in: ["TODO", "IN_PROGRESS"] } } }),
-    prisma.task.count(),
-    prisma.task.count({ where: { status: "DONE" } }),
-    prisma.task.count({ where: { status: "DONE", updatedAt: { gte: weekStart } } }),
-    prisma.serviceRequest.count({ where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } }),
-    prisma.document.count(),
-    prisma.document.count({ where: { ocrStatus: "INDEXED" } }),
-    prisma.reminder.count({ where: { status: "OPEN", dueAt: { gte: now, lte: soon } } }),
-    prisma.user.count({ where: { isActive: true } }),
+  const [metricRows, upcomingEvents, recentCases, myTasks] = await Promise.all([
+    prisma.$queryRaw<DashboardMetrics[]>`
+      SELECT
+        (SELECT COUNT(*)::int FROM "Case") AS "caseCount",
+        (SELECT COUNT(*)::int FROM "Case" WHERE "status" IN ('OPEN', 'IN_PROGRESS', 'POSTPONED')) AS "openCaseCount",
+        (SELECT COUNT(*)::int FROM "Client") AS "clientCount",
+        (SELECT COUNT(*)::int FROM "Task" WHERE "assignedToId" = ${user.id} AND "status" IN ('TODO', 'IN_PROGRESS')) AS "myTaskCount",
+        (SELECT COUNT(*)::int FROM "Task") AS "taskCount",
+        (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE') AS "doneTaskCount",
+        (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE' AND "updatedAt" >= ${weekStart}) AS "doneThisWeekCount",
+        (SELECT COUNT(*)::int FROM "ServiceRequest" WHERE "status" NOT IN ('COMPLETED', 'CANCELLED')) AS "openServiceRequestCount",
+        (SELECT COUNT(*)::int FROM "Document") AS "documentCount",
+        (SELECT COUNT(*)::int FROM "Document" WHERE "ocrStatus" = 'INDEXED') AS "indexedDocumentCount",
+        (SELECT COUNT(*)::int FROM "Reminder" WHERE "status" = 'OPEN' AND "dueAt" >= ${now} AND "dueAt" <= ${soon}) AS "upcomingReminderCount",
+        (SELECT COUNT(*)::int FROM "User" WHERE "isActive" = true) AS "userCount"
+    `,
     prisma.event.findMany({
       where: { startAt: { gte: now } },
       orderBy: { startAt: "asc" },
@@ -94,6 +97,20 @@ export default async function DashboardPage({
       include: { case: { select: { id: true, title: true, caseNumber: true } } },
     }),
   ]);
+  const {
+    caseCount,
+    openCaseCount,
+    clientCount,
+    myTaskCount,
+    taskCount,
+    doneTaskCount,
+    doneThisWeekCount,
+    openServiceRequestCount,
+    documentCount,
+    indexedDocumentCount,
+    upcomingReminderCount,
+    userCount,
+  } = metricRows[0];
 
   const taskProgress = percent(doneTaskCount, taskCount);
   const documentProgress = percent(indexedDocumentCount, documentCount);
@@ -120,7 +137,14 @@ export default async function DashboardPage({
           <div className="flex items-center gap-2">
             <Link href="/profile" className="law-icon-pill">
               {user.avatarStorageKey ? (
-                <img src={`/api/users/${user.id}/avatar`} alt={user.name} className="h-full w-full object-cover" />
+                <Image
+                  src={`/api/users/${user.id}/avatar`}
+                  alt={user.name}
+                  width={80}
+                  height={80}
+                  unoptimized
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 initials
               )}
@@ -155,7 +179,14 @@ export default async function DashboardPage({
           <section className="profile-card-panel">
             <div className="profile-card-image">
               {user.avatarStorageKey ? (
-                <img src={`/api/users/${user.id}/avatar`} alt={user.name} className="h-full w-full object-cover" />
+                <Image
+                  src={`/api/users/${user.id}/avatar`}
+                  alt={user.name}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 1280px) 100vw, 33vw"
+                  className="object-cover"
+                />
               ) : (
                 <div className="grid h-full w-full place-items-center bg-brass-300 text-6xl font-bold text-brand-950">
                   {initials}

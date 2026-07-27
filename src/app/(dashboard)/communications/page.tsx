@@ -2,6 +2,8 @@ import { requirePermission } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, StatCard } from "@/components/ui";
+import { Pagination } from "@/components/pagination";
+import { getPagination, parsePage } from "@/lib/pagination";
 import { IconClock, IconMessage, IconPhone, IconUsers } from "@/components/icons";
 import { CommunicationsManager } from "./communications-manager";
 
@@ -11,15 +13,22 @@ function displayClient(client: { name: string; companyName: string | null; type:
   return client.type === "COMPANY" && client.companyName ? client.companyName : client.name;
 }
 
-export default async function CommunicationsPage() {
+const PAGE_SIZE = 60;
+
+export default async function CommunicationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await requirePermission("cases.view");
   const canManage = hasPermission(user, "cases.manage");
+  const page = parsePage((await searchParams).page);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date(todayStart);
   todayEnd.setDate(todayEnd.getDate() + 1);
 
-  const [rows, clients, cases, users, todayCount, followUps] = await Promise.all([
+  const [rows, clients, cases, users, totalCount, todayCount, followUps] = await Promise.all([
     prisma.communicationLog.findMany({
       orderBy: { occurredAt: "desc" },
       include: {
@@ -27,7 +36,7 @@ export default async function CommunicationsPage() {
         case: { select: { id: true, title: true, caseNumber: true } },
         assignedTo: { select: { id: true, name: true } },
       },
-      take: 150,
+      ...getPagination(page, PAGE_SIZE),
     }),
     prisma.client.findMany({
       orderBy: { updatedAt: "desc" },
@@ -45,6 +54,7 @@ export default async function CommunicationsPage() {
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    prisma.communicationLog.count(),
     prisma.communicationLog.count({ where: { occurredAt: { gte: todayStart, lt: todayEnd } } }),
     prisma.communicationLog.count({ where: { outcome: "NEEDS_FOLLOWUP" } }),
   ]);
@@ -57,7 +67,7 @@ export default async function CommunicationsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="إجمالي السجلات" value={rows.length} icon={<IconPhone />} />
+        <StatCard label="إجمالي السجلات" value={totalCount} icon={<IconPhone />} />
         <StatCard label="تواصلات اليوم" value={todayCount} icon={<IconClock />} />
         <StatCard label="تحتاج متابعة" value={followUps} icon={<IconMessage />} />
         <StatCard label="موظفون متاحون" value={users.length} icon={<IconUsers />} />
@@ -89,6 +99,7 @@ export default async function CommunicationsPage() {
         users={users}
         canManage={canManage}
       />
+      <Pagination page={page} pageSize={PAGE_SIZE} total={totalCount} basePath="/communications" />
     </div>
   );
 }

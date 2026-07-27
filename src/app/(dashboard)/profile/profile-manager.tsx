@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -110,12 +111,15 @@ export function ProfileManager({ user }: ProfileManagerProps) {
               <p className="truncate text-sm text-brand-100">{user.email}</p>
               <p className="mt-1 text-xs text-brand-200">{user.phone || "بدون رقم هاتف"}</p>
             </div>
-            <div className="h-28 w-28 overflow-hidden rounded-lg border border-white/25 bg-white/10 shadow-2xl shadow-black/20">
+            <div className="relative h-28 w-28 overflow-hidden rounded-lg border border-white/25 bg-white/10 shadow-2xl shadow-black/20">
               {user.avatarStorageKey ? (
-                <img
+                <Image
                   src={`/api/users/${user.id}/avatar`}
                   alt={user.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  unoptimized
+                  sizes="112px"
+                  className="object-cover"
                 />
               ) : (
                 <div className="grid h-full w-full place-items-center bg-brass-300 text-4xl font-bold text-brand-950">

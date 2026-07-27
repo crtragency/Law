@@ -36,13 +36,15 @@ export function CasesList({
   clients,
   lawyers,
   canManage,
+  initialCreate = false,
 }: {
   cases: CaseRow[];
   clients: Option[];
   lawyers: Option[];
   canManage: boolean;
+  initialCreate?: boolean;
 }) {
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(initialCreate && canManage);
   const [editing, setEditing] = useState<CaseRow | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -58,7 +60,7 @@ export function CasesList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="glass-toolbar flex flex-wrap items-center gap-3">
         {canManage && (
           <button
             onClick={() => {
@@ -80,7 +82,7 @@ export function CasesList({
           <IconSearch className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             className="field pr-9"
-            placeholder="بحث برقم القضية أو العنوان أو الموكّل"
+            placeholder="بحث داخل الصفحة الحالية"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

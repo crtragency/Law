@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { logoutAction } from "@/app/(dashboard)/logout/actions";
@@ -107,7 +108,14 @@ export function Sidebar({
   const groupedItems = groupItems(items);
 
   const avatar = avatarStorageKey ? (
-    <img src={`/api/users/${userId}/avatar`} alt={userName} className="h-full w-full object-cover" />
+    <Image
+      src={`/api/users/${userId}/avatar`}
+      alt={userName}
+      width={80}
+      height={80}
+      unoptimized
+      className="h-full w-full object-cover"
+    />
   ) : (
     initials
   );

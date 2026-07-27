@@ -70,6 +70,7 @@ export function TasksBoard({
   canManage,
   canAssignOthers,
   currentUserId,
+  initialCreate = false,
 }: {
   tasks: TaskItem[];
   users: Option[];
@@ -77,8 +78,9 @@ export function TasksBoard({
   canManage: boolean;
   canAssignOthers: boolean;
   currentUserId: string;
+  initialCreate?: boolean;
 }) {
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(initialCreate && canManage);
   const [mineOnly, setMineOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -90,7 +92,7 @@ export function TasksBoard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm shadow-black/[0.025]">
+      <div className="glass-toolbar flex flex-wrap items-center gap-3">
         {canManage && (
           <button onClick={() => setShowNew((v) => !v)} className="btn-primary">
             {showNew ? (

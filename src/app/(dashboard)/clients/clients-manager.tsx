@@ -52,13 +52,15 @@ export function ClientsManager({
   clients,
   canManage,
   canViewFinance,
+  initialCreate = false,
 }: {
   clients: ClientRow[];
   canManage: boolean;
   canViewFinance: boolean;
+  initialCreate?: boolean;
 }) {
   const [editing, setEditing] = useState<ClientRow | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(initialCreate && canManage);
   const [query, setQuery] = useState("");
 
   const filtered = clients.filter(
@@ -79,7 +81,7 @@ export function ClientsManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm shadow-black/[0.025]">
+      <div className="glass-toolbar flex flex-wrap items-center gap-3">
         {canManage && (
           <button onClick={openNew} className="btn-primary">
             <IconPlus className="h-4 w-4" /> موكّل جديد
@@ -89,7 +91,7 @@ export function ClientsManager({
           <IconSearch className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             className="field pr-9"
-            placeholder="بحث بالاسم أو الهاتف أو الرقم القومي"
+            placeholder="بحث داخل الصفحة الحالية"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

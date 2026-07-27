@@ -79,7 +79,7 @@ export async function runDashboardSearch(
   user: SearchUser
 ): Promise<DashboardSearchResponse> {
   const query = cleanQuery(rawQuery);
-  if (!query) return { query, total: 0, groups: [] };
+  if (query.length < 2) return { query, total: 0, groups: [] };
 
   const textFilter = { contains: query, mode: "insensitive" as const };
   const jobs: Promise<DashboardSearchGroup>[] = [];

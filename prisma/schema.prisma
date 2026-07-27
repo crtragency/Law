@@ -115,6 +115,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, read])
+  @@index([userId, createdAt])
   @@index([createdAt])
 }
 
@@ -133,6 +134,7 @@ model Message {
   createdAt   DateTime @default(now())
 
   @@index([recipientId, read])
+  @@index([recipientId, createdAt])
   @@index([senderId])
   @@index([createdAt])
 }
@@ -294,6 +296,7 @@ model Client {
   settlementOffers  SettlementOffer[]
 
   @@index([name])
+  @@index([createdAt])
 }
 
 // جلسات دخول العميل للبوابة (منفصلة تماماً عن جلسات الموظفين)
@@ -379,9 +382,11 @@ model Case {
   settlementOffers  SettlementOffer[]
 
   @@index([status])
+  @@index([status, createdAt])
   @@index([caseType])
   @@index([clientId])
   @@index([assignedLawyerId])
+  @@index([assignedLawyerId, status])
 }
 
 // ملاحظات داخلية على القضية (تواصل بين الموظفين)
@@ -436,10 +441,13 @@ model Document {
   createdAt     DateTime           @default(now())
 
   @@index([caseId])
+  @@index([caseId, createdAt])
+  @@index([createdAt])
   @@index([category])
   @@index([visibility])
   @@index([expiresAt])
   @@index([ocrStatus])
+  @@index([ocrStatus, createdAt])
 }
 
 model DocumentRequest {
@@ -503,7 +511,9 @@ model Task {
   comments TaskComment[]
 
   @@index([status])
+  @@index([status, createdAt])
   @@index([assignedToId])
+  @@index([assignedToId, status, dueDate])
   @@index([caseId])
 }
 
@@ -550,6 +560,7 @@ model Event {
 
   @@index([startAt])
   @@index([caseId])
+  @@index([caseId, startAt])
 }
 
 // ===========================================================================
@@ -692,6 +703,7 @@ model ServiceRequest {
   @@index([clientId])
   @@index([caseId])
   @@index([assignedToId])
+  @@index([updatedAt])
 }
 
 model ServiceRequestNote {
@@ -1052,6 +1064,7 @@ model CorrespondenceRegister {
   @@index([direction])
   @@index([status])
   @@index([importance])
+  @@index([updatedAt])
   @@index([receivedAt])
   @@index([sentAt])
   @@index([dueAt])
@@ -1185,7 +1198,9 @@ model Invoice {
   payments Payment[]
 
   @@index([status])
+  @@index([status, dueDate])
   @@index([clientId])
+  @@index([clientId, createdAt])
   @@index([caseId])
   @@index([contractId])
   @@index([dueDate])

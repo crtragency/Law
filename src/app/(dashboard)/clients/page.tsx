@@ -2,25 +2,39 @@ import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/lib/rbac";
 import { PageHeader, EmptyState } from "@/components/ui";
+import { Pagination } from "@/components/pagination";
+import { getPagination, parsePage } from "@/lib/pagination";
 import { ClientsManager } from "./clients-manager";
 
 export const metadata = { title: "الموكّلون — نظام مكتب المحاماة" };
 
-export default async function ClientsPage() {
+const PAGE_SIZE = 48;
+
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; create?: string }>;
+}) {
   const user = await requirePermission("clients.view");
   const canManage = hasPermission(user, "clients.manage");
   const canViewFinance = hasPermission(user, "finance.view");
+  const params = await searchParams;
+  const page = parsePage(params.page);
 
-  const clients = await prisma.client.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { cases: true } } },
-  });
+  const [clients, total] = await Promise.all([
+    prisma.client.findMany({
+      orderBy: { createdAt: "desc" },
+      ...getPagination(page, PAGE_SIZE),
+      include: { _count: { select: { cases: true } } },
+    }),
+    prisma.client.count(),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="الموكّلون"
-        subtitle={`${clients.length} موكّل مسجّل`}
+        subtitle={`${total} موكّل مسجّل`}
       />
       {clients.length === 0 && !canManage ? (
         <EmptyState title="لا يوجد موكّلون بعد" />
@@ -28,6 +42,7 @@ export default async function ClientsPage() {
         <ClientsManager
           canManage={canManage}
           canViewFinance={canViewFinance}
+          initialCreate={params.create === "1"}
           clients={clients.map((c) => ({
             id: c.id,
             type: c.type,
@@ -47,6 +62,7 @@ export default async function ClientsPage() {
           }))}
         />
       )}
+      <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/clients" />
     </div>
   );
 }

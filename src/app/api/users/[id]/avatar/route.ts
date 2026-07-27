@@ -23,7 +23,12 @@ export async function GET(
 
   try {
     const url = await createSignedDownloadUrl(user.avatarStorageKey, 300);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    response.headers.set(
+      "Cache-Control",
+      "private, max-age=240, stale-while-revalidate=60"
+    );
+    return response;
   } catch {
     return new NextResponse("تعذر تجهيز الصورة", { status: 500 });
   }

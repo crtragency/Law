@@ -2,6 +2,8 @@ import { requirePermission } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, StatCard } from "@/components/ui";
+import { Pagination } from "@/components/pagination";
+import { getPagination, parsePage } from "@/lib/pagination";
 import { IconCalendar, IconCheck, IconClock, IconMessage } from "@/components/icons";
 import { MeetingsManager } from "./meetings-manager";
 
@@ -11,12 +13,19 @@ function displayClient(client: { name: string; companyName: string | null; type:
   return client.type === "COMPANY" && client.companyName ? client.companyName : client.name;
 }
 
-export default async function MeetingsPage() {
+const PAGE_SIZE = 60;
+
+export default async function MeetingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await requirePermission("cases.view");
   const canManage = hasPermission(user, "cases.manage");
+  const page = parsePage((await searchParams).page);
   const now = new Date();
 
-  const [rows, clients, cases, users, openActions, upcomingMeetings, closedCount] = await Promise.all([
+  const [rows, clients, cases, users, totalCount, openActions, upcomingMeetings, closedCount] = await Promise.all([
     prisma.meetingMinute.findMany({
       orderBy: { meetingAt: "desc" },
       include: {
@@ -24,7 +33,7 @@ export default async function MeetingsPage() {
         case: { select: { id: true, title: true, caseNumber: true } },
         assignedTo: { select: { id: true, name: true } },
       },
-      take: 150,
+      ...getPagination(page, PAGE_SIZE),
     }),
     prisma.client.findMany({
       orderBy: { updatedAt: "desc" },
@@ -42,6 +51,7 @@ export default async function MeetingsPage() {
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    prisma.meetingMinute.count(),
     prisma.meetingMinute.count({ where: { status: "ACTIONS_OPEN" } }),
     prisma.meetingMinute.count({ where: { nextMeetingAt: { gte: now } } }),
     prisma.meetingMinute.count({ where: { status: "CLOSED" } }),
@@ -55,7 +65,7 @@ export default async function MeetingsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="كل المحاضر" value={rows.length} icon={<IconMessage />} />
+        <StatCard label="كل المحاضر" value={totalCount} icon={<IconMessage />} />
         <StatCard label="إجراءات مفتوحة" value={openActions} icon={<IconClock />} />
         <StatCard label="اجتماعات قادمة" value={upcomingMeetings} icon={<IconCalendar />} />
         <StatCard label="مغلقة" value={closedCount} icon={<IconCheck />} />
@@ -87,6 +97,7 @@ export default async function MeetingsPage() {
         users={users}
         canManage={canManage}
       />
+      <Pagination page={page} pageSize={PAGE_SIZE} total={totalCount} basePath="/meetings" />
     </div>
   );
 }

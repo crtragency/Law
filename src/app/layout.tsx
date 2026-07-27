@@ -5,7 +5,7 @@ import "./globals.css";
 // خط العناوين: Alexandria — هندسي حديث بشخصية واضحة.
 const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
   variable: "--font-display",
   display: "swap",
 });

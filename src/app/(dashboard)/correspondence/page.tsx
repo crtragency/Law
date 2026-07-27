@@ -2,6 +2,8 @@ import { requirePermission } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, StatCard } from "@/components/ui";
+import { Pagination } from "@/components/pagination";
+import { getPagination, parsePage } from "@/lib/pagination";
 import { IconClock, IconFileText, IconInbox, IconSend } from "@/components/icons";
 import { CorrespondenceManager } from "./correspondence-manager";
 
@@ -11,9 +13,16 @@ function displayClient(client: { name: string; companyName: string | null; type:
   return client.type === "COMPANY" && client.companyName ? client.companyName : client.name;
 }
 
-export default async function CorrespondencePage() {
+const PAGE_SIZE = 60;
+
+export default async function CorrespondencePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await requirePermission("cases.view");
   const canManage = hasPermission(user, "cases.manage");
+  const page = parsePage((await searchParams).page);
   const now = new Date();
 
   const [rows, clients, cases, users, totalCount, incomingCount, outgoingCount, dueCount] = await Promise.all([
@@ -24,7 +33,7 @@ export default async function CorrespondencePage() {
         case: { select: { id: true, title: true, caseNumber: true } },
         assignedTo: { select: { id: true, name: true } },
       },
-      take: 150,
+      ...getPagination(page, PAGE_SIZE),
     }),
     prisma.client.findMany({
       orderBy: { updatedAt: "desc" },
@@ -97,6 +106,7 @@ export default async function CorrespondencePage() {
         suggestedNumber={suggestedNumber}
         canManage={canManage}
       />
+      <Pagination page={page} pageSize={PAGE_SIZE} total={totalCount} basePath="/correspondence" />
     </div>
   );
 }

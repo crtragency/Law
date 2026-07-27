@@ -2,14 +2,23 @@ import { requirePermission } from "@/lib/auth";
 import { hasPermission } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, StatCard } from "@/components/ui";
+import { Pagination } from "@/components/pagination";
+import { getPagination, parsePage } from "@/lib/pagination";
 import { IconFileText, IconFolder, IconPaperclip, IconSearch } from "@/components/icons";
 import { DocumentsManager } from "./documents-manager";
 
 export const metadata = { title: "مركز الملفات — نظام مكتب المحاماة" };
 
-export default async function DocumentsPage() {
+const PAGE_SIZE = 60;
+
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await requirePermission("documents.view");
   const canManage = hasPermission(user, "documents.manage");
+  const page = parsePage((await searchParams).page);
 
   const [documents, cases, total, publicCount, linkedCount, indexedCount] = await Promise.all([
     prisma.document.findMany({
@@ -18,7 +27,7 @@ export default async function DocumentsPage() {
         case: { select: { id: true, title: true, caseNumber: true } },
         uploadedBy: { select: { name: true } },
       },
-      take: 300,
+      ...getPagination(page, PAGE_SIZE),
     }),
     prisma.case.findMany({
       where: { status: { notIn: ["CLOSED", "ARCHIVED"] } },
@@ -74,6 +83,7 @@ export default async function DocumentsPage() {
           caseNumber: item.case?.caseNumber ?? null,
         }))}
       />
+      <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/documents" />
     </div>
   );
 }

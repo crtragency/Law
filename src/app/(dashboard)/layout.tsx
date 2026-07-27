@@ -1,13 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import { requireUser } from "@/lib/auth";
 import { hasPermission, ROLE_LABELS } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { Sidebar, type NavItem } from "@/components/sidebar";
 import { SearchCommand } from "@/components/search-command";
-import { HeaderMessagesPopover, HeaderNotificationsPopover } from "@/components/header-popovers";
+import { HeaderActivityPopovers } from "@/components/header-popovers";
+import { HeaderTools } from "@/components/header-tools";
 import { AttendancePrompt } from "@/components/attendance-prompt";
 import { getCurrentWorkDate } from "@/lib/attendance";
-import { formatDateTime } from "@/lib/labels";
 
 export default async function DashboardLayout({
   children,
@@ -83,61 +84,16 @@ export default async function DashboardLayout({
   items.push({ href: "/profile", label: "البروفايل", icon: "user" });
 
   const todayWorkDate = getCurrentWorkDate();
-  const [unreadNotifications, unreadMessages, recentNotifications, recentMessages, todayAttendance] = await Promise.all([
-    prisma.notification.count({ where: { userId: user.id, read: false } }),
-    prisma.message.count({ where: { recipientId: user.id, read: false } }),
-    prisma.notification.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        body: true,
-        link: true,
-        read: true,
-        createdAt: true,
-      },
-    }),
-    prisma.message.findMany({
-      where: { recipientId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        body: true,
-        read: true,
-        createdAt: true,
-        sender: { select: { id: true, name: true } },
-      },
-    }),
-    prisma.attendanceRecord.findUnique({
-      where: { userId_workDate: { userId: user.id, workDate: todayWorkDate } },
-      select: {
-        userId: true,
-        workDate: true,
-        clockInAt: true,
-        clockOutAt: true,
-      },
-    }),
-  ]);
+  const todayAttendance = await prisma.attendanceRecord.findUnique({
+    where: { userId_workDate: { userId: user.id, workDate: todayWorkDate } },
+    select: {
+      userId: true,
+      workDate: true,
+      clockInAt: true,
+      clockOutAt: true,
+    },
+  });
   const canSearch = hasPermission(user, "search.view");
-  const notificationItems = recentNotifications.map((item) => ({
-    id: item.id,
-    title: item.title,
-    body: item.body,
-    read: item.read,
-    href: item.link ?? "/notifications",
-    createdAtLabel: formatDateTime(item.createdAt),
-  }));
-  const messageItems = recentMessages.map((item) => ({
-    id: item.id,
-    senderName: item.sender.name,
-    body: item.body,
-    read: item.read,
-    href: `/messages?to=${item.sender.id}`,
-    createdAtLabel: formatDateTime(item.createdAt),
-  }));
 
   return (
     <div className="dashboard-shell flex min-h-screen flex-col bg-paper lg:flex-row">
@@ -150,9 +106,14 @@ export default async function DashboardLayout({
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-white/78 px-4 py-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl sm:px-6 lg:px-8">
+          <HeaderTools
+            canCreateCases={hasPermission(user, "cases.manage")}
+            canCreateClients={hasPermission(user, "clients.manage")}
+            canCreateTasks={hasPermission(user, "tasks.manage")}
+            canCreateDocuments={hasPermission(user, "documents.manage")}
+          />
           {canSearch && <SearchCommand />}
-          <HeaderMessagesPopover count={unreadMessages} items={messageItems} />
-          <HeaderNotificationsPopover count={unreadNotifications} items={notificationItems} />
+          <HeaderActivityPopovers />
           <ProfileButton
             href="/profile"
             userId={user.id}
@@ -188,7 +149,14 @@ function ProfileButton({
       className="relative flex h-9 w-9 overflow-hidden rounded-lg border border-line bg-white/95 text-sm font-bold text-brand-800 shadow-sm shadow-black/[0.03] transition duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:bg-white"
     >
       {avatarStorageKey ? (
-        <img src={`/api/users/${userId}/avatar`} alt={name} className="h-full w-full object-cover" />
+        <Image
+          src={`/api/users/${userId}/avatar`}
+          alt={name}
+          width={72}
+          height={72}
+          unoptimized
+          className="h-full w-full object-cover"
+        />
       ) : (
         <span className="grid h-full w-full place-items-center">{initials}</span>
       )}

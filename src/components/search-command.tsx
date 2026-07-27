@@ -25,6 +25,7 @@ export function SearchCommand() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cacheRef = useRef(new Map<string, DashboardSearchResponse>());
 
   const openDialog = useCallback(() => {
     setOpen(true);
@@ -67,8 +68,16 @@ export function SearchCommand() {
   useEffect(() => {
     if (!open) return;
     const trimmed = query.trim();
-    if (!trimmed) {
+    if (trimmed.length < 2) {
       setResponse(EMPTY_RESPONSE);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const cached = cacheRef.current.get(trimmed.toLocaleLowerCase("ar"));
+    if (cached) {
+      setResponse(cached);
       setLoading(false);
       setError(null);
       return;
@@ -85,6 +94,11 @@ export function SearchCommand() {
         });
         if (!res.ok) throw new Error("تعذّر تنفيذ البحث");
         const data = (await res.json()) as DashboardSearchResponse;
+        cacheRef.current.set(trimmed.toLocaleLowerCase("ar"), data);
+        if (cacheRef.current.size > 30) {
+          const firstKey = cacheRef.current.keys().next().value;
+          if (firstKey) cacheRef.current.delete(firstKey);
+        }
         setResponse(data);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -93,7 +107,7 @@ export function SearchCommand() {
       } finally {
         setLoading(false);
       }
-    }, 180);
+    }, 320);
 
     return () => {
       controller.abort();
@@ -114,7 +128,7 @@ export function SearchCommand() {
 
       {open && (
         <div
-          className="search-bubble-overlay fixed inset-0 z-[90] bg-brand-950/40 p-3 backdrop-blur-md sm:p-6"
+          className="search-bubble-overlay fixed inset-0 z-[90] bg-brand-950/40 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby="global-search-title"
@@ -158,13 +172,15 @@ export function SearchCommand() {
                 <div className="rounded-lg border border-seal-100 bg-seal-50 px-4 py-3 text-sm text-seal-700">
                   {error}
                 </div>
-              ) : !query.trim() ? (
+              ) : query.trim().length < 2 ? (
                 <div className="grid min-h-[260px] place-items-center rounded-lg border border-dashed border-line bg-white/75 px-5 text-center">
                   <div>
                     <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
                       <IconSearch className="h-5 w-5" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600">كل ملفات المكتب في نافذة واحدة</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      اكتب حرفين على الأقل للبحث في ملفات المكتب
+                    </p>
                   </div>
                 </div>
               ) : loading && response.total === 0 ? (

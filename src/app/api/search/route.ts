@@ -14,7 +14,9 @@ export async function GET(request: Request) {
       role: user.role,
       permissionOverridesJson: user.permissionOverridesJson,
     });
-    return NextResponse.json(results);
+    return NextResponse.json(results, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     if (error instanceof AuthError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
