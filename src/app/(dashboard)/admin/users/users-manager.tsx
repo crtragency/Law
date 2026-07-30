@@ -4,6 +4,7 @@ import { Fragment, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   createUserAction,
+  deleteUserAction,
   updateUserAction,
   resetPasswordAction,
   type ActionResult,
@@ -16,7 +17,7 @@ import {
   type Permission,
 } from "@/lib/rbac";
 import { Badge } from "@/components/ui";
-import { IconPlus } from "@/components/icons";
+import { IconPlus, IconTrash } from "@/components/icons";
 import { formatDateTime } from "@/lib/labels";
 
 interface UserRow {
@@ -177,14 +178,21 @@ export function UsersManager({
                     {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "—"}
                   </td>
                   <td className="table-td">
-                    <button
-                      onClick={() =>
-                        setEditingId(editingId === u.id ? null : u.id)
-                      }
-                      className="text-sm font-medium text-brand-600 hover:underline"
-                    >
-                      {editingId === u.id ? "إغلاق" : "تعديل"}
-                    </button>
+                    <div className="flex min-w-[150px] items-start gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditingId(editingId === u.id ? null : u.id)
+                        }
+                        className="inline-flex h-9 items-center justify-center rounded-lg px-2.5 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+                      >
+                        {editingId === u.id ? "إغلاق" : "تعديل"}
+                      </button>
+                      <DeleteEmployeeButton
+                        user={u}
+                        isSelf={u.id === currentUserId}
+                      />
+                    </div>
                   </td>
                 </tr>
                 {editingId === u.id && (
@@ -200,6 +208,58 @@ export function UsersManager({
         </table>
       </div>
     </div>
+  );
+}
+
+function DeleteEmployeeButton({
+  user,
+  isSelf,
+}: {
+  user: UserRow;
+  isSelf: boolean;
+}) {
+  const [state, action] = useActionState(deleteUserAction, EMPTY);
+
+  return (
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (
+          !confirm(
+            `حذف حساب الموظف "${user.name}" نهائيًا؟\n\nسيتم إنهاء دخوله وحذف رسائله وسجل حضوره، مع بقاء قضايا وملفات المكتب محفوظة.`
+          )
+        ) {
+          event.preventDefault();
+        }
+      }}
+      className="flex flex-col items-start gap-1"
+    >
+      <input type="hidden" name="id" value={user.id} />
+      <DeleteEmployeeSubmit disabled={isSelf} />
+      {state.error && (
+        <span className="max-w-56 text-xs leading-5 text-seal-600">
+          {state.error}
+        </span>
+      )}
+    </form>
+  );
+}
+
+function DeleteEmployeeSubmit({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  const isDisabled = disabled || pending;
+
+  return (
+    <button
+      type="submit"
+      disabled={isDisabled}
+      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-seal-600 transition hover:bg-seal-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+      aria-label={disabled ? "لا يمكنك حذف حسابك الحالي" : "حذف الموظف"}
+      title={disabled ? "لا يمكنك حذف حسابك الحالي" : "حذف الموظف"}
+    >
+      <IconTrash className="h-4 w-4" />
+      {pending ? "جار الحذف..." : "حذف"}
+    </button>
   );
 }
 

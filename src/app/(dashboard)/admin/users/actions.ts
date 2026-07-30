@@ -225,3 +225,89 @@ export async function resetPasswordAction(
   revalidatePath("/admin/users");
   return { ok: true, success: "تم تغيير كلمة المرور وإنهاء جلسات الموظف" };
 }
+
+export async function deleteUserAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const g = await guard();
+  if ("ok" in g) return g;
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) {
+    return { ok: false, error: "معرّف الموظف غير صالح" };
+  }
+  if (id === g.id) {
+    return { ok: false, error: "لا يمكنك حذف حسابك الحالي" };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+    },
+  });
+  if (!target) {
+    return { ok: false, error: "الموظف غير موجود أو تم حذفه بالفعل" };
+  }
+
+  if (target.role === "ADMIN" && target.isActive) {
+    const otherActiveAdmins = await prisma.user.count({
+      where: {
+        id: { not: target.id },
+        role: "ADMIN",
+        isActive: true,
+      },
+    });
+    if (otherActiveAdmins === 0) {
+      return {
+        ok: false,
+        error: "لا يمكن حذف آخر مدير نشط للمكتب. عيّن مديرًا آخر أولًا",
+      };
+    }
+  }
+
+  try {
+    await prisma.user.delete({ where: { id: target.id } });
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error
+    ) {
+      const code = (error as { code?: string }).code;
+      if (code === "P2025") {
+        return { ok: false, error: "الموظف غير موجود أو تم حذفه بالفعل" };
+      }
+      if (code === "P2003") {
+        return {
+          ok: false,
+          error: "تعذّر حذف الموظف لارتباطه بسجل محمي. عطّل الحساب بدلًا من حذفه",
+        };
+      }
+    }
+    throw error;
+  }
+
+  await audit({
+    action: "user.delete",
+    userId: g.id,
+    entity: "User",
+    entityId: target.id,
+    ip: await getClientIp(),
+    details: {
+      name: target.name,
+      email: target.email,
+      role: target.role,
+    },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/dashboard");
+  revalidatePath("/messages");
+  return { ok: true, success: "تم حذف حساب الموظف نهائيًا" };
+}
