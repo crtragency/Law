@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import { ROLE_LABELS } from "@/lib/rbac";
+import { summarizeMessageReactions } from "@/lib/message-reactions";
 import {
   MessagesClient,
   type MessageContact,
@@ -61,7 +62,21 @@ export default async function MessagesPage({
         },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         take: 200,
-        select: { id: true, body: true, senderId: true, createdAt: true },
+        select: {
+          id: true,
+          body: true,
+          senderId: true,
+          createdAt: true,
+          updatedAt: true,
+          reactions: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              emoji: true,
+              userId: true,
+              user: { select: { name: true } },
+            },
+          },
+        },
       }),
     ]);
 
@@ -70,6 +85,8 @@ export default async function MessagesPage({
       body: message.body,
       mine: message.senderId === me.id,
       createdAt: message.createdAt.toISOString(),
+      updatedAt: message.updatedAt.toISOString(),
+      reactions: summarizeMessageReactions(message.reactions, me.id),
     }));
     unreadBySender.set(selectedUser.id, 0);
   }
@@ -95,6 +112,7 @@ export default async function MessagesPage({
         selected={selected}
         initialMessages={initialMessages}
         selectedUnread={selectedUnread}
+        viewerName={me.name}
       />
     </div>
   );

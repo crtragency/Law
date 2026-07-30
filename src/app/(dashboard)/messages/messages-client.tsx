@@ -6,6 +6,7 @@ import {
   LoaderCircle,
   RotateCcw,
   Smile,
+  SmilePlus,
   Wifi,
   WifiOff,
 } from "lucide-react";
@@ -19,6 +20,11 @@ import {
   useState,
 } from "react";
 import { IconSend } from "@/components/icons";
+import {
+  MESSAGE_REACTION_OPTIONS,
+  type MessageReactionEmoji,
+  type MessageReactionSummary,
+} from "@/lib/message-reactions";
 
 export type MessageContact = {
   id: string;
@@ -32,6 +38,8 @@ export type MessageItem = {
   body: string;
   mine: boolean;
   createdAt: string;
+  updatedAt: string;
+  reactions: MessageReactionSummary[];
   pending?: boolean;
   failed?: boolean;
 };
@@ -45,6 +53,9 @@ type RealtimeMessage = {
   mine: boolean;
   peerId: string;
   createdAt: string;
+  updatedAt: string;
+  reactions: MessageReactionSummary[];
+  changeType?: "message" | "update";
 };
 
 type StreamStatus = "connecting" | "live" | "reconnecting";
@@ -106,16 +117,61 @@ function mergeMessages(current: MessageItem[], additions: MessageItem[]) {
   );
 }
 
+function toggleOptimisticReaction(
+  reactions: MessageReactionSummary[],
+  emoji: MessageReactionEmoji,
+  viewerName: string
+) {
+  const mine = reactions.find((reaction) => reaction.mine);
+  const withoutMine = reactions
+    .map((reaction) => {
+      if (!reaction.mine) return reaction;
+      return {
+        ...reaction,
+        count: reaction.count - 1,
+        mine: false,
+        users: reaction.users.filter((user) => user !== viewerName),
+      };
+    })
+    .filter((reaction) => reaction.count > 0);
+
+  if (mine?.emoji === emoji) return withoutMine;
+
+  const existing = withoutMine.find((reaction) => reaction.emoji === emoji);
+  const next = existing
+    ? withoutMine.map((reaction) =>
+        reaction.emoji === emoji
+          ? {
+              ...reaction,
+              count: reaction.count + 1,
+              mine: true,
+              users: [...reaction.users, viewerName],
+            }
+          : reaction
+      )
+    : [
+        ...withoutMine,
+        { emoji, count: 1, mine: true, users: [viewerName] },
+      ];
+
+  return MESSAGE_REACTION_OPTIONS.flatMap((option) => {
+    const reaction = next.find((item) => item.emoji === option.emoji);
+    return reaction ? [reaction] : [];
+  });
+}
+
 export function MessagesClient({
   contacts,
   selected,
   initialMessages,
   selectedUnread,
+  viewerName,
 }: {
   contacts: MessageContact[];
   selected: MessageContact | null;
   initialMessages: MessageItem[];
   selectedUnread: number;
+  viewerName: string;
 }) {
   const [thread, setThread] = useState(initialMessages);
   const [unread, setUnread] = useState<Record<string, number>>(() =>
@@ -123,6 +179,12 @@ export function MessagesClient({
   );
   const [draft, setDraft] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(
+    null
+  );
+  const [reactionPending, setReactionPending] = useState<Set<string>>(
+    () => new Set()
+  );
   const [streamStatus, setStreamStatus] =
     useState<StreamStatus>("connecting");
   const messageEndRef = useRef<HTMLDivElement>(null);
@@ -134,6 +196,8 @@ export function MessagesClient({
     setThread(initialMessages);
     setDraft("");
     setEmojiOpen(false);
+    setReactionPickerFor(null);
+    setReactionPending(new Set());
     setUnread((current) => ({
       ...current,
       ...(selected ? { [selected.id]: 0 } : {}),
@@ -177,8 +241,11 @@ export function MessagesClient({
             body: message.body,
             mine: message.mine,
             createdAt: message.createdAt,
+            updatedAt: message.updatedAt,
+            reactions: message.reactions,
           };
-          const matchingOptimistic = message.mine
+          const matchingOptimistic =
+            message.changeType !== "update" && message.mine
             ? current.find(
                 (item) =>
                   item.mine && item.pending && item.body === message.body
@@ -191,15 +258,17 @@ export function MessagesClient({
             [liveMessage]
           );
         });
-        setUnread((current) => ({ ...current, [message.peerId]: 0 }));
+        if (message.changeType !== "update") {
+          setUnread((current) => ({ ...current, [message.peerId]: 0 }));
+        }
 
-        if (!message.mine) {
+        if (message.changeType !== "update" && !message.mine) {
           if (readTimer !== null) window.clearTimeout(readTimer);
           readTimer = window.setTimeout(() => {
             void markConversationRead(message.peerId);
           }, 120);
         }
-      } else if (!message.mine) {
+      } else if (message.changeType !== "update" && !message.mine) {
         setUnread((current) => ({
           ...current,
           [message.peerId]: (current[message.peerId] ?? 0) + 1,
@@ -227,9 +296,11 @@ export function MessagesClient({
     };
   }, [markConversationRead, selected?.id]);
 
+  const lastMessageId = thread.at(-1)?.id;
+
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ block: "end" });
-  }, [thread]);
+  }, [lastMessageId]);
 
   useEffect(() => {
     if (!emojiOpen) return;
@@ -249,6 +320,25 @@ export function MessagesClient({
     };
   }, [emojiOpen]);
 
+  useEffect(() => {
+    if (!reactionPickerFor) return;
+    const closeReactionPicker = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest("[data-reaction-ui]")) {
+        setReactionPickerFor(null);
+      }
+    };
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setReactionPickerFor(null);
+    };
+    document.addEventListener("mousedown", closeReactionPicker);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeReactionPicker);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [reactionPickerFor]);
+
   const contactCount = useMemo(
     () => contacts.reduce((sum, contact) => sum + (unread[contact.id] ?? 0), 0),
     [contacts, unread]
@@ -261,11 +351,14 @@ export function MessagesClient({
     if (!cleanBody) return;
 
     const tempId = existingTempId ?? `temp-${crypto.randomUUID()}`;
+    const optimisticTime = new Date().toISOString();
     const optimistic: MessageItem = {
       id: tempId,
       body: cleanBody,
       mine: true,
-      createdAt: new Date().toISOString(),
+      createdAt: optimisticTime,
+      updatedAt: optimisticTime,
+      reactions: [],
       pending: true,
     };
 
@@ -303,6 +396,8 @@ export function MessagesClient({
               body: data.message!.body,
               mine: true,
               createdAt: data.message!.createdAt,
+              updatedAt: data.message!.updatedAt,
+              reactions: data.message!.reactions,
             },
           ]
         )
@@ -315,6 +410,89 @@ export function MessagesClient({
             : message
         )
       );
+    }
+  }
+
+  async function reactToMessage(
+    message: MessageItem,
+    emoji: MessageReactionEmoji
+  ) {
+    if (
+      message.pending ||
+      message.failed ||
+      message.id.startsWith("temp-") ||
+      reactionPending.has(message.id)
+    ) {
+      return;
+    }
+
+    const previousReactions = message.reactions;
+    const optimisticReactions = toggleOptimisticReaction(
+      previousReactions,
+      emoji,
+      viewerName
+    );
+    const optimisticUpdatedAt = new Date().toISOString();
+    setReactionPickerFor(null);
+    setReactionPending((current) => new Set(current).add(message.id));
+    setThread((current) =>
+      current.map((item) =>
+        item.id === message.id
+          ? {
+              ...item,
+              reactions: optimisticReactions,
+              updatedAt: optimisticUpdatedAt,
+            }
+          : item
+      )
+    );
+
+    try {
+      const response = await fetch(
+        `/api/messages/${encodeURIComponent(message.id)}/reactions`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ emoji }),
+        }
+      );
+      const data = (await response.json()) as {
+        reactions?: MessageReactionSummary[];
+        updatedAt?: string;
+        error?: string;
+      };
+      if (!response.ok || !data.reactions || !data.updatedAt) {
+        throw new Error(data.error ?? "تعذر حفظ الريأكت");
+      }
+
+      setThread((current) =>
+        current.map((item) =>
+          item.id === message.id
+            ? {
+                ...item,
+                reactions: data.reactions!,
+                updatedAt: data.updatedAt!,
+              }
+            : item
+        )
+      );
+    } catch {
+      setThread((current) =>
+        current.map((item) =>
+          item.id === message.id && item.updatedAt === optimisticUpdatedAt
+            ? { ...item, reactions: previousReactions }
+            : item
+        )
+      );
+    } finally {
+      setReactionPending((current) => {
+        const next = new Set(current);
+        next.delete(message.id);
+        return next;
+      });
     }
   }
 
@@ -481,55 +659,193 @@ export function MessagesClient({
                   </div>
                 </div>
               ) : (
-                thread.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.mine ? "justify-start" : "justify-end"
-                    }`}
-                  >
+                thread.map((message) => {
+                  const canReact =
+                    !message.pending &&
+                    !message.failed &&
+                    !message.id.startsWith("temp-");
+                  const isReacting = reactionPending.has(message.id);
+
+                  return (
                     <div
-                      className={`max-w-[82%] rounded-lg px-3.5 py-2.5 text-sm shadow-sm sm:max-w-[72%] ${
-                        message.mine
-                          ? "bg-brand-800 text-white"
-                          : "border border-line/70 bg-white text-ink"
-                      } ${message.failed ? "ring-1 ring-seal-500" : ""}`}
+                      key={message.id}
+                      className={`flex ${
+                        message.mine ? "justify-start" : "justify-end"
+                      }`}
                     >
-                      <p dir="auto" className="whitespace-pre-wrap break-words leading-6">
-                        {message.body}
-                      </p>
                       <div
-                        className={`mt-1.5 flex items-center gap-1 text-[10px] ${
-                          message.mine ? "text-brand-100" : "text-gray-400"
+                        dir="ltr"
+                        className={`group flex max-w-[88%] items-end gap-1.5 sm:max-w-[76%] ${
+                          message.mine ? "flex-row-reverse" : "flex-row"
                         }`}
                       >
-                        {message.pending ? (
-                          <>
-                            <LoaderCircle className="h-3 w-3 animate-spin" />
-                            <span>جار الإرسال</span>
-                          </>
-                        ) : message.failed ? (
-                          <>
-                            <Clock3 className="h-3 w-3" />
-                            <span>لم تُرسل</span>
+                        <div dir="rtl" className="min-w-0">
+                          <div
+                            className={`rounded-lg px-3.5 py-2.5 text-sm shadow-sm ${
+                              message.mine
+                                ? "bg-brand-800 text-white"
+                                : "border border-line/70 bg-white text-ink"
+                            } ${
+                              message.failed ? "ring-1 ring-seal-500" : ""
+                            }`}
+                          >
+                            <p
+                              dir="auto"
+                              className="whitespace-pre-wrap break-words leading-6"
+                            >
+                              {message.body}
+                            </p>
+                            <div
+                              className={`mt-1.5 flex items-center gap-1 text-[10px] ${
+                                message.mine
+                                  ? "text-brand-100"
+                                  : "text-gray-400"
+                              }`}
+                            >
+                              {message.pending ? (
+                                <>
+                                  <LoaderCircle className="h-3 w-3 animate-spin" />
+                                  <span>جار الإرسال</span>
+                                </>
+                              ) : message.failed ? (
+                                <>
+                                  <Clock3 className="h-3 w-3" />
+                                  <span>لم تُرسل</span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void sendBody(message.body, message.id)
+                                    }
+                                    className="mr-1 inline-flex items-center gap-1 font-bold text-white underline underline-offset-2"
+                                  >
+                                    <RotateCcw className="h-3 w-3" />
+                                    إعادة
+                                  </button>
+                                </>
+                              ) : (
+                                formatMessageTime(message.createdAt)
+                              )}
+                            </div>
+                          </div>
+
+                          {message.reactions.length > 0 && (
+                            <div
+                              dir="ltr"
+                              className={`mt-1 flex flex-wrap gap-1 ${
+                                message.mine ? "justify-end" : "justify-start"
+                              }`}
+                            >
+                              {message.reactions.map((reaction) => {
+                                const option = MESSAGE_REACTION_OPTIONS.find(
+                                  (item) => item.emoji === reaction.emoji
+                                );
+                                const names = reaction.users.join("، ");
+
+                                return (
+                                  <button
+                                    key={reaction.emoji}
+                                    type="button"
+                                    data-reaction-ui
+                                    disabled={!canReact || isReacting}
+                                    aria-pressed={reaction.mine}
+                                    aria-label={`${option?.label ?? "ريأكت"}: ${
+                                      reaction.count
+                                    }`}
+                                    title={
+                                      names
+                                        ? `${option?.label ?? "ريأكت"}: ${names}`
+                                        : option?.label
+                                    }
+                                    onClick={() =>
+                                      void reactToMessage(
+                                        message,
+                                        reaction.emoji
+                                      )
+                                    }
+                                    className={`inline-flex h-7 min-w-10 items-center justify-center gap-1 rounded-md border px-2 text-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-wait disabled:opacity-65 ${
+                                      reaction.mine
+                                        ? "border-brand-500 bg-brand-50 text-brand-900 shadow-sm"
+                                        : "border-line/80 bg-white text-ink hover:border-brand-300 hover:bg-brand-50"
+                                    }`}
+                                  >
+                                    <span aria-hidden="true">
+                                      {reaction.emoji}
+                                    </span>
+                                    <span className="text-[11px] font-bold tabular-nums">
+                                      {reaction.count}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        {canReact && (
+                          <div
+                            data-reaction-ui
+                            className="relative mb-1 shrink-0"
+                          >
                             <button
                               type="button"
+                              disabled={isReacting}
+                              aria-label="إضافة ريأكت"
+                              aria-expanded={reactionPickerFor === message.id}
+                              title="إضافة ريأكت"
                               onClick={() =>
-                                void sendBody(message.body, message.id)
+                                setReactionPickerFor((current) =>
+                                  current === message.id ? null : message.id
+                                )
                               }
-                              className="mr-1 inline-flex items-center gap-1 font-bold text-white underline underline-offset-2"
+                              className={`grid h-8 w-8 place-items-center rounded-md border bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-wait disabled:opacity-60 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 ${
+                                reactionPickerFor === message.id
+                                  ? "border-brand-500 bg-brand-50 text-brand-800 opacity-100"
+                                  : "border-line/80 text-gray-500 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+                              }`}
                             >
-                              <RotateCcw className="h-3 w-3" />
-                              إعادة
+                              {isReacting ? (
+                                <LoaderCircle className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <SmilePlus className="h-4 w-4" />
+                              )}
                             </button>
-                          </>
-                        ) : (
-                          formatMessageTime(message.createdAt)
+
+                            {reactionPickerFor === message.id && (
+                              <div
+                                role="menu"
+                                aria-label="اختيار ريأكت"
+                                className={`absolute top-1/2 z-40 grid w-[10.5rem] -translate-y-1/2 grid-cols-4 gap-1 rounded-lg border border-line bg-white p-1.5 shadow-xl shadow-brand-950/10 ${
+                                  message.mine
+                                    ? "left-0 sm:left-auto sm:right-10"
+                                    : "right-0 sm:left-10 sm:right-auto"
+                                }`}
+                              >
+                                {MESSAGE_REACTION_OPTIONS.map((option) => (
+                                  <button
+                                    key={option.emoji}
+                                    type="button"
+                                    role="menuitem"
+                                    aria-label={option.label}
+                                    title={option.label}
+                                    onClick={() =>
+                                      void reactToMessage(
+                                        message,
+                                        option.emoji
+                                      )
+                                    }
+                                    className="grid h-9 w-9 place-items-center rounded-md text-xl transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                                  >
+                                    {option.emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
               <div ref={messageEndRef} />
             </div>

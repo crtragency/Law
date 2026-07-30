@@ -78,6 +78,7 @@ model User {
   notifications             Notification[]           @relation("UserNotifications")
   messagesSent              Message[]                @relation("MessagesSent")
   messagesReceived          Message[]                @relation("MessagesReceived")
+  messageReactions          MessageReaction[]
   caseMessages              CaseMessage[]            @relation("CaseMessageStaffAuthor")
   createdConsultations      LegalConsultation[]      @relation("ConsultationCreatedBy")
   assignedConsultations     LegalConsultation[]      @relation("ConsultationAssignedTo")
@@ -132,12 +133,34 @@ model Message {
   body        String
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  reactions   MessageReaction[]
 
   @@index([recipientId, read])
   @@index([recipientId, createdAt])
+  @@index([recipientId, updatedAt])
   @@index([senderId])
   @@index([senderId, createdAt])
+  @@index([senderId, updatedAt])
   @@index([createdAt])
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  emoji     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId, emoji])
+  @@index([userId])
+  @@index([updatedAt])
 }
 
 // جلسات الدخول — تُخزَّن في قاعدة البيانات حتى يمكن إلغاؤها فوراً

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction, type LoginState } from "./actions";
 
@@ -14,6 +15,7 @@ function SubmitButton() {
 }
 
 export function LoginForm() {
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [state, formAction] = useActionState<LoginState, FormData>(
     loginAction,
     {}
@@ -47,15 +49,31 @@ export function LoginForm() {
         <label htmlFor="password" className="label">
           كلمة المرور
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="field"
-          placeholder="••••••••"
-        />
+        <div className="relative">
+          <input
+            id="password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            className="field pl-11"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setPasswordVisible((visible) => !visible)}
+            aria-label={passwordVisible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            aria-pressed={passwordVisible}
+            title={passwordVisible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            className="absolute left-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-gray-400 transition hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/25"
+          >
+            {passwordVisible ? (
+              <EyeOff className="h-[18px] w-[18px]" />
+            ) : (
+              <Eye className="h-[18px] w-[18px]" />
+            )}
+          </button>
+        </div>
       </div>
 
       <SubmitButton />

@@ -2,6 +2,10 @@ import "server-only";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { notify } from "@/lib/notifications";
+import {
+  summarizeMessageReactions,
+  type MessageReactionSummary,
+} from "@/lib/message-reactions";
 
 export type InternalMessageEvent = {
   id: string;
@@ -12,6 +16,8 @@ export type InternalMessageEvent = {
   mine: boolean;
   peerId: string;
   createdAt: string;
+  updatedAt: string;
+  reactions: MessageReactionSummary[];
 };
 
 export async function getInternalMessageUpdates(
@@ -23,10 +29,10 @@ export async function getInternalMessageUpdates(
     where: {
       // Inclusive cursor plus client/server de-duplication avoids losing two
       // messages that PostgreSQL stores with the same millisecond timestamp.
-      createdAt: { gte: since },
+      updatedAt: { gte: since },
       OR: [{ senderId: userId }, { recipientId: userId }],
     },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
     take,
     select: {
       id: true,
@@ -34,7 +40,16 @@ export async function getInternalMessageUpdates(
       senderId: true,
       recipientId: true,
       createdAt: true,
+      updatedAt: true,
       sender: { select: { name: true } },
+      reactions: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          emoji: true,
+          userId: true,
+          user: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -49,6 +64,8 @@ export async function getInternalMessageUpdates(
       mine,
       peerId: mine ? row.recipientId : row.senderId,
       createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+      reactions: summarizeMessageReactions(row.reactions, userId),
     };
   });
 }
@@ -77,6 +94,7 @@ export async function createInternalMessage(
       senderId: true,
       recipientId: true,
       createdAt: true,
+      updatedAt: true,
     },
   });
 
@@ -97,5 +115,7 @@ export async function createInternalMessage(
     mine: true,
     peerId: recipient.id,
     createdAt: message.createdAt.toISOString(),
+    updatedAt: message.updatedAt.toISOString(),
+    reactions: [],
   };
 }

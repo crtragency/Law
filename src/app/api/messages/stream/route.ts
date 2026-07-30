@@ -30,11 +30,23 @@ export async function GET(request: NextRequest) {
   let cursor = parseSince(request.nextUrl.searchParams.get("since"));
   let closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const deliveredIds = new Set<string>();
+  const deliveredVersions = new Map<string, string>();
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const startedAt = Date.now();
+
+      const enqueue = (chunk: Uint8Array) => {
+        if (closed) return false;
+        try {
+          controller.enqueue(chunk);
+          return true;
+        } catch {
+          closed = true;
+          if (timer) clearTimeout(timer);
+          return false;
+        }
+      };
 
       const close = () => {
         if (closed) return;
@@ -60,33 +72,39 @@ export async function GET(request: NextRequest) {
 
         try {
           const batch = await getInternalMessageUpdates(user.id, cursor);
+          if (closed || request.signal.aborted) {
+            close();
+            return;
+          }
           if (batch.length > 0) {
-            cursor = new Date(batch[batch.length - 1]!.createdAt);
+            cursor = new Date(batch[batch.length - 1]!.updatedAt);
           }
           const messages = batch.filter((message) => {
-            if (deliveredIds.has(message.id)) return false;
-            deliveredIds.add(message.id);
+            if (deliveredVersions.get(message.id) === message.updatedAt) {
+              return false;
+            }
+            deliveredVersions.set(message.id, message.updatedAt);
             return true;
           });
           if (messages.length > 0) {
-            controller.enqueue(
+            enqueue(
               encoder.encode(`data: ${JSON.stringify({ messages })}\n\n`)
             );
           } else {
-            controller.enqueue(encoder.encode(": keep-alive\n\n"));
+            enqueue(encoder.encode(": keep-alive\n\n"));
           }
         } catch {
-          controller.enqueue(
+          enqueue(
             encoder.encode(
               `event: stream-error\ndata: ${JSON.stringify({ retry: true })}\n\n`
             )
           );
         }
 
-        timer = setTimeout(tick, POLL_INTERVAL_MS);
+        if (!closed) timer = setTimeout(tick, POLL_INTERVAL_MS);
       };
 
-      controller.enqueue(encoder.encode("retry: 1000\n\n"));
+      enqueue(encoder.encode("retry: 1000\n\n"));
       request.signal.addEventListener("abort", close, { once: true });
       void tick();
     },

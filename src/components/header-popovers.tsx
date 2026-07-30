@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconBell, IconMessage } from "@/components/icons";
+import type { MessageReactionSummary } from "@/lib/message-reactions";
 
 type ActivityItem = {
   id: string;
@@ -27,6 +28,9 @@ type RealtimeMessage = {
   mine: boolean;
   peerId: string;
   createdAt: string;
+  updatedAt: string;
+  reactions: MessageReactionSummary[];
+  changeType?: "message" | "update";
 };
 
 type StreamStatus = "connecting" | "live" | "reconnecting";
@@ -75,7 +79,7 @@ export function HeaderActivityPopovers() {
     const controller = new AbortController();
     const initialSince = new Date(Date.now() - 1_000).toISOString();
     const cursor = { current: initialSince };
-    const seenIds = new Set<string>();
+    const seenVersions = new Map<string, string>();
     let fallbackTimer: number | null = null;
     let eventSource: EventSource | null = null;
 
@@ -89,21 +93,33 @@ export function HeaderActivityPopovers() {
     };
 
     const receive = (incoming: RealtimeMessage[]) => {
-      const fresh = incoming.filter((message) => {
-        if (seenIds.has(message.id)) return false;
-        seenIds.add(message.id);
-        return true;
+      const fresh = incoming.flatMap((message) => {
+        const previousVersion = seenVersions.get(message.id);
+        if (previousVersion === message.updatedAt) return [];
+        seenVersions.set(message.id, message.updatedAt);
+        const isNewMessage =
+          previousVersion === undefined &&
+          new Date(message.createdAt).getTime() >=
+            new Date(initialSince).getTime();
+        return [
+          {
+            ...message,
+            changeType: isNewMessage ? "message" : "update",
+          } satisfies RealtimeMessage,
+        ];
       });
       if (fresh.length === 0) return;
 
-      cursor.current = fresh[fresh.length - 1]!.createdAt;
+      cursor.current = fresh[fresh.length - 1]!.updatedAt;
       fresh.forEach((message) => {
         window.dispatchEvent(
           new CustomEvent("law:message-received", { detail: message })
         );
       });
 
-      const received = fresh.filter((message) => !message.mine);
+      const received = fresh.filter(
+        (message) => message.changeType === "message" && !message.mine
+      );
       if (received.length === 0) return;
 
       setMessages((current) => {
@@ -278,20 +294,42 @@ function HeaderPopover({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
+  const cancelScheduledClose = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const closeNow = useCallback(() => {
+    cancelScheduledClose();
+    setOpen(false);
+  }, [cancelScheduledClose]);
 
   const show = useCallback(() => {
+    cancelScheduledClose();
     setOpen(true);
     setError(false);
     void onOpen().catch(() => setError(true));
-  }, [onOpen]);
+  }, [cancelScheduledClose, onOpen]);
+
+  const scheduleClose = useCallback(() => {
+    cancelScheduledClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null;
+      setOpen(false);
+    }, 1_000);
+  }, [cancelScheduledClose]);
 
   useEffect(() => {
     if (!open) return;
     function closeOnOutsideClick(event: MouseEvent) {
-      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!wrapperRef.current?.contains(event.target as Node)) closeNow();
     }
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeNow();
     }
     document.addEventListener("mousedown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
@@ -299,22 +337,23 @@ function HeaderPopover({
       document.removeEventListener("mousedown", closeOnOutsideClick);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [open]);
+  }, [closeNow, open]);
+
+  useEffect(() => cancelScheduledClose, [cancelScheduledClose]);
 
   return (
     <div
       ref={wrapperRef}
       className="relative"
       onMouseEnter={show}
-      onMouseLeave={() => setOpen(false)}
+      onMouseLeave={scheduleClose}
     >
       <button
         type="button"
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => (open ? setOpen(false) : show())}
-        onFocus={show}
+        onClick={() => (open ? closeNow() : show())}
         className="header-icon-button"
       >
         {children}
@@ -351,7 +390,7 @@ function HeaderPopover({
                   key={item.id}
                   href={item.href}
                   role="menuitem"
-                  onClick={() => setOpen(false)}
+                  onClick={closeNow}
                   className={`block border-b border-gray-100 px-3 py-3 transition last:border-b-0 hover:bg-brand-50/55 ${
                     item.read ? "" : "bg-brand-50/35"
                   }`}
@@ -375,7 +414,7 @@ function HeaderPopover({
 
           <Link
             href={seeAllHref}
-            onClick={() => setOpen(false)}
+            onClick={closeNow}
             className="block border-t border-line bg-white px-3 py-2.5 text-center text-xs font-bold text-brand-700 transition hover:bg-brand-50"
           >
             عرض الكل
