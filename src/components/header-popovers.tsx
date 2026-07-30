@@ -57,6 +57,9 @@ export function HeaderActivityPopovers() {
     notifications: 0,
     messages: 0,
   });
+  const [activePopover, setActivePopover] = useState<
+    "messages" | "notifications" | null
+  >(null);
   const [notifications, setNotifications] = useState<ActivityItem[] | null>(null);
   const [messages, setMessages] = useState<ActivityItem[] | null>(null);
   const countRefreshTimer = useRef<number | null>(null);
@@ -251,22 +254,34 @@ export function HeaderActivityPopovers() {
   return (
     <>
       <HeaderPopover
+        open={activePopover === "messages"}
         count={counts.messages}
         label="الرسائل"
         seeAllHref="/messages"
         emptyText="لا توجد رسائل جديدة"
         items={messages}
         onOpen={loadMessages}
+        onRequestOpen={() => setActivePopover("messages")}
+        onRequestClose={() =>
+          setActivePopover((current) => (current === "messages" ? null : current))
+        }
       >
         <IconMessage />
       </HeaderPopover>
       <HeaderPopover
+        open={activePopover === "notifications"}
         count={counts.notifications}
         label="الإشعارات"
         seeAllHref="/notifications"
         emptyText="لا توجد إشعارات جديدة"
         items={notifications}
         onOpen={loadNotifications}
+        onRequestOpen={() => setActivePopover("notifications")}
+        onRequestClose={() =>
+          setActivePopover((current) =>
+            current === "notifications" ? null : current
+          )
+        }
       >
         <IconBell />
       </HeaderPopover>
@@ -275,53 +290,40 @@ export function HeaderActivityPopovers() {
 }
 
 function HeaderPopover({
+  open,
   count,
   label,
   seeAllHref,
   emptyText,
   items,
   onOpen,
+  onRequestOpen,
+  onRequestClose,
   children,
 }: {
+  open: boolean;
   count: number;
   label: string;
   seeAllHref: string;
   emptyText: string;
   items: ActivityItem[] | null;
   onOpen: () => Promise<void>;
+  onRequestOpen: () => void;
+  onRequestClose: () => void;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef = useRef<number | null>(null);
-
-  const cancelScheduledClose = useCallback(() => {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  }, []);
 
   const closeNow = useCallback(() => {
-    cancelScheduledClose();
-    setOpen(false);
-  }, [cancelScheduledClose]);
+    onRequestClose();
+  }, [onRequestClose]);
 
   const show = useCallback(() => {
-    cancelScheduledClose();
-    setOpen(true);
+    onRequestOpen();
     setError(false);
     void onOpen().catch(() => setError(true));
-  }, [cancelScheduledClose, onOpen]);
-
-  const scheduleClose = useCallback(() => {
-    cancelScheduledClose();
-    closeTimerRef.current = window.setTimeout(() => {
-      closeTimerRef.current = null;
-      setOpen(false);
-    }, 1_000);
-  }, [cancelScheduledClose]);
+  }, [onOpen, onRequestOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -339,14 +341,12 @@ function HeaderPopover({
     };
   }, [closeNow, open]);
 
-  useEffect(() => cancelScheduledClose, [cancelScheduledClose]);
-
   return (
     <div
       ref={wrapperRef}
       className="relative"
       onMouseEnter={show}
-      onMouseLeave={scheduleClose}
+      onMouseLeave={closeNow}
     >
       <button
         type="button"
