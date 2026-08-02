@@ -15,13 +15,13 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8">
+    <div className="page-header mb-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-4xl">
           <h1 className="page-title">{title}</h1>
           {subtitle && <p className="mt-2 max-w-3xl text-[13px] leading-7 text-gray-500">{subtitle}</p>}
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="page-header-action shrink-0">{action}</div>}
       </div>
       <div className="rule-double mt-5" aria-hidden />
     </div>
@@ -48,8 +48,8 @@ export function EmptyState({
   hint?: string;
 }) {
   return (
-    <div className="card flex min-h-[220px] flex-col items-center justify-center border-dashed py-12 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-paper text-gray-400">
+    <div className="empty-state card flex min-h-[220px] flex-col items-center justify-center border-dashed py-12 text-center">
+      <div className="empty-state-icon mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-paper text-gray-400">
         {icon ?? <IconInbox />}
       </div>
       <p className="font-medium text-gray-700">{title}</p>
@@ -71,7 +71,7 @@ export function StatCard({
 }) {
   const inner = (
     <div className="card surface-hover group flex min-h-[112px] items-center gap-4 overflow-hidden p-5">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition duration-200 group-hover:bg-brand-700 group-hover:text-white">
+      <div className="stat-card-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition duration-200 group-hover:bg-brand-700 group-hover:text-white">
         {icon}
       </div>
       <div className="leading-tight">

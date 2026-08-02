@@ -8,6 +8,7 @@ import { SearchCommand } from "@/components/search-command";
 import { HeaderActivityPopovers } from "@/components/header-popovers";
 import { HeaderTools } from "@/components/header-tools";
 import { AttendancePrompt } from "@/components/attendance-prompt";
+import { PageScrollEnhancements } from "@/components/page-scroll-enhancements";
 import { getCurrentWorkDate } from "@/lib/attendance";
 
 export default async function DashboardLayout({
@@ -104,8 +105,8 @@ export default async function DashboardLayout({
         avatarStorageKey={user.avatarStorageKey}
         roleLabel={ROLE_LABELS[user.role]}
       />
-      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-white/78 px-4 py-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="dashboard-content flex min-w-0 flex-1 flex-col">
+        <header className="dashboard-header sticky top-0 z-20 flex items-center justify-end gap-2 border-b border-line/80 bg-white/78 px-4 py-3 shadow-sm shadow-black/[0.025] backdrop-blur-xl sm:px-6 lg:px-8">
           <HeaderTools
             canCreateCases={hasPermission(user, "cases.manage")}
             canCreateClients={hasPermission(user, "clients.manage")}
@@ -121,6 +122,7 @@ export default async function DashboardLayout({
             avatarStorageKey={user.avatarStorageKey}
           />
         </header>
+        <PageScrollEnhancements />
         <main className="dashboard-main mx-auto w-full max-w-[1720px] flex-1 p-4 sm:p-6 lg:p-9 xl:p-10">
           <AttendancePrompt record={todayAttendance} />
           {children}

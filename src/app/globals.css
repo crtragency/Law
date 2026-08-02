@@ -9,6 +9,15 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
 ::selection {
   background: #cdae63;
   color: #071812;
@@ -38,6 +47,26 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    opacity: 0.35;
+    transform: scaleY(0.16);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -122,8 +151,75 @@ body {
       theme("colors.paper");
   }
 
+  .dashboard-content {
+    overflow-x: clip;
+  }
+
   .dashboard-main {
-    animation: page-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    isolation: isolate;
+  }
+
+  .dashboard-main > * {
+    animation: surface-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .dashboard-main > :nth-child(2) {
+    animation-delay: 35ms;
+  }
+
+  .dashboard-main > :nth-child(3) {
+    animation-delay: 65ms;
+  }
+
+  .dashboard-main > :nth-child(4) {
+    animation-delay: 90ms;
+  }
+
+  .dashboard-main > :nth-child(n + 5) {
+    animation-delay: 110ms;
+  }
+
+  .dashboard-header {
+    min-height: 62px;
+    isolation: isolate;
+    box-shadow:
+      0 1px 0 rgba(18, 52, 41, 0.06),
+      0 12px 32px rgba(12, 32, 26, 0.035);
+  }
+
+  .page-scroll-progress {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-start: 0;
+    z-index: 60;
+    height: 2px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .page-scroll-progress > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: theme("colors.brass.300");
+    box-shadow: 0 0 12px rgba(205, 175, 99, 0.5);
+    transform-origin: left center;
+    transition: transform 90ms linear;
+    will-change: transform;
+  }
+
+  .scroll-to-top {
+    @apply fixed bottom-6 left-6 z-40 grid h-11 w-11 place-items-center rounded-lg border border-line bg-white/90 text-brand-800
+      opacity-0 shadow-lg shadow-brand-950/10 backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:border-brand-300
+      hover:bg-brand-800 hover:text-white focus-visible:opacity-100;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.9);
+  }
+
+  .scroll-to-top-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
   }
 
   .search-bubble-overlay {
@@ -173,6 +269,15 @@ body {
       focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100;
   }
 
+  .header-icon-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(12, 32, 26, 0.075);
+  }
+
+  .header-icon-button:active {
+    transform: translateY(0) scale(0.96);
+  }
+
   .header-dropdown {
     @apply absolute z-50 origin-top-left overflow-hidden rounded-lg border border-line bg-white
       shadow-[0_22px_60px_rgba(12,32,26,0.16)] ring-1 ring-black/[0.02];
@@ -210,6 +315,10 @@ body {
     @apply font-display text-[28px] font-bold leading-tight tracking-normal text-ink sm:text-3xl;
   }
 
+  .page-header {
+    position: relative;
+  }
+
   .rule-double {
     position: relative;
     height: 6px;
@@ -232,12 +341,27 @@ body {
     inset-inline-start: 0;
     width: 130px;
     border-top: 2px solid theme("colors.brass.300");
+    transform-origin: right center;
+    animation: rule-draw 520ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
   }
 
   .field {
     @apply min-h-11 w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-ink
       shadow-inner shadow-black/[0.012] outline-none transition duration-200 placeholder:text-gray-400
       hover:border-brand-200 hover:bg-white focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100/70;
+  }
+
+  .field:disabled {
+    @apply cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400 shadow-none;
+  }
+
+  select.field:not(:disabled) {
+    cursor: pointer;
+  }
+
+  textarea.field {
+    min-height: 108px;
+    resize: vertical;
   }
 
   .label {
@@ -247,6 +371,10 @@ body {
   .btn {
     @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
       shadow-sm shadow-black/[0.03] transition duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn:not(:disabled):active {
+    transform: translateY(0) scale(0.98);
   }
 
   .btn-primary {
@@ -347,6 +475,11 @@ body {
     position: relative;
   }
 
+  .data-panel:focus-within {
+    border-color: rgba(61, 118, 96, 0.32);
+    box-shadow: 0 16px 38px rgba(12, 32, 26, 0.055);
+  }
+
   .data-panel table {
     width: 100%;
     border-collapse: separate;
@@ -361,6 +494,11 @@ body {
 
   .data-panel tbody tr:hover {
     background: rgba(238, 244, 240, 0.62);
+    box-shadow: inset -3px 0 0 theme("colors.brand.500");
+  }
+
+  .data-panel tbody tr:not(:first-child) td {
+    border-top: 1px solid rgba(225, 226, 220, 0.72);
   }
 
   .section-heading {
@@ -393,6 +531,28 @@ body {
 
   .surface-hover {
     @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md hover:shadow-brand-950/[0.055];
+  }
+
+  .surface-hover:hover .stat-card-icon {
+    transform: scale(1.04) rotate(-2deg);
+  }
+
+  .empty-state {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(238, 244, 240, 0.34)),
+      white;
+  }
+
+  .empty-state-icon {
+    transition:
+      transform 220ms ease,
+      color 220ms ease,
+      background-color 220ms ease;
+  }
+
+  .empty-state:hover .empty-state-icon {
+    @apply bg-brand-50 text-brand-700;
+    transform: translateY(-2px) scale(1.04);
   }
 
   .law-command-board {
@@ -431,12 +591,57 @@ body {
     @apply min-h-[210px] rounded-lg border border-white/70 bg-white/[0.78] p-6 shadow-sm shadow-brand-950/[0.045] backdrop-blur;
   }
 
+  .law-mini-card,
+  .law-stack-panel,
+  .calendar-card-panel,
+  .recent-cases-panel,
+  .profile-card-panel,
+  .law-task-panel {
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .law-mini-card:hover,
+  .law-stack-panel:hover,
+  .calendar-card-panel:hover,
+  .recent-cases-panel:hover {
+    transform: translateY(-2px);
+    border-color: rgba(61, 118, 96, 0.34);
+    box-shadow: 0 18px 38px rgba(12, 32, 26, 0.07);
+  }
+
+  .profile-card-panel:hover,
+  .law-task-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 44px rgba(7, 24, 18, 0.16);
+  }
+
   .law-card-arrow {
     @apply grid h-9 w-9 place-items-center rounded-lg border border-line bg-white text-sm font-bold text-brand-800 shadow-sm shadow-black/[0.02] transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-50;
   }
 
   .law-bar {
     @apply block w-3 rounded-full bg-brand-800 shadow-sm shadow-brand-950/10;
+    transform-origin: bottom center;
+    animation: bar-grow 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .law-bar:nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .law-bar:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .law-bar:nth-child(4) {
+    animation-delay: 170ms;
+  }
+
+  .law-bar:nth-child(5) {
+    animation-delay: 220ms;
   }
 
   .law-bar:nth-child(even) {
@@ -489,6 +694,32 @@ body {
 }
 
 @media (max-width: 639px) {
+  .dashboard-header {
+    min-height: 58px;
+    gap: 0.375rem;
+    padding-inline: 0.75rem;
+  }
+
+  .dashboard-main {
+    padding: 0.75rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header-action {
+    width: 100%;
+  }
+
+  .page-header-action > * {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
   .field {
     font-size: 16px;
   }
@@ -505,5 +736,21 @@ body {
   .pagination-bar > p {
     width: 100%;
     text-align: center;
+  }
+
+  .table-th,
+  .table-td {
+    padding-inline: 0.875rem;
+  }
+
+  .law-command-board {
+    padding: 1rem;
+  }
+
+  .scroll-to-top {
+    bottom: 1rem;
+    left: 1rem;
+    height: 2.5rem;
+    width: 2.5rem;
   }
 }
