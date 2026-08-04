@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import { requireUser } from "@/lib/auth";
 import { hasPermission, ROLE_LABELS } from "@/lib/rbac";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDatabaseRetry } from "@/lib/prisma";
 import { Badge, FlashMessage } from "@/components/ui";
 import {
   CASE_STATUS_COLORS,
@@ -64,21 +64,24 @@ export default async function DashboardPage({
   weekStart.setDate(now.getDate() - 7);
 
   const [metricRows, upcomingEvents, recentCases, myTasks] = await Promise.all([
-    prisma.$queryRaw<DashboardMetrics[]>`
-      SELECT
-        (SELECT COUNT(*)::int FROM "Case") AS "caseCount",
-        (SELECT COUNT(*)::int FROM "Case" WHERE "status" IN ('OPEN', 'IN_PROGRESS', 'POSTPONED')) AS "openCaseCount",
-        (SELECT COUNT(*)::int FROM "Client") AS "clientCount",
-        (SELECT COUNT(*)::int FROM "Task" WHERE "assignedToId" = ${user.id} AND "status" IN ('TODO', 'IN_PROGRESS')) AS "myTaskCount",
-        (SELECT COUNT(*)::int FROM "Task") AS "taskCount",
-        (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE') AS "doneTaskCount",
-        (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE' AND "updatedAt" >= ${weekStart}) AS "doneThisWeekCount",
-        (SELECT COUNT(*)::int FROM "ServiceRequest" WHERE "status" NOT IN ('COMPLETED', 'CANCELLED')) AS "openServiceRequestCount",
-        (SELECT COUNT(*)::int FROM "Document") AS "documentCount",
-        (SELECT COUNT(*)::int FROM "Document" WHERE "ocrStatus" = 'INDEXED') AS "indexedDocumentCount",
-        (SELECT COUNT(*)::int FROM "Reminder" WHERE "status" = 'OPEN' AND "dueAt" >= ${now} AND "dueAt" <= ${soon}) AS "upcomingReminderCount",
-        (SELECT COUNT(*)::int FROM "User" WHERE "isActive" = true) AS "userCount"
-    `,
+    withDatabaseRetry(
+      () => prisma.$queryRaw<DashboardMetrics[]>`
+        SELECT
+          (SELECT COUNT(*)::int FROM "Case") AS "caseCount",
+          (SELECT COUNT(*)::int FROM "Case" WHERE "status" IN ('OPEN', 'IN_PROGRESS', 'POSTPONED')) AS "openCaseCount",
+          (SELECT COUNT(*)::int FROM "Client") AS "clientCount",
+          (SELECT COUNT(*)::int FROM "Task" WHERE "assignedToId" = ${user.id} AND "status" IN ('TODO', 'IN_PROGRESS')) AS "myTaskCount",
+          (SELECT COUNT(*)::int FROM "Task") AS "taskCount",
+          (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE') AS "doneTaskCount",
+          (SELECT COUNT(*)::int FROM "Task" WHERE "status" = 'DONE' AND "updatedAt" >= ${weekStart}) AS "doneThisWeekCount",
+          (SELECT COUNT(*)::int FROM "ServiceRequest" WHERE "status" NOT IN ('COMPLETED', 'CANCELLED')) AS "openServiceRequestCount",
+          (SELECT COUNT(*)::int FROM "Document") AS "documentCount",
+          (SELECT COUNT(*)::int FROM "Document" WHERE "ocrStatus" = 'INDEXED') AS "indexedDocumentCount",
+          (SELECT COUNT(*)::int FROM "Reminder" WHERE "status" = 'OPEN' AND "dueAt" >= ${now} AND "dueAt" <= ${soon}) AS "upcomingReminderCount",
+          (SELECT COUNT(*)::int FROM "User" WHERE "isActive" = true) AS "userCount"
+      `,
+      { readOnly: true }
+    ),
     prisma.event.findMany({
       where: { startAt: { gte: now } },
       orderBy: { startAt: "asc" },
